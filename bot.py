@@ -1042,7 +1042,6 @@ async def main():
     await bot.set_my_commands([
         types.BotCommand(command="start",    description="🚀 Start the bot"),
         types.BotCommand(command="myaccs",   description="📋 My created accounts"),
-        types.BotCommand(command="botaccs",  description="🌐 Bot accounts list"),
         types.BotCommand(command="credits",  description="💳 Check your credits"),
     ])
 
