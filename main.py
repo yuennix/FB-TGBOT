@@ -1448,77 +1448,74 @@ DOMAIN_PASSWORDS = {
     "12": "9382",
 }
 
-# mail.tm token store: email -> Bearer token (used for code retrieval)
-_mailtm_tokens = {}
+# 1secmail inbox tracker: email -> {login, domain}
+_1secmail_inboxes = {}
+_1SECMAIL_DOMAINS = [
+    "1secmail.com", "1secmail.org", "1secmail.net",
+    "kzccv.com", "qiott.com", "wwjmp.com",
+    "esiix.com", "xojxe.com", "yoggm.com",
+]
 
-def _create_mailtm_email(fname, lname):
-    """Create a real mail.tm inbox and return the email address."""
+def _create_1secmail_email(fname, lname):
+    """Pick a 1secmail address — inbox exists automatically, no signup needed."""
     try:
-        import re as _re
-        fn = _re.sub(r'\W+', '', fname.lower())
-        ln = _re.sub(r'\W+', '', lname.lower())
-        r = requests.get("https://api.mail.tm/domains", timeout=10)
-        if r.status_code != 200:
-            return None
-        domains_list = r.json().get("hydra:member", [])
-        if not domains_list:
-            return None
-        domain = random.choice(domains_list)["domain"]
+        fn = re.sub(r'\W+', '', fname.lower())
+        ln = re.sub(r'\W+', '', lname.lower())
         n2 = random.randint(10, 99)
+        n3 = random.randint(100, 999)
         username = random.choice([
-            f"{fn}.{ln}", f"{fn}_{ln}", f"{fn}{ln}",
-            f"{fn}.{ln}{n2}", f"{fn}{n2}", f"{ln}{n2}",
+            f"{fn}.{ln}",    f"{fn}_{ln}",    f"{fn}{ln}",
+            f"{fn}.{ln}{n2}", f"{fn}{n2}",    f"{ln}{n2}",
             f"{fn[0]}{ln}{n2}", f"{fn[0]}.{ln}",
+            f"{fn}{ln}{n3}", f"{fn[0]}{ln}{n3}",
         ])
-        email    = f"{username}@{domain}"
-        password = ''.join(random.choices('abcdefghijklmnopqrstuvwxyz0123456789', k=12))
-        resp = requests.post(
-            "https://api.mail.tm/accounts",
-            json={"address": email, "password": password},
-            timeout=10
-        )
-        if resp.status_code != 201:
-            return None
-        tok_resp = requests.post(
-            "https://api.mail.tm/token",
-            json={"address": email, "password": password},
-            timeout=10
-        )
-        if tok_resp.status_code != 200:
-            return None
-        token = tok_resp.json().get("token")
-        if token:
-            _mailtm_tokens[email] = token
+        domain = random.choice(_1SECMAIL_DOMAINS)
+        email  = f"{username}@{domain}"
+        _1secmail_inboxes[email] = {"login": username, "domain": domain}
         return email
     except Exception:
         return None
 
-def _fetch_mailtm_code(email):
-    """Poll mail.tm inbox for a Facebook verification code."""
-    token = _mailtm_tokens.get(email)
-    if not token:
+def _fetch_1secmail_code(email):
+    """Poll 1secmail inbox for a Facebook verification code."""
+    info = _1secmail_inboxes.get(email)
+    if not info:
         return None
-    headers = {"Authorization": f"Bearer {token}"}
+    login  = info["login"]
+    domain = info["domain"]
+    base   = "https://www.1secmail.com/api/v1/"
     code_re = re.compile(r'(?<!\d)(\d{5,8})(?!\d)')
     for attempt in range(30):
         if attempt > 0:
             time.sleep(2)
         try:
-            r = requests.get("https://api.mail.tm/messages", headers=headers, timeout=10)
+            r = requests.get(
+                base,
+                params={"action": "getMessages", "login": login, "domain": domain},
+                timeout=10
+            )
             if r.status_code != 200:
                 continue
-            msgs = r.json().get("hydra:member", [])
+            msgs = r.json() if isinstance(r.json(), list) else []
             for msg in msgs[:5]:
-                mid = msg.get("id", "")
-                mr = requests.get(f"https://api.mail.tm/messages/{mid}", headers=headers, timeout=10)
+                mid = msg.get("id")
+                if not mid:
+                    continue
+                mr = requests.get(
+                    base,
+                    params={"action": "readMessage", "login": login, "domain": domain, "id": mid},
+                    timeout=10
+                )
                 if mr.status_code != 200:
                     continue
                 data = mr.json()
-                text = data.get("text", "") or ""
-                html_parts = data.get("html", []) or []
-                blobs = [text] + (html_parts if isinstance(html_parts, list) else [html_parts])
+                blobs = [
+                    str(data.get("subject", "")),
+                    str(data.get("textBody", "")),
+                    str(data.get("htmlBody", "")),
+                ]
                 for blob in blobs:
-                    m = code_re.search(str(blob))
+                    m = code_re.search(blob)
                     if m:
                         return m.group(1)
         except Exception:
@@ -1647,7 +1644,7 @@ def get_temp_email(fname, lname, domain_choice=None):
     ]
     prefix = random.choice(patterns).lower()
     if domain_choice == "1":
-        result = _create_mailtm_email(fname, lname)
+        result = _create_1secmail_email(fname, lname)
         if result:
             return result
         domain = "weyn.store"
@@ -1724,8 +1721,8 @@ def _fetch_yopmail_code(login):
 def get_temp_code(email):
     login = email.split('@')[0].lower()
     domain = email.split('@')[1].lower() if '@' in email else ''
-    if email in _mailtm_tokens:
-        return _fetch_mailtm_code(email)
+    if email in _1secmail_inboxes:
+        return _fetch_1secmail_code(email)
     if domain == 'yopmail.com':
         return _fetch_yopmail_code(login)
     sess = requests.Session()
