@@ -219,13 +219,14 @@ async def cmd_start(message: types.Message):
         return
 
     pending_users[uid] = {"name": first_name, "username": username}
-    await message.answer(
+    req_msg = await message.answer(
         "🔒 *Access Required*\n\n"
         "This bot requires approval to use.\n"
         "Your request has been sent to the owner.\n\n"
         "Please wait for approval ⏳",
         parse_mode="Markdown"
     )
+    pending_users[uid]["req_msg_id"] = req_msg.message_id
     await bot.send_message(
         OWNER_ID,
         f"🔔 *New Access Request*\n\n"
@@ -328,6 +329,9 @@ async def cb_give_credits(callback: types.CallbackQuery):
         parse_mode="Markdown"
     )
     try:
+        req_msg_id = pending_users.get(target_id, {}).get("req_msg_id")
+        if req_msg_id:
+            asyncio.create_task(_del(target_id, req_msg_id))
         await bot.send_message(
             target_id,
             f"✅ *Your access has been approved!*\n\n"
