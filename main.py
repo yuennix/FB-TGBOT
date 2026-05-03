@@ -2090,9 +2090,6 @@ def register_account(domain_choice, name_option, gender_option, max_retries=8):
     def _rand_ph_ip():
         return f"{random.choice(_ph_prefixes)}.{random.randint(1,254)}.{random.randint(1,254)}"
 
-    # Stagger start so 100 workers don't all hit Facebook at the same instant
-    time.sleep(random.uniform(0, 2.0))
-
     while not STOP_FLAG.is_set() and attempts < max_retries:
         attempts += 1
         try:
@@ -2146,7 +2143,6 @@ def register_account(domain_choice, name_option, gender_option, max_retries=8):
             form = extract_form(res.text)
             if not form.get('reg_instance'):
                 cp += 1
-                time.sleep(random.uniform(0.3, 1.0))
                 continue
 
             if gender_option == "1":
@@ -2225,16 +2221,25 @@ def register_account(domain_choice, name_option, gender_option, max_retries=8):
                 'X-Forwarded-For': _fwd,
                 'X-Real-IP': _fwd,
             }
-            # Brief human-like pause between GET and POST
-            time.sleep(random.uniform(0.4, 1.5))
             reg = ses.post(_reg_url, data=payload, headers=headers, timeout=12)
             cookies = ses.cookies.get_dict()
-            if "c_user" in cookies:
-                uid = cookies["c_user"]
+            # Also check response URL and body for c_user (FB sometimes embeds it)
+            _c_user = cookies.get("c_user")
+            if not _c_user:
+                _m = re.search(r'c_user[="](\d+)', reg.text or "")
+                if _m:
+                    _c_user = _m.group(1)
+            if not _c_user and reg.history:
+                for _r in reg.history:
+                    _m = re.search(r'c_user[="](\d+)', _r.headers.get("Location", ""))
+                    if _m:
+                        _c_user = _m.group(1)
+                        break
+            if _c_user:
                 with _live_lock:
                     live += 1
                 _acc_result = {
-                    "uid": uid,
+                    "uid": _c_user,
                     "password": password,
                     "name": f"{fname} {lname}",
                     "email": email,
@@ -2242,10 +2247,8 @@ def register_account(domain_choice, name_option, gender_option, max_retries=8):
                 return _acc_result
             else:
                 cp += 1
-                time.sleep(random.uniform(0.5, 2.0))
                 continue
         except requests.exceptions.ConnectionError:
-            time.sleep(random.uniform(0.2, 0.6))
             continue
         except Exception:
             cp += 1
