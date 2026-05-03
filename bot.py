@@ -543,15 +543,32 @@ async def cb_create(callback: types.CallbackQuery):
             gender_option=gender_val
         )
 
+    CONCURRENCY = 3
     success = 0
-    while success < count:
-        if stop_flags.get(uid):
-            await callback.message.answer("🛑 *Creation stopped.*", parse_mode="Markdown")
-            break
-        try:
-            result = await loop.run_in_executor(None, _register)
+    lock = asyncio.Lock()
+    stopped = False
+
+    async def _worker():
+        nonlocal success, stopped
+        while True:
+            async with lock:
+                if stopped or success >= count:
+                    return
+            if stop_flags.get(uid):
+                async with lock:
+                    stopped = True
+                return
+            try:
+                result = await loop.run_in_executor(None, _register)
+            except Exception as e:
+                logging.exception(e)
+                continue
             if result:
-                success += 1
+                async with lock:
+                    if success >= count:
+                        return
+                    success += 1
+                    current = success
                 created_accounts.append({
                     "name":     result["name"],
                     "email":    result["email"],
@@ -560,19 +577,25 @@ async def cb_create(callback: types.CallbackQuery):
                     "by":       uid,
                 })
                 await callback.message.answer(
-                    f"✅ *Account {success}/{count} Created!*\n\n"
+                    f"✅ *Account {current}/{count} Created!*\n\n"
                     f"👤 *Name:* `{result['name']}`\n"
                     f"📧 *Email:* `{result['email']}`\n"
                     f"🔑 *Password:* `{result['password']}`\n"
                     f"🆔 *UID:* `{result['uid']}`",
                     parse_mode="Markdown"
                 )
-            # if result is None here it means STOP_FLAG was set inside register_account
+                if current >= count:
+                    return
             elif stop_flags.get(uid):
-                await callback.message.answer("🛑 *Creation stopped.*", parse_mode="Markdown")
-                break
-        except Exception as e:
-            logging.exception(e)
+                async with lock:
+                    stopped = True
+                return
+
+    workers = [asyncio.create_task(_worker()) for _ in range(min(count, CONCURRENCY))]
+    await asyncio.gather(*workers)
+
+    if stopped or stop_flags.get(uid):
+        await callback.message.answer("🛑 *Creation stopped.*", parse_mode="Markdown")
 
     stop_flags.pop(uid, None)
     await callback.message.answer(
