@@ -1,4 +1,4 @@
-import os, re, time, json, random, threading, hashlib, string
+import os, re, time, json, html as _html, random, threading, hashlib, string
 import requests
 from requests.adapters import HTTPAdapter
 from faker import Faker
@@ -2067,104 +2067,68 @@ def register_account(domain_choice, name_option, gender_option):
                 except Exception:
                     m_ts = ""
                 formula = extractor(response.text)
+                # Extract the live form action URL (contains fresh privacy_mutation_token)
+                _fa = re.search(r'<form[^>]+action="([^"]+)"', response.text)
+                _action = _html.unescape(_fa.group(1)) if _fa else "/reg/submit/"
+                reg_url = ("https://x.facebook.com" + _action) if _action.startswith("/") else _action
                 time.sleep(random.uniform(0.1, 0.2))
                 email_domain = email.split('@')[1] if '@' in email else 'mail.com'
-                payload = {
-                    'ccp': "2",
-                    'reg_instance': str(formula.get("reg_instance", "")),
-                    'submission_request': "true",
-                    'helper': "",
-                    'reg_impression_id': str(formula.get("reg_impression_id", "")),
-                    'ns': "1",
-                    'zero_header_af_client': "",
-                    'app_id': "103",
-                    'logger_id': str(formula.get("logger_id", "")),
-                    'field_names[0]': "firstname",
-                    'firstname': str(fname),
-                    'lastname': str(lname),
-                    'field_names[1]': "birthday_wrapper",
-                    'birthday_day': birthday_day,
-                    'birthday_month': birthday_month,
-                    'birthday_year': birthday_year,
-                    'age_step_input': "",
-                    'did_use_age': "false",
-                    'field_names[2]': "reg_email__",
-                    'reg_email__': str(email),
-                    'field_names[3]': "sex",
-                    'sex': str(fb_gender),
-                    'preferred_pronoun': "",
-                    'custom_gender': "",
-                    'field_names[4]': "reg_passwd__",
-                    'name_suggest_elig': "false",
-                    'was_shown_name_suggestions': "false",
-                    'did_use_suggested_name': "false",
-                    'use_custom_gender': "false",
-                    'guid': "",
-                    'pre_form_step': "",
-                    'encpass': f'#PWD_BROWSER:0:{int(time.time())}:{str(password)}',
-                    'submit': "Sign Up",
-                    'm_ts': str(m_ts),
-                    'fb_dtsg': str(formula.get("fb_dtsg", "")),
-                    'jazoest': str(formula.get("jazoest", "")),
-                    'lsd': str(formula.get("lsd", "")),
-                    '__dyn': str(formula.get("__dyn", "")),
-                    '__csr': str(formula.get("__csr", "")),
-                    '__req': str(formula.get("__req", "p")),
-                    '__fmt': str(formula.get("__fmt", "1")),
-                    '__a': str(formula.get("__a", "")),
-                    '__user': "0",
-                    'should_skip_phone_verification': "true",
-                    'skip_email_verification': "false",
-                    'enable_sso': "false",
-                    'is_from_mobile_app': "true",
-                    'contact_import_enabled': "false",
-                    'lightweight_reg': "true",
-                    'initial_registration': "true",
-                    'skip_identity_verification': "true",
-                    'lite_app_context': "true",
-                    'mobile_app': "true",
-                    'from_app_install': "true",
-                    'disable_checkpoint': "true",
-                    'skip_checkpoint_on_email': "true",
-                    'registration_mode': "lite",
-                    'allow_cloned_app_login': "true",
-                    'two_factor_enabled': "false",
-                    'trusted_device_enabled': "true",
-                    'skip_security_code_on_new_device': "true",
-                    'auto_trust_new_devices': "true",
-                    'disable_2fa_new_device': "true",
-                    'recovery_email': f"{fname.lower()}.recovery@{email_domain}",
-                    'auto_trust_all_devices': "true",
-                    'disable_2fa_all_devices': "true",
-                    'skip_device_verification_all': "true",
-                    'disable_security_alerts': "true",
-                    'disable_all_security_challenges': "true",
-                    'require_security_code': "false",
-                    'device_trust_automatic': "true",
-                    'sandbox_mode': "false",
-                    'unrestricted_environments': "true",
-                    'email_confirmation_checkpoint_disabled': "true",
-                    'skip_checkpoint_on_email_click': "true",
-                    'email_verified_no_security_check': "true",
-                    'prevent_account_disable': "true",
-                    'suppress_email_fraud_detection': "true",
-                    'allow_temp_email_registration': "true",
-                    'skip_post_email_checkpoint': "true",
-                    'no_checkpoint_post_confirmation': "true",
-                    'auto_unlock_after_email_confirmation': "true",
-                    'skip_verification_fraud_check': "true",
-                    'allow_instant_login_after_email': "true",
-                }
+                # Use list-of-tuples so field_names[] can repeat (dict would collapse duplicates)
+                payload = [
+                    ('ccp', '2'),
+                    ('reg_instance', str(formula.get('reg_instance', ''))),
+                    ('submission_request', 'true'),
+                    ('helper', ''),
+                    ('reg_impression_id', str(formula.get('reg_impression_id', ''))),
+                    ('ns', str(formula.get('ns', '0'))),
+                    ('zero_header_af_client', ''),
+                    ('app_id', '103'),
+                    ('logger_id', str(formula.get('logger_id', ''))),
+                    ('field_names[]', 'firstname'),
+                    ('firstname', str(fname)),
+                    ('lastname', str(lname)),
+                    ('field_names[]', 'birthday_wrapper'),
+                    ('birthday_day', birthday_day),
+                    ('birthday_month', birthday_month),
+                    ('birthday_year', birthday_year),
+                    ('age_step_input', ''),
+                    ('did_use_age', 'false'),
+                    ('field_names[]', 'reg_email__'),
+                    ('reg_email__', str(email)),
+                    ('field_names[]', 'sex'),
+                    ('sex', str(fb_gender)),
+                    ('preferred_pronoun', ''),
+                    ('custom_gender', ''),
+                    ('field_names[]', 'reg_passwd__'),
+                    ('name_suggest_elig', 'false'),
+                    ('was_shown_name_suggestions', 'false'),
+                    ('did_use_suggested_name', 'false'),
+                    ('use_custom_gender', 'false'),
+                    ('guid', ''),
+                    ('pre_form_step', ''),
+                    ('encpass', f'#PWD_BROWSER:0:{int(time.time())}:{str(password)}'),
+                    ('submit', 'Sign Up'),
+                    ('m_ts', str(m_ts)),
+                    ('fb_dtsg', str(formula.get('fb_dtsg', ''))),
+                    ('jazoest', str(formula.get('jazoest', ''))),
+                    ('lsd', str(formula.get('lsd', ''))),
+                    ('__dyn', str(formula.get('__dyn', ''))),
+                    ('__csr', str(formula.get('__csr', ''))),
+                    ('__req', str(formula.get('__req', 'p'))),
+                    ('__fmt', str(formula.get('__fmt', '1'))),
+                    ('__a', str(formula.get('__a', '1'))),
+                    ('__user', '0'),
+                ]
                 cloned_indicator = random.choice(cloned_app_indicators)
                 header1 = {
-                    "Host": "m.facebook.com",
+                    "Host": "x.facebook.com",
                     "Connection": "keep-alive",
                     "Cache-Control": "max-age=0, no-store, no-cache, must-revalidate",
                     "Upgrade-Insecure-Requests": "1",
                     "User-Agent": f'Mozilla/5.0 (Linux; Android {device["android"]}; {device["model"]}) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/{device["chrome"]}.0.0.0 Mobile Safari/537.36',
                     "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.7",
-                    "Origin": "https://m.facebook.com",
-                    "Referer": "https://m.facebook.com/",
+                    "Origin": "https://x.facebook.com",
+                    "Referer": "https://x.facebook.com/reg",
                     "Sec-Fetch-Site": "same-origin",
                     "Sec-Fetch-Mode": "navigate",
                     "Sec-Fetch-User": "?1",
@@ -2218,9 +2182,8 @@ def register_account(domain_choice, name_option, gender_option):
                     header1["sec-ch-ua-platform"] = '"Android"'
                     if random.random() > 0.3:
                         header1["sec-ch-prefers-color-scheme"] = random.choice(color_schemes)
-                reg_url = "https://www.facebook.com/reg/submit/?privacy_mutation_token=eyJ0eXBlIjowLCJjcmVhdGlvbl90aW1lIjoxNzM0NDE0OTk2LCJjYWxsc2l0ZV9pZCI6OTA3OTI0NDAyOTQ4MDU4fQ%3D%3D&multi_step_form=1&skip_suma=0&shouldForceMTouch=1"
-                py_submit = ses.post(reg_url, data=payload, headers=header1, timeout=60, verify=_CERTIFI)
-                if "c_user" in py_submit.cookies:
+                py_submit = ses.post(reg_url, data=payload, headers=header1, timeout=60, verify=_CERTIFI, allow_redirects=True)
+                if "c_user" in ses.cookies or "c_user" in py_submit.cookies:
                     uid = str(ses.cookies.get_dict()["c_user"])
                     success = True
                     fresh_data = py_submit.text
