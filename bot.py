@@ -2,6 +2,8 @@ import os
 import json
 import asyncio
 import logging
+import base64
+import urllib.request
 from dotenv import load_dotenv
 from aiogram import Bot, Dispatcher, types
 from aiogram.filters import Command
@@ -28,13 +30,63 @@ user_credits    = {}   # uid -> int  (OWNER_ID is unlimited)
 owner_action    = {}   # OWNER_ID -> {action, target, prompt_msg_id}
 creating_msg    = {}   # uid -> message_id of the "⚡ Creating …" banner
 
-USERS_FILE = "users.json"
+USERS_FILE   = "users.json"
+_GH_OWNER    = "yuennix"
+_GH_REPO     = "FB-TGBOT"
+_GH_BRANCH   = "data"
+_GH_PATH     = "users.json"
+_GH_TOKEN    = os.getenv("GITHUB_TOKEN", "")
+_GH_HEADERS  = {
+    "Authorization": f"token {_GH_TOKEN}",
+    "Accept": "application/vnd.github.v3+json",
+    "Content-Type": "application/json",
+}
+
+def _gh_fetch_users():
+    """Fetch users.json content from GitHub data branch. Returns dict or None."""
+    try:
+        url = f"https://api.github.com/repos/{_GH_OWNER}/{_GH_REPO}/contents/{_GH_PATH}?ref={_GH_BRANCH}"
+        req = urllib.request.Request(url, headers=_GH_HEADERS)
+        with urllib.request.urlopen(req, timeout=10) as r:
+            resp = json.loads(r.read())
+        raw = base64.b64decode(resp["content"]).decode()
+        return json.loads(raw), resp["sha"]
+    except Exception:
+        return None, None
+
+def _gh_push_users(payload_str, sha=None):
+    """Push users.json string to GitHub data branch."""
+    try:
+        content = base64.b64encode(payload_str.encode()).decode()
+        body = {
+            "message": "chore: sync users.json",
+            "content": content,
+            "branch": _GH_BRANCH,
+        }
+        if sha:
+            body["sha"] = sha
+        url = f"https://api.github.com/repos/{_GH_OWNER}/{_GH_REPO}/contents/{_GH_PATH}"
+        req = urllib.request.Request(url, data=json.dumps(body).encode(), method="PUT", headers=_GH_HEADERS)
+        with urllib.request.urlopen(req, timeout=10) as r:
+            resp = json.loads(r.read())
+        return resp.get("content", {}).get("sha")
+    except Exception:
+        return sha
+
+_gh_users_sha = None   # tracks latest SHA so pushes don't conflict
 
 def load_users():
-    global seen_users, approved_users, user_credits, pending_users, unlocked_domains, created_accounts
+    global seen_users, approved_users, user_credits, pending_users, unlocked_domains, created_accounts, _gh_users_sha
+    data, sha = _gh_fetch_users()
+    if sha:
+        _gh_users_sha = sha
+    if data is None:
+        try:
+            with open(USERS_FILE, "r") as f:
+                data = json.load(f)
+        except Exception:
+            data = {}
     try:
-        with open(USERS_FILE, "r") as f:
-            data = json.load(f)
         seen_users     = set(data.get("seen_users", []))
         approved_users = set(data.get("approved_users", []))
         user_credits   = {int(k): v for k, v in data.get("user_credits", {}).items()}
@@ -45,22 +97,30 @@ def load_users():
         for uid_str, domains in data.get("unlocked_domains", {}).items():
             unlocked_domains[int(uid_str)] = set(domains)
         created_accounts = data.get("created_accounts", [])
+        with open(USERS_FILE, "w") as f:
+            json.dump(data, f)
     except Exception:
         pass
 
 def save_users():
+    global _gh_users_sha
+    payload = {
+        "seen_users":       list(seen_users),
+        "approved_users":   list(approved_users),
+        "user_credits":     {str(k): v for k, v in user_credits.items()},
+        "pending_users":    {str(k): v for k, v in pending_users.items()},
+        "unlocked_domains": {str(k): list(v) for k, v in unlocked_domains.items()},
+        "created_accounts": created_accounts,
+    }
+    payload_str = json.dumps(payload)
     try:
         with open(USERS_FILE, "w") as f:
-            json.dump({
-                "seen_users":       list(seen_users),
-                "approved_users":   list(approved_users),
-                "user_credits":     {str(k): v for k, v in user_credits.items()},
-                "pending_users":    {str(k): v for k, v in pending_users.items()},
-                "unlocked_domains": {str(k): list(v) for k, v in unlocked_domains.items()},
-                "created_accounts": created_accounts,
-            }, f)
+            f.write(payload_str)
     except Exception:
         pass
+    new_sha = _gh_push_users(payload_str, _gh_users_sha)
+    if new_sha:
+        _gh_users_sha = new_sha
 
 DOMAINS = {
     "1":  "jemm.site",
