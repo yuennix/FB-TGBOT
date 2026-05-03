@@ -377,11 +377,18 @@ async def cb_give_credits(callback: types.CallbackQuery):
     target_info = pending_users.get(target_id, {})
     name = target_info.get("name", str(target_id))
 
-    await callback.message.edit_text(
+    sent = await callback.message.edit_text(
         f"✅ *Credits given!*\n"
         f"👤 {name} (`{target_id}`) now has *{total}* credit(s).",
         parse_mode="Markdown"
     )
+    async def _auto_del_credits():
+        await asyncio.sleep(4)
+        try:
+            await callback.message.delete()
+        except Exception:
+            pass
+    asyncio.create_task(_auto_del_credits())
     try:
         req_msg_id = pending_users.get(target_id, {}).get("req_msg_id")
         if req_msg_id:
