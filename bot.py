@@ -831,13 +831,21 @@ async def cb_stop(callback: types.CallbackQuery):
         return
     stop_flags[uid] = True
     creating_msg.pop(uid, None)
-    await callback.answer("🛑 Stopping after current account finishes...", show_alert=True)
-    # Delete the "⚡ Creating..." banner (this IS the banner message)
+    await callback.answer("🛑 Stopped!", show_alert=False)
     try:
-        await callback.message.delete()
+        await callback.message.edit_text(
+            "🤖 *Facebook Auto Creator*\n\nSelect options step by step 👇",
+            parse_mode="Markdown",
+            reply_markup=make_start_kb(uid)
+        )
     except Exception:
         try:
-            await callback.message.edit_text("🛑 *Stopped.*", parse_mode="Markdown", reply_markup=None)
+            await bot.send_message(
+                callback.message.chat.id,
+                "🤖 *Facebook Auto Creator*\n\nSelect options step by step 👇",
+                parse_mode="Markdown",
+                reply_markup=make_start_kb(uid)
+            )
         except Exception:
             pass
 
@@ -1085,21 +1093,31 @@ async def _start_creation(uid, count, data, chat_id):
         else f"\n💳 Credits remaining: *{user_credits.get(uid, 0)}*"
     )
     if stopped:
-        summary = f"🛑 *Stopped.* {success}/{count} accounts created.{credits_summary}"
+        # Menu already shown instantly by cb_stop — only notify if accounts were made
+        if success > 0:
+            await bot.send_message(
+                chat_id,
+                f"✅ *{success} account(s) created before stopping.*{credits_summary}",
+                parse_mode="Markdown"
+            )
     elif success == 0:
-        summary = (
+        await bot.send_message(
+            chat_id,
             "❌ *No accounts were created.*\n\n"
             "Facebook may be blocking registrations from this server's IP. "
-            "Try again later or contact the owner."
+            "Try again later or contact the owner.\n\n"
+            "🤖 *Facebook Auto Creator*\n\nSelect options step by step 👇",
+            parse_mode="Markdown",
+            reply_markup=make_start_kb(uid)
         )
     else:
-        summary = f"🎉 *Done!* {success}/{count} accounts created.{credits_summary}"
-    await bot.send_message(
-        chat_id,
-        f"{summary}\n\n🤖 *Facebook Auto Creator*\n\nSelect options step by step 👇",
-        parse_mode="Markdown",
-        reply_markup=make_start_kb(uid)
-    )
+        await bot.send_message(
+            chat_id,
+            f"🎉 *Done!* {success}/{count} accounts created.{credits_summary}\n\n"
+            "🤖 *Facebook Auto Creator*\n\nSelect options step by step 👇",
+            parse_mode="Markdown",
+            reply_markup=make_start_kb(uid)
+        )
 
 async def main():
     print("🤖 Bot is now running...")
