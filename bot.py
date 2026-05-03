@@ -278,6 +278,8 @@ async def cmd_start(message: types.Message):
     first_name = message.from_user.first_name or "there"
     username   = f"@{message.from_user.username}" if message.from_user.username else "no username"
 
+    load_users()
+
     asyncio.create_task(_del(message.chat.id, message.message_id))
     user_data.pop(uid, None)
     owner_action.pop(uid, None)
