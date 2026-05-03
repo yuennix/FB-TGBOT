@@ -1434,18 +1434,96 @@ cp = 0
 _live_lock = threading.Lock()
 
 DOMAIN_PASSWORDS = {
-    "1": "jemm123",
-    "2": "yop123",
-    "3": "yuennix",
-    "4": "astheia123",
-    "5": "yuennix",
-    "6": "astheia123",
-    "7": "shaishai@22",
-    "8": "yuennix",
-    "9": "meggg123",
-    "10": "3490_sio8aN",
-    "11": "9382",
+    "1":  "",
+    "2":  "jemm123",
+    "3":  "yop123",
+    "4":  "yuennix",
+    "5":  "astheia123",
+    "6":  "yuennix",
+    "7":  "astheia123",
+    "8":  "shaishai@22",
+    "9":  "yuennix",
+    "10": "meggg123",
+    "11": "3490_sio8aN",
+    "12": "9382",
 }
+
+# mail.tm token store: email -> Bearer token (used for code retrieval)
+_mailtm_tokens = {}
+
+def _create_mailtm_email(fname, lname):
+    """Create a real mail.tm inbox and return the email address."""
+    try:
+        import re as _re
+        fn = _re.sub(r'\W+', '', fname.lower())
+        ln = _re.sub(r'\W+', '', lname.lower())
+        r = requests.get("https://api.mail.tm/domains", timeout=10)
+        if r.status_code != 200:
+            return None
+        domains_list = r.json().get("hydra:member", [])
+        if not domains_list:
+            return None
+        domain = random.choice(domains_list)["domain"]
+        n2 = random.randint(10, 99)
+        username = random.choice([
+            f"{fn}.{ln}", f"{fn}_{ln}", f"{fn}{ln}",
+            f"{fn}.{ln}{n2}", f"{fn}{n2}", f"{ln}{n2}",
+            f"{fn[0]}{ln}{n2}", f"{fn[0]}.{ln}",
+        ])
+        email    = f"{username}@{domain}"
+        password = ''.join(random.choices('abcdefghijklmnopqrstuvwxyz0123456789', k=12))
+        resp = requests.post(
+            "https://api.mail.tm/accounts",
+            json={"address": email, "password": password},
+            timeout=10
+        )
+        if resp.status_code != 201:
+            return None
+        tok_resp = requests.post(
+            "https://api.mail.tm/token",
+            json={"address": email, "password": password},
+            timeout=10
+        )
+        if tok_resp.status_code != 200:
+            return None
+        token = tok_resp.json().get("token")
+        if token:
+            _mailtm_tokens[email] = token
+        return email
+    except Exception:
+        return None
+
+def _fetch_mailtm_code(email):
+    """Poll mail.tm inbox for a Facebook verification code."""
+    token = _mailtm_tokens.get(email)
+    if not token:
+        return None
+    headers = {"Authorization": f"Bearer {token}"}
+    code_re = re.compile(r'(?<!\d)(\d{5,8})(?!\d)')
+    for attempt in range(30):
+        if attempt > 0:
+            time.sleep(2)
+        try:
+            r = requests.get("https://api.mail.tm/messages", headers=headers, timeout=10)
+            if r.status_code != 200:
+                continue
+            msgs = r.json().get("hydra:member", [])
+            for msg in msgs[:5]:
+                mid = msg.get("id", "")
+                mr = requests.get(f"https://api.mail.tm/messages/{mid}", headers=headers, timeout=10)
+                if mr.status_code != 200:
+                    continue
+                data = mr.json()
+                text = data.get("text", "") or ""
+                html_parts = data.get("html", []) or []
+                blobs = [text] + (html_parts if isinstance(html_parts, list) else [html_parts])
+                for blob in blobs:
+                    m = code_re.search(str(blob))
+                    if m:
+                        return m.group(1)
+        except Exception:
+            continue
+    return None
 DOMAIN_UNLOCKED = set()
 STOP_FLAG = threading.Event()
 CUSTOM_PASS = None
@@ -1569,26 +1647,31 @@ def get_temp_email(fname, lname, domain_choice=None):
     ]
     prefix = random.choice(patterns).lower()
     if domain_choice == "1":
-        domain = "jemm.site"
-    elif domain_choice == "2":
-        domain = "yopmail.com"
-    elif domain_choice == "3":
+        result = _create_mailtm_email(fname, lname)
+        if result:
+            return result
         domain = "weyn.store"
+    elif domain_choice == "2":
+        domain = "jemm.site"
+    elif domain_choice == "3":
+        domain = "yopmail.com"
     elif domain_choice == "4":
-        domain = "astheia.shop"
+        domain = "weyn.store"
     elif domain_choice == "5":
-        domain = "jhames.shop"
+        domain = "astheia.shop"
     elif domain_choice == "6":
-        domain = "lilearyth.shop"
+        domain = "jhames.shop"
     elif domain_choice == "7":
-        domain = "miztyxmm.store"
+        domain = "lilearyth.shop"
     elif domain_choice == "8":
-        domain = "jakulan.site"
+        domain = "miztyxmm.store"
     elif domain_choice == "9":
-        domain = "pleasenospam.email"
+        domain = "jakulan.site"
     elif domain_choice == "10":
-        domain = "lovesiobhan.shop"
+        domain = "pleasenospam.email"
     elif domain_choice == "11":
+        domain = "lovesiobhan.shop"
+    elif domain_choice == "12":
         domain = "rimuru.store"
     else:
         domain = "weyn.store"
@@ -1641,6 +1724,8 @@ def _fetch_yopmail_code(login):
 def get_temp_code(email):
     login = email.split('@')[0].lower()
     domain = email.split('@')[1].lower() if '@' in email else ''
+    if email in _mailtm_tokens:
+        return _fetch_mailtm_code(email)
     if domain == 'yopmail.com':
         return _fetch_yopmail_code(login)
     sess = requests.Session()
