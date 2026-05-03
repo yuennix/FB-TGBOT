@@ -1079,28 +1079,27 @@ async def _start_creation(uid, count, data, chat_id):
     if banner_id:
         asyncio.create_task(_del(chat_id, banner_id))
 
-    if stopped or stop_flags.get(uid):
-        await bot.send_message(chat_id, "🛑 *Creation stopped.*", parse_mode="Markdown")
-
     stop_flags.pop(uid, None)
     credits_summary = (
         "" if uid == OWNER_ID
         else f"\n💳 Credits remaining: *{user_credits.get(uid, 0)}*"
     )
-    if success == 0 and not stopped:
-        await bot.send_message(
-            chat_id,
+    if stopped:
+        summary = f"🛑 *Stopped.* {success}/{count} accounts created.{credits_summary}"
+    elif success == 0:
+        summary = (
             "❌ *No accounts were created.*\n\n"
             "Facebook may be blocking registrations from this server's IP. "
-            "Try again later or contact the owner.",
-            parse_mode="Markdown"
+            "Try again later or contact the owner."
         )
     else:
-        await bot.send_message(
-            chat_id,
-            f"🎉 *Done!* {success}/{count} accounts created.{credits_summary}\n\nType /start to create more.",
-            parse_mode="Markdown"
-        )
+        summary = f"🎉 *Done!* {success}/{count} accounts created.{credits_summary}"
+    await bot.send_message(
+        chat_id,
+        f"{summary}\n\n🤖 *Facebook Auto Creator*\n\nSelect options step by step 👇",
+        parse_mode="Markdown",
+        reply_markup=make_start_kb(uid)
+    )
 
 async def main():
     print("🤖 Bot is now running...")
