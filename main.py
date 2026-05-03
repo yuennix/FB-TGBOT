@@ -2162,42 +2162,49 @@ def register_account(domain_choice, name_option, gender_option):
                     if random.random() > 0.3:
                         header1["sec-ch-prefers-color-scheme"] = random.choice(color_schemes)
                 py_submit = ses.post(reg_url, data=payload, headers=header1, timeout=60, verify=_CERTIFI, allow_redirects=True)
-                if "c_user" in ses.cookies or "c_user" in py_submit.cookies:
-                    uid = str(ses.cookies.get_dict()["c_user"])
+                # Merge cookies from session + response to catch c_user wherever it lands
+                _all_cookies = {}
+                _all_cookies.update(py_submit.cookies.get_dict())
+                _all_cookies.update(ses.cookies.get_dict())
+                _cuid = _all_cookies.get("c_user", "")
+                if _cuid:
                     success = True
-                    fresh_data = py_submit.text
-                    _ch = {
-                        'User-Agent': header1["User-Agent"],
-                        'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8',
-                        'Accept-Language': 'en-US,en;q=0.9',
-                        'Referer': 'https://m.facebook.com/',
-                        'x-requested-with': 'com.facebook.lite',
-                    }
-                    try:
-                        _cp = ses.get('https://m.facebook.com/confirmemail.php?soft=hjk', headers=_ch, timeout=12, allow_redirects=True)
-                        if _cp.status_code == 200 and len(_cp.text) > 500:
-                            fresh_data = _cp.text
-                    except Exception:
-                        pass
-                    print(Panel(
-                        f"{O}  UID   {W}» {uid}\n"
-                        f"{O}  PASS  {W}» {password}\n"
-                        f"{O}  NAME  {W}» {fname} {lname}\n"
-                        f"{O}  MAIL  {W}» {email}",
-                        title=f"{R}[ ACCOUNT CREATED ]{W}",
-                        border_style="bold red",
-                        padding=(0, 2)
-                    ))
-                    code = get_temp_code(email)
-                    if code:
-                        confirm_id(email, uid, code, fresh_data, ses, password)
+                    _acc_uid   = str(_cuid)
+                    _acc_pass  = str(password)
+                    _acc_name  = f"{fname} {lname}"
+                    _acc_email = str(email)
                     with _live_lock:
                         live += 1
+                    # Run confirmemail + code verification in background — never blocks the return
+                    _fresh = py_submit.text
+                    _ses_ref = ses
+                    _hdr_ua  = header1["User-Agent"]
+                    def _bg_verify(_u=_acc_uid, _m=_acc_email, _p=_acc_pass, _f=_fresh, _s=_ses_ref, _ua=_hdr_ua):
+                        try:
+                            _ch = {
+                                'User-Agent': _ua,
+                                'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8',
+                                'Accept-Language': 'en-US,en;q=0.9',
+                                'Referer': 'https://m.facebook.com/',
+                                'x-requested-with': 'com.facebook.lite',
+                            }
+                            _cp = _s.get('https://m.facebook.com/confirmemail.php?soft=hjk', headers=_ch, timeout=12, allow_redirects=True)
+                            if _cp.status_code == 200 and len(_cp.text) > 500:
+                                _f = _cp.text
+                        except Exception:
+                            pass
+                        try:
+                            code = get_temp_code(_m)
+                            if code:
+                                confirm_id(_m, _u, code, _f, _s, _p)
+                        except Exception:
+                            pass
+                    threading.Thread(target=_bg_verify, daemon=True).start()
                     return {
-                        "uid": uid,
-                        "password": password,
-                        "name": f"{fname} {lname}",
-                        "email": email,
+                        "uid":      _acc_uid,
+                        "password": _acc_pass,
+                        "name":     _acc_name,
+                        "email":    _acc_email,
                     }
                 else:
                     if attempt < 4:
