@@ -432,6 +432,12 @@ async def handle_text(message: types.Message):
 
     entered = message.text.strip()
 
+    # Delete the password message immediately so it vanishes from chat
+    try:
+        await message.delete()
+    except Exception:
+        pass
+
     if awaiting == "custom_pass":
         if len(entered) < 6:
             await message.answer("⚠️ Password must be at least *6 characters*. Try again:", parse_mode="Markdown")
@@ -439,7 +445,7 @@ async def handle_text(message: types.Message):
         user_data[uid]["password"] = entered
         user_data[uid].pop("awaiting")
         await message.answer(
-            f"✅ *Custom password set!*\n\n🔑 Password: `{entered}`\n\n🔢 How many accounts?",
+            f"✅ *Custom password set!*\n\n🔢 How many accounts?",
             parse_mode="Markdown",
             reply_markup=make_count_kb()
         )
