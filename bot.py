@@ -31,7 +31,7 @@ creating_msg    = {}   # uid -> message_id of the "⚡ Creating …" banner
 USERS_FILE = "users.json"
 
 def load_users():
-    global seen_users, approved_users, user_credits, pending_users
+    global seen_users, approved_users, user_credits, pending_users, unlocked_domains
     try:
         with open(USERS_FILE, "r") as f:
             data = json.load(f)
@@ -42,6 +42,8 @@ def load_users():
             uid = int(uid_str)
             if uid not in pending_users:
                 pending_users[uid] = info
+        for uid_str, domains in data.get("unlocked_domains", {}).items():
+            unlocked_domains[int(uid_str)] = set(domains)
     except Exception:
         pass
 
@@ -49,10 +51,11 @@ def save_users():
     try:
         with open(USERS_FILE, "w") as f:
             json.dump({
-                "seen_users":     list(seen_users),
-                "approved_users": list(approved_users),
-                "user_credits":   {str(k): v for k, v in user_credits.items()},
-                "pending_users":  {str(k): v for k, v in pending_users.items()},
+                "seen_users":      list(seen_users),
+                "approved_users":  list(approved_users),
+                "user_credits":    {str(k): v for k, v in user_credits.items()},
+                "pending_users":   {str(k): v for k, v in pending_users.items()},
+                "unlocked_domains": {str(k): list(v) for k, v in unlocked_domains.items()},
             }, f)
     except Exception:
         pass
@@ -90,14 +93,12 @@ DOMAIN_PASSWORDS = {
 def make_start_kb(uid=0):
     is_owner = (uid == OWNER_ID)
     rows = [[InlineKeyboardButton(text="🚀 Start Creating Accounts", callback_data="menu:create")]]
+    rows.append([
+        InlineKeyboardButton(text="📋 My Accounts",  callback_data="menu:myaccs"),
+        InlineKeyboardButton(text="🌐 Bot Accounts", callback_data="menu:botaccs"),
+    ])
     if not is_owner:
-        rows.append([
-            InlineKeyboardButton(text="📋 My Accounts",  callback_data="menu:myaccs"),
-            InlineKeyboardButton(text="💳 My Credits",   callback_data="menu:mycredits"),
-        ])
-        rows.append([
-            InlineKeyboardButton(text="🌐 Bot Accounts", callback_data="menu:botaccs"),
-        ])
+        rows.append([InlineKeyboardButton(text="💳 My Credits", callback_data="menu:mycredits")])
     if is_owner:
         rows.append([InlineKeyboardButton(text="⚙️ Owner Menu", callback_data="menu:admin")])
     return InlineKeyboardMarkup(inline_keyboard=rows)
@@ -222,6 +223,7 @@ async def cmd_start(message: types.Message):
     if uid == OWNER_ID:
         approved_users.add(uid)
 
+    # Show welcome only the very first time ever
     if uid not in seen_users:
         seen_users.add(uid)
         save_users()
@@ -234,13 +236,14 @@ async def cmd_start(message: types.Message):
             f"2️⃣ Choose name style\n"
             f"3️⃣ Choose gender\n"
             f"4️⃣ Choose email domain\n"
-            f"5️⃣ Enter domain password\n"
+            f"5️⃣ Enter domain password _(only once per domain)_\n"
             f"6️⃣ Type how many accounts\n"
             f"7️⃣ Get results instantly!\n"
             f"━━━━━━━━━━━━━━━━━━",
             parse_mode="Markdown"
         )
 
+    # Already approved → go straight to menu
     if is_allowed(uid):
         await message.answer(
             "🤖 *Facebook Auto Creator*\n\nSelect options step by step 👇",
@@ -249,6 +252,7 @@ async def cmd_start(message: types.Message):
         )
         return
 
+    # Already waiting for approval → remind, don't re-send request
     if uid in pending_users:
         await message.answer(
             "⏳ Your access request is still *pending approval*. Please wait.",
@@ -256,6 +260,7 @@ async def cmd_start(message: types.Message):
         )
         return
 
+    # First time requesting access
     pending_users[uid] = {"name": first_name, "username": username}
     save_users()
     req_msg = await message.answer(
@@ -266,16 +271,19 @@ async def cmd_start(message: types.Message):
         parse_mode="Markdown"
     )
     pending_users[uid]["req_msg_id"] = req_msg.message_id
-    await bot.send_message(
-        OWNER_ID,
-        f"🔔 *New Access Request*\n\n"
-        f"👤 Name: *{first_name}*\n"
-        f"🆔 User ID: `{uid}`\n"
-        f"📛 Username: {username}\n\n"
-        f"Approve or deny below:",
-        parse_mode="Markdown",
-        reply_markup=make_approval_kb(uid)
-    )
+    try:
+        await bot.send_message(
+            OWNER_ID,
+            f"🔔 *New Access Request*\n\n"
+            f"👤 Name: *{first_name}*\n"
+            f"🆔 User ID: `{uid}`\n"
+            f"📛 Username: {username}\n\n"
+            f"Approve or deny below:",
+            parse_mode="Markdown",
+            reply_markup=make_approval_kb(uid)
+        )
+    except Exception:
+        pass
 
 # ================== /credits COMMAND ==================
 @dp.message(Command("credits"))
@@ -688,15 +696,16 @@ async def cb_stop(callback: types.CallbackQuery):
         await callback.answer("Not your session.", show_alert=True)
         return
     stop_flags[uid] = True
-    # Immediately delete the "⚡ Creating..." banner
-    banner_id = creating_msg.pop(uid, None)
-    if banner_id:
-        asyncio.create_task(_del(uid, banner_id))
+    creating_msg.pop(uid, None)
     await callback.answer("🛑 Stopping after current account finishes...", show_alert=True)
+    # Delete the "⚡ Creating..." banner (this IS the banner message)
     try:
-        await callback.message.edit_reply_markup(reply_markup=None)
+        await callback.message.delete()
     except Exception:
-        pass
+        try:
+            await callback.message.edit_text("🛑 *Stopped.*", parse_mode="Markdown", reply_markup=None)
+        except Exception:
+            pass
 
 # ================== TEXT INPUT HANDLER ==================
 @dp.message()
@@ -798,6 +807,7 @@ async def handle_text(message: types.Message):
         if uid not in unlocked_domains:
             unlocked_domains[uid] = set()
         unlocked_domains[uid].add(domain_key)
+        save_users()
         user_data[uid].pop("awaiting", None)
         await message.answer(
             "✅ *Domain unlocked!* _(won't ask again)_\n\n🔑 *Set a password for the created accounts:*",
