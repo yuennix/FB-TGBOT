@@ -123,31 +123,33 @@ def save_users():
         _gh_users_sha = new_sha
 
 DOMAINS = {
-    "1":  "jemm.site",
-    "2":  "yopmail.com",
-    "3":  "weyn.store",
-    "4":  "astheia.shop",
-    "5":  "jhames.shop",
-    "6":  "lilearyth.shop",
-    "7":  "miztyxmm.store",
-    "8":  "jakulan.site",
-    "9":  "pleasenospam.email",
-    "10": "lovesiobhan.shop",
-    "11": "rimuru.store",
+    "1":  "mail.tm ✨",
+    "2":  "jemm.site",
+    "3":  "yopmail.com",
+    "4":  "weyn.store",
+    "5":  "astheia.shop",
+    "6":  "jhames.shop",
+    "7":  "lilearyth.shop",
+    "8":  "miztyxmm.store",
+    "9":  "jakulan.site",
+    "10": "pleasenospam.email",
+    "11": "lovesiobhan.shop",
+    "12": "rimuru.store",
 }
 
 DOMAIN_PASSWORDS = {
-    "1":  "jemm123",
-    "2":  "yop123",
-    "3":  "yuennix",
-    "4":  "astheia123",
-    "5":  "yuennix",
-    "6":  "astheia123",
-    "7":  "shaishai@22",
-    "8":  "yuennix",
-    "9":  "meggg123",
-    "10": "3490_sio8aN",
-    "11": "9382",
+    "1":  "",
+    "2":  "jemm123",
+    "3":  "yop123",
+    "4":  "yuennix",
+    "5":  "astheia123",
+    "6":  "yuennix",
+    "7":  "astheia123",
+    "8":  "shaishai@22",
+    "9":  "yuennix",
+    "10": "meggg123",
+    "11": "3490_sio8aN",
+    "12": "9382",
 }
 
 # ================== KEYBOARDS ==================
@@ -770,9 +772,14 @@ async def cb_domain_pass(callback: types.CallbackQuery):
     user_data[uid]["domain"] = domain_key
     domain_name = DOMAINS.get(domain_key, domain_key)
 
-    if domain_key in unlocked_domains.get(uid, set()):
+    if domain_key == "1" or domain_key in unlocked_domains.get(uid, set()):
+        if domain_key == "1" and domain_key not in unlocked_domains.get(uid, set()):
+            if uid not in unlocked_domains:
+                unlocked_domains[uid] = set()
+            unlocked_domains[uid].add(domain_key)
+            save_users()
         await callback.message.edit_text(
-            f"✅ *Domain `{domain_name}` already unlocked!*\n\n🔑 *Set a password for the created accounts:*",
+            f"✅ *Domain `{domain_name}` unlocked!*\n\n🔑 *Set a password for the created accounts:*",
             parse_mode="Markdown",
             reply_markup=make_acc_pass_kb()
         )
