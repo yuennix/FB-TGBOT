@@ -2066,58 +2066,37 @@ def register_account(domain_choice, name_option, gender_option):
                     m_ts = m_ts_match.group(1) if m_ts_match else ""
                 except Exception:
                     m_ts = ""
-                formula = extractor(response.text)
                 # Extract the live form action URL (contains fresh privacy_mutation_token)
                 _fa = re.search(r'<form[^>]+action="([^"]+)"', response.text)
                 _action = _html.unescape(_fa.group(1)) if _fa else "/reg/submit/"
                 reg_url = ("https://x.facebook.com" + _action) if _action.startswith("/") else _action
                 time.sleep(random.uniform(0.1, 0.2))
                 email_domain = email.split('@')[1] if '@' in email else 'mail.com'
-                # Use list-of-tuples so field_names[] can repeat (dict would collapse duplicates)
-                payload = [
-                    ('ccp', '2'),
-                    ('reg_instance', str(formula.get('reg_instance', ''))),
-                    ('submission_request', 'true'),
-                    ('helper', ''),
-                    ('reg_impression_id', str(formula.get('reg_impression_id', ''))),
-                    ('ns', str(formula.get('ns', '0'))),
-                    ('zero_header_af_client', ''),
-                    ('app_id', '103'),
-                    ('logger_id', str(formula.get('logger_id', ''))),
-                    ('field_names[]', 'firstname'),
-                    ('firstname', str(fname)),
-                    ('lastname', str(lname)),
-                    ('field_names[]', 'birthday_wrapper'),
-                    ('birthday_day', birthday_day),
-                    ('birthday_month', birthday_month),
-                    ('birthday_year', birthday_year),
-                    ('age_step_input', ''),
-                    ('did_use_age', 'false'),
-                    ('field_names[]', 'reg_email__'),
-                    ('reg_email__', str(email)),
-                    ('field_names[]', 'sex'),
-                    ('sex', str(fb_gender)),
-                    ('preferred_pronoun', ''),
-                    ('custom_gender', ''),
-                    ('field_names[]', 'reg_passwd__'),
-                    ('name_suggest_elig', 'false'),
-                    ('was_shown_name_suggestions', 'false'),
-                    ('did_use_suggested_name', 'false'),
-                    ('use_custom_gender', 'false'),
-                    ('guid', ''),
-                    ('pre_form_step', ''),
-                    ('encpass', f'#PWD_BROWSER:0:{int(time.time())}:{str(password)}'),
-                    ('submit', 'Sign Up'),
-                    ('m_ts', str(m_ts)),
-                    ('fb_dtsg', str(formula.get('fb_dtsg', ''))),
-                    ('jazoest', str(formula.get('jazoest', ''))),
-                    ('lsd', str(formula.get('lsd', ''))),
-                    ('__dyn', str(formula.get('__dyn', ''))),
-                    ('__csr', str(formula.get('__csr', ''))),
-                    ('__req', str(formula.get('__req', 'p'))),
-                    ('__fmt', str(formula.get('__fmt', '1'))),
-                    ('__a', str(formula.get('__a', '1'))),
-                    ('__user', '0'),
+                # Build payload from exact form hidden fields so tokens are always fresh
+                # Use list-of-tuples to preserve repeated field_names[] keys
+                _soup = BeautifulSoup(response.text, "html.parser")
+                _form = _soup.find("form")
+                payload = []
+                if _form:
+                    for _inp in _form.find_all("input"):
+                        _n = _inp.get("name", "")
+                        _t = _inp.get("type", "")
+                        _v = _inp.get("value") or ""
+                        if _n and _t not in ("radio", "submit", "button"):
+                            payload.append((_n, _v))
+                # Append all user-filled fields
+                payload += [
+                    ("firstname",      str(fname)),
+                    ("lastname",       str(lname)),
+                    ("birthday_day",   birthday_day),
+                    ("birthday_month", birthday_month),
+                    ("birthday_year",  birthday_year),
+                    ("did_use_age",    "false"),
+                    ("reg_email__",    str(email)),
+                    ("sex",            str(fb_gender)),
+                    ("encpass",        f"#PWD_BROWSER:0:{int(time.time())}:{str(password)}"),
+                    ("submit",         "Sign Up"),
+                    ("m_ts",           str(m_ts)),
                 ]
                 cloned_indicator = random.choice(cloned_app_indicators)
                 header1 = {
