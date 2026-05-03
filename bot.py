@@ -1,4 +1,5 @@
 import os
+import json
 import asyncio
 import logging
 from dotenv import load_dotenv
@@ -26,6 +27,35 @@ created_accounts= []   # list of {name,email,password,uid,by}
 user_credits    = {}   # uid -> int  (OWNER_ID is unlimited)
 owner_action    = {}   # OWNER_ID -> {action, target, prompt_msg_id}
 creating_msg    = {}   # uid -> message_id of the "⚡ Creating …" banner
+
+USERS_FILE = "users.json"
+
+def load_users():
+    global seen_users, approved_users, user_credits, pending_users
+    try:
+        with open(USERS_FILE, "r") as f:
+            data = json.load(f)
+        seen_users     = set(data.get("seen_users", []))
+        approved_users = set(data.get("approved_users", []))
+        user_credits   = {int(k): v for k, v in data.get("user_credits", {}).items()}
+        for uid_str, info in data.get("pending_users", {}).items():
+            uid = int(uid_str)
+            if uid not in pending_users:
+                pending_users[uid] = info
+    except Exception:
+        pass
+
+def save_users():
+    try:
+        with open(USERS_FILE, "w") as f:
+            json.dump({
+                "seen_users":     list(seen_users),
+                "approved_users": list(approved_users),
+                "user_credits":   {str(k): v for k, v in user_credits.items()},
+                "pending_users":  {str(k): v for k, v in pending_users.items()},
+            }, f)
+    except Exception:
+        pass
 
 DOMAINS = {
     "1":  "jemm.site",
@@ -194,6 +224,7 @@ async def cmd_start(message: types.Message):
 
     if uid not in seen_users:
         seen_users.add(uid)
+        save_users()
         await message.answer(
             f"👋 *Welcome, {first_name}!*\n\n"
             f"This bot lets you automatically create Facebook accounts with custom names, gender, email domain, and more.\n\n"
@@ -226,6 +257,7 @@ async def cmd_start(message: types.Message):
         return
 
     pending_users[uid] = {"name": first_name, "username": username}
+    save_users()
     req_msg = await message.answer(
         "🔒 *Access Required*\n\n"
         "This bot requires approval to use.\n"
@@ -330,6 +362,7 @@ async def cb_give_credits(callback: types.CallbackQuery):
     amount = int(amount)
     user_credits[target_id] = user_credits.get(target_id, 0) + amount
     total = user_credits[target_id]
+    save_users()
 
     target_info = pending_users.get(target_id, {})
     name = target_info.get("name", str(target_id))
@@ -428,6 +461,7 @@ async def cb_revoke(callback: types.CallbackQuery):
     target = int(callback.data.split(":")[1])
     approved_users.discard(target)
     user_credits.pop(target, None)
+    save_users()
     try:
         await bot.send_message(target, "🚫 Your access to this bot has been revoked.")
     except Exception:
@@ -689,6 +723,7 @@ async def handle_text(message: types.Message):
             amount = int(entered)
             user_credits[target_id] = user_credits.get(target_id, 0) + amount
             total = user_credits[target_id]
+            save_users()
             info  = pending_users.get(target_id, {})
             name  = info.get("name", str(target_id))
             conf = await bot.send_message(
@@ -916,6 +951,7 @@ async def _start_creation(uid, count, data, chat_id):
 async def main():
     print("🤖 Bot is now running...")
     logging.basicConfig(level=logging.INFO)
+    load_users()
 
     await bot.set_my_commands([
         types.BotCommand(command="start",   description="🚀 Start the bot"),
