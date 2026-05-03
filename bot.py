@@ -745,6 +745,7 @@ async def cb_noop(callback: types.CallbackQuery):
 # ================== START CREATE ==================
 @dp.callback_query(lambda c: c.data == "menu:create")
 async def cb_name_style(callback: types.CallbackQuery):
+    load_users()
     if not is_allowed(callback.from_user.id):
         await callback.answer("⛔ You don't have access. Use /start to request.", show_alert=True)
         return
