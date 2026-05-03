@@ -388,6 +388,12 @@ async def cb_approval(callback: types.CallbackQuery):
 
     if action == "ok":
         approved_users.add(target_id)
+        # Save req_msg_id BEFORE popping so cb_give_credits can still read it
+        _req_mid = user_info.get("req_msg_id")
+        if _req_mid:
+            if target_id not in user_data:
+                user_data[target_id] = {}
+            user_data[target_id]["req_msg_id"] = _req_mid
         pending_users.pop(target_id, None)
         await callback.message.edit_text(
             f"✅ *Approved!*  👤 {name} (`{target_id}`)\n\n"
@@ -455,7 +461,10 @@ async def cb_give_credits(callback: types.CallbackQuery):
             pass
     asyncio.create_task(_auto_del_credits())
     try:
-        req_msg_id = pending_users.get(target_id, {}).get("req_msg_id")
+        req_msg_id = (
+            user_data.get(target_id, {}).pop("req_msg_id", None)
+            or pending_users.get(target_id, {}).get("req_msg_id")
+        )
         if req_msg_id:
             asyncio.create_task(_del(target_id, req_msg_id))
         await bot.send_message(
