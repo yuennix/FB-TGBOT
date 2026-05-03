@@ -31,7 +31,7 @@ creating_msg    = {}   # uid -> message_id of the "⚡ Creating …" banner
 USERS_FILE = "users.json"
 
 def load_users():
-    global seen_users, approved_users, user_credits, pending_users, unlocked_domains
+    global seen_users, approved_users, user_credits, pending_users, unlocked_domains, created_accounts
     try:
         with open(USERS_FILE, "r") as f:
             data = json.load(f)
@@ -44,6 +44,7 @@ def load_users():
                 pending_users[uid] = info
         for uid_str, domains in data.get("unlocked_domains", {}).items():
             unlocked_domains[int(uid_str)] = set(domains)
+        created_accounts = data.get("created_accounts", [])
     except Exception:
         pass
 
@@ -51,11 +52,12 @@ def save_users():
     try:
         with open(USERS_FILE, "w") as f:
             json.dump({
-                "seen_users":      list(seen_users),
-                "approved_users":  list(approved_users),
-                "user_credits":    {str(k): v for k, v in user_credits.items()},
-                "pending_users":   {str(k): v for k, v in pending_users.items()},
+                "seen_users":       list(seen_users),
+                "approved_users":   list(approved_users),
+                "user_credits":     {str(k): v for k, v in user_credits.items()},
+                "pending_users":    {str(k): v for k, v in pending_users.items()},
                 "unlocked_domains": {str(k): list(v) for k, v in unlocked_domains.items()},
+                "created_accounts": created_accounts,
             }, f)
     except Exception:
         pass
@@ -510,6 +512,7 @@ async def cb_accounts_clear(callback: types.CallbackQuery):
         return
     count = len(created_accounts)
     created_accounts.clear()
+    save_users()
     await callback.message.edit_text(
         f"🗑 *Cleared!* {count} account record(s) removed.\n\n📋 *Created Accounts*\n\nNo accounts yet.",
         parse_mode="Markdown",
@@ -918,6 +921,7 @@ async def _start_creation(uid, count, data, chat_id):
                     "uid":      result["uid"],
                     "by":       uid,
                 })
+                save_users()
                 credits_left = "" if uid == OWNER_ID else f"\n💳 Credits left: *{user_credits.get(uid, 0)}*"
                 await bot.send_message(
                     chat_id,
