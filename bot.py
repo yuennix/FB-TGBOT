@@ -1016,7 +1016,7 @@ async def _start_creation(uid, count, data, chat_id):
             gender_option=gender_val
         )
 
-    CONCURRENCY = 5
+    CONCURRENCY = 10
     success     = 0
     lock        = asyncio.Lock()
     stopped     = False
