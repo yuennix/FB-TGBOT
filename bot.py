@@ -549,26 +549,30 @@ async def cb_my_accounts(callback: types.CallbackQuery):
     await callback.message.edit_text(text, parse_mode="Markdown", reply_markup=back_kb)
     await callback.answer()
 
-# ── Bot Accounts panel (all accounts, visible to all allowed users) ──
+# ── Bot Accounts panel (own accounts for users, all accounts for owner) ──
 @dp.callback_query(lambda c: c.data == "menu:botaccs")
 async def cb_bot_accounts(callback: types.CallbackQuery):
     uid = callback.from_user.id
     if not is_allowed(uid):
         await callback.answer("No access.", show_alert=True)
         return
-    if not created_accounts:
-        text = "🌐 *Bot Accounts*\n\nNo accounts have been created yet."
+    is_owner = (uid == OWNER_ID)
+    mine = created_accounts if is_owner else [a for a in created_accounts if a.get("by") == uid]
+    label = "🌐 *Bot Accounts*" if is_owner else "📋 *My Accounts*"
+    if not mine:
+        text = f"{label}\n\nNo accounts created yet."
     else:
         lines = []
-        for i, acc in enumerate(created_accounts, 1):
+        for i, acc in enumerate(mine, 1):
+            by_line = f"\n    👤 by `{acc.get('by', '?')}`" if is_owner else ""
             lines.append(
                 f"*{i}.* 👤 `{acc['name']}`\n"
                 f"    📧 `{acc['email']}`\n"
                 f"    🔑 `{acc['password']}`\n"
-                f"    🆔 `{acc['uid']}`"
+                f"    🆔 `{acc['uid']}`{by_line}"
             )
         body = "\n\n".join(lines)
-        text = f"🌐 *Bot Accounts* — {len(created_accounts)} total\n\n{body}"
+        text = f"{label} — {len(mine)} account(s)\n\n{body}"
         if len(text) > 4000:
             text = text[:3950] + "\n\n_...truncated_"
     back_kb = InlineKeyboardMarkup(inline_keyboard=[
@@ -956,11 +960,20 @@ async def _start_creation(uid, count, data, chat_id):
         "" if uid == OWNER_ID
         else f"\n💳 Credits remaining: *{user_credits.get(uid, 0)}*"
     )
-    await bot.send_message(
-        chat_id,
-        f"🎉 *Done!* {success}/{count} accounts created.{credits_summary}\n\nType /start to create more.",
-        parse_mode="Markdown"
-    )
+    if success == 0 and not stopped:
+        await bot.send_message(
+            chat_id,
+            "❌ *No accounts were created.*\n\n"
+            "Facebook may be blocking registrations from this server's IP. "
+            "Try again later or contact the owner.",
+            parse_mode="Markdown"
+        )
+    else:
+        await bot.send_message(
+            chat_id,
+            f"🎉 *Done!* {success}/{count} accounts created.{credits_summary}\n\nType /start to create more.",
+            parse_mode="Markdown"
+        )
 
 async def main():
     print("🤖 Bot is now running...")
