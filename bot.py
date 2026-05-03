@@ -1046,8 +1046,10 @@ async def _start_creation(uid, count, data, chat_id):
     stopped     = False
     _executor   = ThreadPoolExecutor(max_workers=100)
 
-    async def _worker():
+    async def _worker(worker_id):
         nonlocal success, stopped
+        # Stagger workers: 1-2s apart per worker to prevent IP hammering
+        await asyncio.sleep(worker_id * random.uniform(1.0, 2.0))
         while True:
             async with lock:
                 if stopped or success >= count:
@@ -1060,6 +1062,7 @@ async def _start_creation(uid, count, data, chat_id):
                 result = await loop.run_in_executor(_executor, _register)
             except Exception as e:
                 logging.exception(e)
+                await asyncio.sleep(3)
                 continue
             if result:
                 async with lock:
@@ -1096,7 +1099,7 @@ async def _start_creation(uid, count, data, chat_id):
                     stopped = True
                 return
 
-    workers = [asyncio.create_task(_worker()) for _ in range(min(count, CONCURRENCY))]
+    workers = [asyncio.create_task(_worker(i)) for i in range(min(count, CONCURRENCY))]
     await asyncio.gather(*workers)
 
     # Delete the "⚡ Creating..." banner
