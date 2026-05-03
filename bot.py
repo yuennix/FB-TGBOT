@@ -1048,8 +1048,8 @@ async def _start_creation(uid, count, data, chat_id):
 
     async def _worker(worker_id):
         nonlocal success, stopped
-        # Stagger workers: 1-2s apart per worker to prevent IP hammering
-        await asyncio.sleep(worker_id * random.uniform(1.0, 2.0))
+        # Stagger workers: 0.3-0.5s apart per worker to prevent IP hammering but still fast
+        await asyncio.sleep(worker_id * random.uniform(0.3, 0.5))
         while True:
             async with lock:
                 if stopped or success >= count:
