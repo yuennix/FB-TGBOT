@@ -543,7 +543,7 @@ async def cb_create(callback: types.CallbackQuery):
             gender_option=gender_val
         )
 
-    CONCURRENCY = 3
+    CONCURRENCY = 5
     success = 0
     lock = asyncio.Lock()
     stopped = False
