@@ -531,9 +531,6 @@ async def cb_accounts_clear(callback: types.CallbackQuery):
 @dp.callback_query(lambda c: c.data == "menu:myaccs")
 async def cb_my_accounts(callback: types.CallbackQuery):
     uid  = callback.from_user.id
-    if not is_allowed(uid):
-        await callback.answer("No access.", show_alert=True)
-        return
     mine = [a for a in created_accounts if a.get("by") == uid]
     if not mine:
         text = "📋 *My Created Accounts*\n\nYou haven't created any accounts yet."
@@ -592,9 +589,6 @@ async def cb_bot_accounts(callback: types.CallbackQuery):
 @dp.message(Command("myaccs"))
 async def cmd_myaccs(message: types.Message):
     uid = message.from_user.id
-    if not is_allowed(uid):
-        await message.answer("🔒 No access.")
-        return
     mine = [a for a in created_accounts if a.get("by") == uid]
     if not mine:
         text = "📋 *My Created Accounts*\n\nYou haven't created any accounts yet."
