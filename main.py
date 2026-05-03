@@ -1598,7 +1598,7 @@ def _fetch_yopmail_code(login):
     }
     for attempt in range(25):
         if attempt > 0:
-            time.sleep(3)
+            time.sleep(1)
         try:
             r = sess.get(
                 f"https://yopmail.com/mail.php?b={login}&to=inbox",
@@ -1668,7 +1668,7 @@ def get_temp_code(email):
     code_re = re.compile(r'(?<!\d)(\d{5,8})(?!\d)')
     for attempt in range(25):
         if attempt > 0:
-            time.sleep(3)
+            time.sleep(1)
         for url in endpoint_templates:
             try:
                 r = sess.get(url, headers=headers, timeout=10)
@@ -2027,7 +2027,6 @@ def register_account(domain_choice, name_option, gender_option):
                                 fresh_data = _rr.text
                 except Exception:
                     pass
-                time.sleep(2)
                 print(Panel(
                     f"{O}  UID   {W}» {uid}\n"
                     f"{O}  PASS  {W}» {password}\n"
@@ -2052,7 +2051,7 @@ def register_account(domain_choice, name_option, gender_option):
                 cp += 1
                 continue
         except requests.exceptions.ConnectionError:
-            time.sleep(1)
+            time.sleep(0.3)
             continue
         except Exception as e:
             cp += 1
