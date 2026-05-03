@@ -1995,240 +1995,158 @@ def confirm_id(mail, uid, otp, data, ses, password):
             save_result(uid, password, cookie)
     except Exception:
         pass
-def register_account(domain_choice, name_option, gender_option, max_outer=3):
+def register_account(domain_choice, name_option, gender_option, max_retries=8):
     global live, cp
-    _used_combos = set()
-    _outer_fails = 0
-    accept_languages = [
-        "en-US,en;q=0.9",
-        "en-GB,en-US;q=0.9,en;q=0.8",
-        "en-PH,en-US;q=0.9,en;q=0.8",
-        "en-PH,en;q=0.9",
-        "en-US,en;q=0.9,fil;q=0.8",
-    ]
-    cloned_app_indicators = [
-        "", "parallel-space", "app-cloner", "virtual-app",
-        "virtual-xposed", "gbox-cloner", "dual-space",
-        "multiple-accounts", "clone-app", "super-clone", "",
-    ]
-    color_schemes = ["light", "light", "light", "dark"]
-    while not STOP_FLAG.is_set() and _outer_fails < max_outer:
-        success = False
-        for attempt in range(5):
-            try:
-                ses = requests.Session()
-                adapter = HTTPAdapter(pool_connections=10, pool_maxsize=20, max_retries=3, pool_block=False)
-                ses.mount('http://', adapter)
-                ses.mount('https://', adapter)
-                device = get_device_info()
-                if attempt > 0:
-                    time.sleep(random.uniform(0.2, 0.5) * (attempt + 1))
-                if gender_option == "1":
-                    fb_gender = "2"
-                    g_gender = "1"
-                elif gender_option == "2":
-                    fb_gender = "1"
-                    g_gender = "2"
+    attempts = 0
+    while not STOP_FLAG.is_set() and attempts < max_retries:
+        attempts += 1
+        try:
+            ses = requests.Session()
+            res = ses.get('https://m.facebook.com/reg/')
+            form = extract_form(res.text)
+            if gender_option == "1":
+                gender = "2"
+                g_type = "male"
+            elif gender_option == "2":
+                gender = "1"
+                g_type = "female"
+            else:
+                if random.random() < 0.5:
+                    gender = "2"
+                    g_type = "male"
                 else:
-                    g_gender = random.choice(['1', '2'])
-                    fb_gender = "2" if g_gender == "1" else "1"
-                for _ in range(50):
-                    if name_option == "1":
-                        fname, lname = get_filipino_name(g_gender)
-                    else:
-                        fname, lname = get_rpw_name(g_gender)
-                    combo_key = f"{fname.lower()}_{lname.lower()}"
-                    if combo_key not in _used_combos:
-                        _used_combos.add(combo_key)
-                        break
-                year_options = (
-                    list(range(1989, 1993)) * 6 +
-                    list(range(1993, 1997)) * 8 +
-                    list(range(1997, 2001)) * 7 +
-                    list(range(2001, 2005)) * 5 +
-                    list(range(2005, 2007)) * 2
-                )
-                birthday_year = str(random.choice(year_options))
-                month_weights = list(range(1, 13)) + [3, 4, 5, 6, 7, 8, 9, 10] * 2
-                birthday_month = str(random.choice(month_weights))
-                all_days = [d for d in range(2, 29) if d not in [15, 20, 25]]
-                weighted_days = all_days + [d for d in all_days if 5 <= d <= 23]
-                birthday_day = str(random.choice(weighted_days))
-                email = get_temp_email(fname, lname, domain_choice)
-                password = fake_password(globals().get('CUSTOM_PASS'))
-                response = ses.get(
-                    'https://x.facebook.com/reg',
-                    params={"_rdc": "1", "_rdr": "", "wtsid": "rdr_0t3qOXoIHbMS6isLw", "refsrc": "deprecated"},
-                    timeout=10, verify=_CERTIFI
-                )
-                try:
-                    mts_page = ses.get("https://x.facebook.com", timeout=5, verify=_CERTIFI).text
-                    m_ts_match = re.search(r'name="m_ts" value="(.*?)"', str(mts_page))
-                    m_ts = m_ts_match.group(1) if m_ts_match else ""
-                except Exception:
-                    m_ts = ""
-                # Extract the live form action URL (contains fresh privacy_mutation_token)
-                _fa = re.search(r'<form[^>]+action="([^"]+)"', response.text)
-                _action = _html.unescape(_fa.group(1)) if _fa else "/reg/submit/"
-                reg_url = ("https://x.facebook.com" + _action) if _action.startswith("/") else _action
-                time.sleep(random.uniform(0.1, 0.2))
-                email_domain = email.split('@')[1] if '@' in email else 'mail.com'
-                # Build payload from exact form hidden fields so tokens are always fresh
-                # Use list-of-tuples to preserve repeated field_names[] keys
-                _soup = BeautifulSoup(response.text, "html.parser")
-                _form = _soup.find("form")
-                payload = []
-                if _form:
-                    for _inp in _form.find_all("input"):
-                        _n = _inp.get("name", "")
-                        _t = _inp.get("type", "")
-                        _v = _inp.get("value") or ""
-                        if _n and _t not in ("radio", "submit", "button"):
-                            payload.append((_n, _v))
-                # Append all user-filled fields
-                payload += [
-                    ("firstname",      str(fname)),
-                    ("lastname",       str(lname)),
-                    ("birthday_day",   birthday_day),
-                    ("birthday_month", birthday_month),
-                    ("birthday_year",  birthday_year),
-                    ("did_use_age",    "false"),
-                    ("reg_email__",    str(email)),
-                    ("sex",            str(fb_gender)),
-                    ("encpass",        f"#PWD_BROWSER:0:{int(time.time())}:{str(password)}"),
-                    ("submit",         "Sign Up"),
-                    ("m_ts",           str(m_ts)),
-                ]
-                cloned_indicator = random.choice(cloned_app_indicators)
-                header1 = {
-                    "Host": "x.facebook.com",
-                    "Connection": "keep-alive",
-                    "Cache-Control": "max-age=0, no-store, no-cache, must-revalidate",
-                    "Upgrade-Insecure-Requests": "1",
-                    "User-Agent": f'Mozilla/5.0 (Linux; Android {device["android"]}; {device["model"]}) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/{device["chrome"]}.0.0.0 Mobile Safari/537.36',
-                    "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.7",
-                    "Origin": "https://x.facebook.com",
-                    "Referer": "https://x.facebook.com/reg",
-                    "Sec-Fetch-Site": "same-origin",
-                    "Sec-Fetch-Mode": "navigate",
-                    "Sec-Fetch-User": "?1",
-                    "Sec-Fetch-Dest": "document",
-                    "X-Requested-With": "com.facebook.lite",
-                    "X-Client-Type": "lite",
-                    "X-Facebook-App-ID": "103",
-                    "X-Is-Mobile-App": "true",
-                    "X-Lightweight-Mode": "true",
-                    "X-App-Version": device["fb_lite_version"],
-                    "X-Requested-Platform": "Android",
-                    "X-Allow-Cloned-App": "true",
-                    "X-Skip-All-Checkpoints": "true",
-                    "X-Disable-All-Verification-Checkpoints": "true",
-                    "X-Disable-Security-Challenge": "true",
-                    "X-Skip-Device-Verification": "true",
-                    "X-Security-Code-Challenge-Disabled": "true",
-                    "X-Bypass-Device-Challenge": "true",
-                    "X-Device-Trust-Level": "high",
-                    "X-Disable-Account-Review": "true",
-                    "X-Auto-Approve-After-Email": "true",
-                    "X-Prevent-Account-Disable": "true",
-                    "X-Skip-Fraud-Review": "true",
-                    "X-Allow-Temp-Email": "true",
-                    "X-Email-Verification-Delay": "86400",
-                    "X-Skip-Immediate-Email-Verify": "true",
-                    "X-Allow-Unconfirmed-Email": "true",
-                    "X-Skip-Post-Email-Checkpoint": "true",
-                    "X-No-Checkpoint-Post-Confirmation": "true",
-                    "X-Auto-Unlock-After-Email": "true",
-                    "X-Email-Confirmed-No-Checkpoint": "true",
-                    "X-FB-HTTP-Engine": "Liger",
-                    "X-FB-Lite-Manual-Email": "true",
-                    "X-Manual-Email-Confirmation-Only": "true",
-                    "X-No-Auto-Checkpoint-After-Email": "true",
-                    "X-Allow-Instant-Login-After-Email": "true",
-                    "Accept-Encoding": "gzip, deflate, br",
-                    "Accept-Language": random.choice(accept_languages),
-                    "Pragma": "no-cache",
-                    "Expires": "0",
+                    gender = "1"
+                    g_type = "female"
+            if name_option == "1":
+                first_names = FILIPINO_FIRST_NAMES_MALE if g_type == "male" else FILIPINO_FIRST_NAMES_FEMALE
+                last_names = FILIPINO_LAST_NAMES
+            else:
+                first_names = RPW_FIRST_NAMES_MALE if g_type == "male" else RPW_FIRST_NAMES_FEMALE
+                last_names = RPW_LAST_NAMES
+            fname = random.choice(first_names)
+            lname = random.choice(last_names)
+            email = get_temp_email(fname, lname, domain_choice)
+            password = fake_password(globals().get('CUSTOM_PASS'))
+            from urllib.parse import quote as _uq
+            _pt = form.get('privacy_mutation_token', '')
+            if _pt:
+                _reg_url = f"https://m.facebook.com/reg/submit/?privacy_mutation_token={_uq(_pt)}&multi_step_form=1&skip_suma=0&shouldForceMTouch=1"
+            else:
+                _reg_url = "https://m.facebook.com/reg/submit/?multi_step_form=1&skip_suma=0&shouldForceMTouch=1"
+            payload = {
+                'ccp': '2',
+                'reg_instance': form.get('reg_instance'),
+                'reg_impression_id': form.get('reg_impression_id'),
+                'logger_id': form.get('logger_id'),
+                'firstname': fname,
+                'lastname': lname,
+                'birthday_day': str(random.randint(1, 28)),
+                'birthday_month': str(random.randint(1, 12)),
+                'birthday_year': str(
+                    globals().get('CUSTOM_BIRTH_YEAR') if isinstance(globals().get('CUSTOM_BIRTH_YEAR'), int)
+                    else random.randint(*globals().get('CUSTOM_BIRTH_YEAR')) if isinstance(globals().get('CUSTOM_BIRTH_YEAR'), tuple)
+                    else random.randint(1985, 2003)
+                ),
+                'reg_email__': email,
+                'reg_passwd__': password,
+                'sex': gender,
+                'encpass': f'#PWD_BROWSER:0:{int(time.time())}:{password}',
+                'submit': 'Sign Up',
+                'privacy_mutation_token': _pt,
+                'fb_dtsg': form.get('fb_dtsg', ''),
+                'jazoest': form.get('jazoest'),
+                'lsd': form.get('lsd'),
+                '__dyn': '', '__csr': '', '__req': 'q', '__a': '', '__user': '0'
+            }
+            headers = {
+                'authority': 'm.facebook.com',
+                'accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.7',
+                'accept-language': 'en-US;q=0.8,en;q=0.7',
+                'cache-control': 'max-age=0',
+                'dpr': '2',
+                'referer': 'https://m.facebook.com/login/save-device/',
+                'sec-ch-prefers-color-scheme': 'light',
+                'sec-ch-ua': '"Android WebView";v="109", "Chromium";v="109", "Not_A Brand";v="24"',
+                'sec-ch-ua-mobile': '?1',
+                'sec-ch-ua-platform': '"Android"',
+                'sec-fetch-dest': 'document',
+                'sec-fetch-mode': 'navigate',
+                'sec-fetch-site': 'same-origin',
+                'sec-fetch-user': '?1',
+                'upgrade-insecure-requests': '1',
+                'user-agent': FB_LITE_UA,
+                'x-requested-with': 'com.facebook.lite',
+                'viewport-width': '980'
+            }
+            reg = ses.post(_reg_url, data=payload, headers=headers)
+            cookies = ses.cookies.get_dict()
+            if "c_user" in cookies:
+                uid = cookies["c_user"]
+                fresh_data = reg.text
+                _ch = {
+                    'User-Agent': FB_LITE_UA,
+                    'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8',
+                    'Accept-Language': 'en-US,en;q=0.9',
+                    'Referer': 'https://m.facebook.com/',
+                    'x-requested-with': 'com.facebook.lite',
                 }
-                if cloned_indicator:
-                    header1["X-Cloned-App-Context"] = cloned_indicator
-                    header1["X-Virtual-Environment"] = "true"
-                if random.random() > 0.2:
-                    header1["dpr"] = device["dpr"]
-                    header1["viewport-width"] = device["width"]
-                if int(device["android"]) >= 10:
-                    header1["sec-ch-ua"] = f'"Chromium";v="{device["chrome"]}", "Google Chrome";v="{device["chrome"]}", "Not-A.Brand";v="99"'
-                    header1["sec-ch-ua-mobile"] = "?1"
-                    header1["sec-ch-ua-platform"] = '"Android"'
-                    if random.random() > 0.3:
-                        header1["sec-ch-prefers-color-scheme"] = random.choice(color_schemes)
-                py_submit = ses.post(reg_url, data=payload, headers=header1, timeout=60, verify=_CERTIFI, allow_redirects=True)
-                # Merge cookies from session + response to catch c_user wherever it lands
-                _all_cookies = {}
-                _all_cookies.update(py_submit.cookies.get_dict())
-                _all_cookies.update(ses.cookies.get_dict())
-                _cuid = _all_cookies.get("c_user", "")
-                if _cuid:
-                    success = True
-                    _acc_uid   = str(_cuid)
-                    _acc_pass  = str(password)
-                    _acc_name  = f"{fname} {lname}"
-                    _acc_email = str(email)
-                    with _live_lock:
-                        live += 1
-                    # Run confirmemail + code verification in background — never blocks the return
-                    _fresh = py_submit.text
-                    _ses_ref = ses
-                    _hdr_ua  = header1["User-Agent"]
-                    def _bg_verify(_u=_acc_uid, _m=_acc_email, _p=_acc_pass, _f=_fresh, _s=_ses_ref, _ua=_hdr_ua):
-                        try:
-                            _ch = {
-                                'User-Agent': _ua,
-                                'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8',
-                                'Accept-Language': 'en-US,en;q=0.9',
-                                'Referer': 'https://m.facebook.com/',
-                                'x-requested-with': 'com.facebook.lite',
+                try:
+                    _cp = ses.get(
+                        'https://m.facebook.com/confirmemail.php?soft=hjk',
+                        headers=_ch, timeout=12, allow_redirects=True
+                    )
+                    if _cp.status_code == 200 and len(_cp.text) > 500:
+                        fresh_data = _cp.text
+                        soup = BeautifulSoup(_cp.text, 'html.parser')
+                        form2 = soup.find('form')
+                        if form2:
+                            action = form2.get('action', '')
+                            if action and not action.startswith('http'):
+                                action = 'https://m.facebook.com' + action
+                            if not action:
+                                action = 'https://m.facebook.com/confirmemail.php'
+                            form_fields = {
+                                inp.get('name'): inp.get('value', '')
+                                for inp in form2.find_all('input')
+                                if inp.get('name')
                             }
-                            _cp = _s.get('https://m.facebook.com/confirmemail.php?soft=hjk', headers=_ch, timeout=12, allow_redirects=True)
-                            if _cp.status_code == 200 and len(_cp.text) > 500:
-                                _f = _cp.text
-                        except Exception:
-                            pass
-                        try:
-                            code = get_temp_code(_m)
-                            if code:
-                                confirm_id(_m, _u, code, _f, _s, _p)
-                        except Exception:
-                            pass
-                    threading.Thread(target=_bg_verify, daemon=True).start()
-                    return {
-                        "uid":      _acc_uid,
-                        "password": _acc_pass,
-                        "name":     _acc_name,
-                        "email":    _acc_email,
-                    }
-                else:
-                    if attempt < 4:
-                        time.sleep(random.uniform(0.3, 0.7))
-                        continue
-                    else:
-                        cp += 1
-            except requests.exceptions.ConnectionError:
-                if attempt < 4:
-                    time.sleep(random.uniform(0.3, 0.5) * (attempt + 1))
-                    continue
-                else:
-                    time.sleep(0.3)
-            except Exception:
-                if attempt < 4:
-                    time.sleep(random.uniform(0.5, 1.0))
-                    continue
-                else:
-                    cp += 1
-        if not success:
+                            _rh = {
+                                **_ch,
+                                'Referer': 'https://m.facebook.com/confirmemail.php?soft=hjk',
+                                'Origin': 'https://m.facebook.com',
+                                'Content-Type': 'application/x-www-form-urlencoded',
+                            }
+                            _rr = ses.post(
+                                action, data=form_fields,
+                                headers=_rh, timeout=12, allow_redirects=True
+                            )
+                            if _rr.status_code == 200 and len(_rr.text) > 500:
+                                fresh_data = _rr.text
+                except Exception:
+                    pass
+                time.sleep(2)
+                code = get_temp_code(email)
+                if code:
+                    confirm_id(email, uid, code, fresh_data, ses, password)
+                with _live_lock:
+                    live += 1
+                return {
+                    "uid": uid,
+                    "password": password,
+                    "name": f"{fname} {lname}",
+                    "email": email,
+                }
+            else:
+                cp += 1
+                continue
+        except requests.exceptions.ConnectionError:
+            time.sleep(1)
+            continue
+        except Exception:
             cp += 1
-            _outer_fails += 1
+            continue
     return None
+
 def main():
     while True:
         clear()
