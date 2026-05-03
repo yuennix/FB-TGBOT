@@ -92,27 +92,15 @@ DOMAIN_PASSWORDS = {
 
 # ================== KEYBOARDS ==================
 
-def make_menu_text(uid=0):
-    is_owner = (uid == OWNER_ID)
-    credits = "♾️ Unlimited" if is_owner else f"*{user_credits.get(uid, 0)}*"
-    return (
-        "🤖 *Facebook Auto Creator*\n"
-        "━━━━━━━━━━━━━━━━━━\n"
-        f"💳 Credits: {credits}\n"
-        "━━━━━━━━━━━━━━━━━━\n"
-        "Select an option below 👇"
-    )
-
 def make_start_kb(uid=0):
     is_owner = (uid == OWNER_ID)
-    rows = [
-        [InlineKeyboardButton(text="🚀 Start Creating Accounts", callback_data="menu:create")],
-        [
-            InlineKeyboardButton(text="📋 My Accounts",  callback_data="menu:myaccs"),
-            InlineKeyboardButton(text="🌐 Bot Accounts", callback_data="menu:botaccs"),
-        ],
-        [InlineKeyboardButton(text="💳 My Credits", callback_data="menu:mycredits")],
-    ]
+    rows = [[InlineKeyboardButton(text="🚀 Start Creating Accounts", callback_data="menu:create")]]
+    rows.append([
+        InlineKeyboardButton(text="📋 My Accounts",  callback_data="menu:myaccs"),
+        InlineKeyboardButton(text="🌐 Bot Accounts", callback_data="menu:botaccs"),
+    ])
+    if not is_owner:
+        rows.append([InlineKeyboardButton(text="💳 My Credits", callback_data="menu:mycredits")])
     if is_owner:
         rows.append([InlineKeyboardButton(text="⚙️ Owner Menu", callback_data="menu:admin")])
     return InlineKeyboardMarkup(inline_keyboard=rows)
@@ -260,7 +248,7 @@ async def cmd_start(message: types.Message):
     # Already approved → go straight to menu
     if is_allowed(uid):
         await message.answer(
-            make_menu_text(uid),
+            "🤖 *Facebook Auto Creator*\n\nSelect options step by step 👇",
             parse_mode="Markdown",
             reply_markup=make_start_kb(uid)
         )
@@ -458,7 +446,7 @@ async def cb_admin_menu(callback: types.CallbackQuery):
 async def cb_menu_back(callback: types.CallbackQuery):
     uid = callback.from_user.id
     await callback.message.edit_text(
-        make_menu_text(uid),
+        "🤖 *Facebook Auto Creator*\n\nSelect options step by step 👇",
         parse_mode="Markdown",
         reply_markup=make_start_kb(uid)
     )
