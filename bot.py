@@ -291,7 +291,7 @@ async def cmd_start(message: types.Message):
     if uid not in seen_users:
         seen_users.add(uid)
         save_users()
-        await message.answer(
+        welcome_msg = await message.answer(
             f"👋 *Welcome, {first_name}!*\n\n"
             f"This bot lets you automatically create Facebook accounts with custom names, gender, email domain, and more.\n\n"
             f"━━━━━━━━━━━━━━━━━━\n"
@@ -306,6 +306,7 @@ async def cmd_start(message: types.Message):
             f"━━━━━━━━━━━━━━━━━━",
             parse_mode="Markdown"
         )
+        asyncio.create_task(_del(message.chat.id, welcome_msg.message_id))
 
     # Already approved → go straight to menu
     if is_allowed(uid):
