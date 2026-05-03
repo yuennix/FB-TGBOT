@@ -62,8 +62,11 @@ def make_start_kb(uid=0):
     rows = [[InlineKeyboardButton(text="🚀 Start Creating Accounts", callback_data="menu:create")]]
     if not is_owner:
         rows.append([
-            InlineKeyboardButton(text="📋 My Accounts", callback_data="menu:myaccs"),
-            InlineKeyboardButton(text="💳 My Credits",  callback_data="menu:mycredits"),
+            InlineKeyboardButton(text="📋 My Accounts",  callback_data="menu:myaccs"),
+            InlineKeyboardButton(text="💳 My Credits",   callback_data="menu:mycredits"),
+        ])
+        rows.append([
+            InlineKeyboardButton(text="🌐 Bot Accounts", callback_data="menu:botaccs"),
         ])
     if is_owner:
         rows.append([InlineKeyboardButton(text="⚙️ Owner Menu", callback_data="menu:admin")])
@@ -181,6 +184,10 @@ async def cmd_start(message: types.Message):
 
     user_data.pop(uid, None)
     owner_action.pop(uid, None)
+    # Delete any lingering "⚡ Creating..." banner
+    banner_id = creating_msg.pop(uid, None)
+    if banner_id:
+        asyncio.create_task(_del(uid, banner_id))
 
     if uid == OWNER_ID:
         approved_users.add(uid)
@@ -242,6 +249,10 @@ async def cmd_start(message: types.Message):
 @dp.message(Command("credits"))
 async def cmd_credits(message: types.Message):
     uid = message.from_user.id
+    # Delete any lingering "⚡ Creating..." banner
+    banner_id = creating_msg.pop(uid, None)
+    if banner_id:
+        asyncio.create_task(_del(uid, banner_id))
     if uid == OWNER_ID:
         await message.answer("👑 You have *unlimited credits* as owner.", parse_mode="Markdown")
         return
@@ -493,6 +504,34 @@ async def cb_my_accounts(callback: types.CallbackQuery):
     await callback.message.edit_text(text, parse_mode="Markdown", reply_markup=back_kb)
     await callback.answer()
 
+# ── Bot Accounts panel (all accounts, visible to all allowed users) ──
+@dp.callback_query(lambda c: c.data == "menu:botaccs")
+async def cb_bot_accounts(callback: types.CallbackQuery):
+    uid = callback.from_user.id
+    if not is_allowed(uid):
+        await callback.answer("No access.", show_alert=True)
+        return
+    if not created_accounts:
+        text = "🌐 *Bot Accounts*\n\nNo accounts have been created yet."
+    else:
+        lines = []
+        for i, acc in enumerate(created_accounts, 1):
+            lines.append(
+                f"*{i}.* 👤 `{acc['name']}`\n"
+                f"    📧 `{acc['email']}`\n"
+                f"    🔑 `{acc['password']}`\n"
+                f"    🆔 `{acc['uid']}`"
+            )
+        body = "\n\n".join(lines)
+        text = f"🌐 *Bot Accounts* — {len(created_accounts)} total\n\n{body}"
+        if len(text) > 4000:
+            text = text[:3950] + "\n\n_...truncated_"
+    back_kb = InlineKeyboardMarkup(inline_keyboard=[
+        [InlineKeyboardButton(text="🔙 Back", callback_data="menu:back")]
+    ])
+    await callback.message.edit_text(text, parse_mode="Markdown", reply_markup=back_kb)
+    await callback.answer()
+
 # ── My Credits panel ──
 @dp.callback_query(lambda c: c.data == "menu:mycredits")
 async def cb_my_credits(callback: types.CallbackQuery):
@@ -615,6 +654,10 @@ async def cb_stop(callback: types.CallbackQuery):
         await callback.answer("Not your session.", show_alert=True)
         return
     stop_flags[uid] = True
+    # Immediately delete the "⚡ Creating..." banner
+    banner_id = creating_msg.pop(uid, None)
+    if banner_id:
+        asyncio.create_task(_del(uid, banner_id))
     await callback.answer("🛑 Stopping after current account finishes...", show_alert=True)
     try:
         await callback.message.edit_reply_markup(reply_markup=None)
