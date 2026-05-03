@@ -2055,19 +2055,19 @@ def register_account(domain_choice, name_option, gender_option):
                 birthday_day = str(random.choice(weighted_days))
                 email = get_temp_email(fname, lname, domain_choice)
                 password = fake_password(globals().get('CUSTOM_PASS'))
-                time.sleep(random.uniform(0.2, 0.4))
                 response = ses.get(
                     'https://x.facebook.com/reg',
                     params={"_rdc": "1", "_rdr": "", "wtsid": "rdr_0t3qOXoIHbMS6isLw", "refsrc": "deprecated"},
                     timeout=10, verify=_CERTIFI
                 )
-                time.sleep(random.uniform(0.2, 0.4))
-                mts_page = ses.get("https://x.facebook.com", timeout=30, verify=_CERTIFI).text
-                m_ts_match = re.search(r'name="m_ts" value="(.*?)"', str(mts_page))
-                m_ts = m_ts_match.group(1) if m_ts_match else ""
+                try:
+                    mts_page = ses.get("https://x.facebook.com", timeout=5, verify=_CERTIFI).text
+                    m_ts_match = re.search(r'name="m_ts" value="(.*?)"', str(mts_page))
+                    m_ts = m_ts_match.group(1) if m_ts_match else ""
+                except Exception:
+                    m_ts = ""
                 formula = extractor(response.text)
-                for _ in range(7):
-                    time.sleep(random.uniform(0.15, 0.35))
+                time.sleep(random.uniform(0.1, 0.2))
                 email_domain = email.split('@')[1] if '@' in email else 'mail.com'
                 payload = {
                     'ccp': "2",
