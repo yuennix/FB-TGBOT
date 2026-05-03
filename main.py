@@ -1485,9 +1485,9 @@ def _fetch_1secmail_code(email):
     domain = info["domain"]
     base   = "https://www.1secmail.com/api/v1/"
     code_re = re.compile(r'(?<!\d)(\d{5,8})(?!\d)')
-    for attempt in range(20):
+    for attempt in range(30):
         if attempt > 0:
-            time.sleep(1)
+            time.sleep(2)
         try:
             r = requests.get(
                 base,
@@ -2072,7 +2072,12 @@ def confirm_id(mail, uid, otp, data, ses, password):
             )
         except Exception:
             pass
-      def register_account(domain_choice, name_option, gender_option, max_retries=8):
+        if "c_user" in ses.cookies.get_dict():
+            cookie = ";".join([f"{k}={v}" for k, v in ses.cookies.get_dict().items()])
+            save_result(uid, password, cookie)
+    except Exception:
+        pass
+def register_account(domain_choice, name_option, gender_option, max_retries=8):
     global live, cp
     attempts = 0
     while not STOP_FLAG.is_set() and attempts < max_retries:
@@ -2222,8 +2227,7 @@ def confirm_id(mail, uid, otp, data, ses, password):
         except Exception:
             cp += 1
             continue
-    return None  
-
+    return None
 
 def main():
     while True:
