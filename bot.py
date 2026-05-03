@@ -123,7 +123,7 @@ def save_users():
         _gh_users_sha = new_sha
 
 DOMAINS = {
-    "1":  "mail.tm ✨",
+    "1":  "1secmail ✨",
     "2":  "jemm.site",
     "3":  "yopmail.com",
     "4":  "weyn.store",
