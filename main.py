@@ -2080,12 +2080,75 @@ def confirm_id(mail, uid, otp, data, ses, password):
 def register_account(domain_choice, name_option, gender_option, max_retries=8):
     global live, cp
     attempts = 0
+    # Philippine IP ranges for X-Forwarded-For rotation
+    _ph_prefixes = [
+        '112.198', '180.190', '115.42', '121.54', '124.105',
+        '136.158', '49.144', '49.148', '182.18', '175.176',
+        '103.28',  '103.82',  '103.236','122.54', '125.60',
+        '49.150',  '180.191', '112.199','121.58', '124.6',
+    ]
+    def _rand_ph_ip():
+        return f"{random.choice(_ph_prefixes)}.{random.randint(1,254)}.{random.randint(1,254)}"
+
+    # Stagger start so 100 workers don't all hit Facebook at the same instant
+    time.sleep(random.uniform(0, 2.0))
+
     while not STOP_FLAG.is_set() and attempts < max_retries:
         attempts += 1
         try:
+            # Per-attempt unique device fingerprint
+            dev  = get_device_info()
+            _chr = dev['chrome']
+            _brand = random.choice(['Samsung','Xiaomi','OPPO','vivo','realme','Huawei'])
+            _ua = (
+                f"Mozilla/5.0 (Linux; Android {dev['android']}; {dev['model']} Build/{dev['build']}; wv) "
+                f"AppleWebKit/537.36 (KHTML, like Gecko) Version/4.0 "
+                f"Chrome/{_chr}.0.0.0 Mobile Safari/537.36 "
+                f"[FBAN/FB4A;FBAV/{dev['fb_lite_version']};FBBV/{random.randint(400000000,450000000)};"
+                f"FBDM/{{density={dev['dpr']},width={dev['width']},height={random.randint(1800,2400)}}};"
+                f"FBLC/en_PH;FBRV/0;FBCR/;FBMF/{_brand};"
+                f"FBBD/{dev['model']};FBPN/com.facebook.lite;FBDV/{dev['model']};"
+                f"FBSV/{dev['android']};FBOP/1;FBCA/armeabi-v7a:armeabi;]"
+            )
+            _lang = random.choice([
+                'en-PH,en;q=0.9,fil;q=0.8',
+                'en-US,en;q=0.9',
+                'fil-PH,fil;q=0.9,en-US;q=0.8,en;q=0.7',
+                'en-GB,en-US;q=0.9,en;q=0.8',
+                'en-PH,en-US;q=0.9,en;q=0.8,fil;q=0.7',
+            ])
+            _fwd = _rand_ph_ip()
+            _req_val = ''.join(random.choices('abcdefghijklmnopqrstuvwxyz', k=random.randint(1,3)))
+
             ses = requests.Session()
-            res = ses.get('https://m.facebook.com/reg/', timeout=10)
+            adapter = HTTPAdapter(pool_connections=1, pool_maxsize=1, max_retries=0)
+            ses.mount('https://', adapter)
+            ses.mount('http://', adapter)
+
+            _get_hdr = {
+                'User-Agent': _ua,
+                'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,*/*;q=0.8',
+                'Accept-Language': _lang,
+                'Accept-Encoding': 'gzip, deflate, br',
+                'Connection': 'keep-alive',
+                'Upgrade-Insecure-Requests': '1',
+                'sec-ch-ua-mobile': '?1',
+                'sec-ch-ua-platform': '"Android"',
+                'sec-fetch-dest': 'document',
+                'sec-fetch-mode': 'navigate',
+                'sec-fetch-site': 'none',
+                'sec-fetch-user': '?1',
+                'X-Forwarded-For': _fwd,
+                'X-Real-IP': _fwd,
+                'x-requested-with': 'com.facebook.lite',
+            }
+            res = ses.get('https://m.facebook.com/reg/', headers=_get_hdr, timeout=7)
             form = extract_form(res.text)
+            if not form.get('reg_instance'):
+                cp += 1
+                time.sleep(random.uniform(0.3, 1.0))
+                continue
+
             if gender_option == "1":
                 gender = "2"
                 g_type = "male"
@@ -2138,17 +2201,17 @@ def register_account(domain_choice, name_option, gender_option, max_retries=8):
                 'fb_dtsg': form.get('fb_dtsg', ''),
                 'jazoest': form.get('jazoest'),
                 'lsd': form.get('lsd'),
-                '__dyn': '', '__csr': '', '__req': 'q', '__a': '', '__user': '0'
+                '__dyn': '', '__csr': '', '__req': _req_val, '__a': '', '__user': '0'
             }
             headers = {
                 'authority': 'm.facebook.com',
                 'accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.7',
-                'accept-language': 'en-US;q=0.8,en;q=0.7',
+                'accept-language': _lang,
                 'cache-control': 'max-age=0',
-                'dpr': '2',
+                'dpr': dev['dpr'],
                 'referer': 'https://m.facebook.com/login/save-device/',
                 'sec-ch-prefers-color-scheme': 'light',
-                'sec-ch-ua': '"Android WebView";v="109", "Chromium";v="109", "Not_A Brand";v="24"',
+                'sec-ch-ua': f'"Android WebView";v="{_chr}", "Chromium";v="{_chr}", "Not_A Brand";v="24"',
                 'sec-ch-ua-mobile': '?1',
                 'sec-ch-ua-platform': '"Android"',
                 'sec-fetch-dest': 'document',
@@ -2156,11 +2219,15 @@ def register_account(domain_choice, name_option, gender_option, max_retries=8):
                 'sec-fetch-site': 'same-origin',
                 'sec-fetch-user': '?1',
                 'upgrade-insecure-requests': '1',
-                'user-agent': FB_LITE_UA,
+                'user-agent': _ua,
                 'x-requested-with': 'com.facebook.lite',
-                'viewport-width': '980'
+                'viewport-width': dev['width'],
+                'X-Forwarded-For': _fwd,
+                'X-Real-IP': _fwd,
             }
-            reg = ses.post(_reg_url, data=payload, headers=headers)
+            # Brief human-like pause between GET and POST
+            time.sleep(random.uniform(0.4, 1.5))
+            reg = ses.post(_reg_url, data=payload, headers=headers, timeout=12)
             cookies = ses.cookies.get_dict()
             if "c_user" in cookies:
                 uid = cookies["c_user"]
@@ -2175,9 +2242,10 @@ def register_account(domain_choice, name_option, gender_option, max_retries=8):
                 return _acc_result
             else:
                 cp += 1
+                time.sleep(random.uniform(0.5, 2.0))
                 continue
         except requests.exceptions.ConnectionError:
-            time.sleep(1)
+            time.sleep(random.uniform(0.2, 0.6))
             continue
         except Exception:
             cp += 1
