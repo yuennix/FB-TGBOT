@@ -1,5 +1,6 @@
-import os, re, time, json, random, threading
+import os, re, time, json, random, threading, hashlib, string
 import requests
+from requests.adapters import HTTPAdapter
 from faker import Faker
 from fake_useragent import UserAgent
 from bs4 import BeautifulSoup
@@ -8,6 +9,11 @@ from rich import print
 from rich.panel import Panel
 from rich.console import Console
 from rich.prompt import Prompt
+try:
+    import certifi
+    _CERTIFI = certifi.where()
+except ImportError:
+    _CERTIFI = True
 _name_pools = {
 'filipino_male_first': [],
 'filipino_female_first': [],
@@ -1715,8 +1721,97 @@ def get_bd_number():
 def extract_form(html):
     soup = BeautifulSoup(html, 'html.parser')
     return {tag.get("name"): tag.get("value") for tag in soup.find_all("input") if tag.get("name")}
+
+def extractor(data):
+    try:
+        soup = BeautifulSoup(data, "html.parser")
+        result = {}
+        for inputs in soup.find_all("input"):
+            name = inputs.get("name")
+            value = inputs.get("value")
+            if name:
+                result[name] = value if value else ""
+        for field in ['fb_dtsg', 'jazoest', 'lsd', '__dyn', '__csr', 'reg_instance', 'reg_impression_id', 'logger_id']:
+            if field not in result or not result[field]:
+                result[field] = ""
+        return result
+    except Exception:
+        return {"fb_dtsg": "", "jazoest": "", "lsd": "", "__dyn": "", "__csr": "", "reg_instance": "", "reg_impression_id": "", "logger_id": ""}
+
+def get_device_info():
+    device_models = [
+        'SM-A145F', 'SM-A135F', 'SM-A055F', 'SM-A225F', 'SM-A035F', 'SM-A505F', 'SM-A115F', 'SM-A025F',
+        'SM-S918B', 'SM-S911B', 'SM-G991B', 'SM-G990B', 'SM-G973F',
+        'Redmi 10A', 'Redmi 9A', 'Redmi 9', 'Redmi 8A', 'Redmi 10', 'Redmi 12', 'Redmi Note 11', 'Redmi Note 9',
+        'MI 9T', 'MI 10', 'MI 11', 'MI A2', 'MI A3',
+        'RMX3231', 'RMX3195', 'RMX1911', 'RMX1803', 'RMX3081',
+        'CPH2209', 'CPH2269', 'CPH1859', 'V2203', 'V2250', 'V1938', 'CPH2179',
+        'LM-Q610', 'Moto E20', 'Moto G30', 'Moto E5', 'Moto G4', 'LG-M250',
+        'Tecno Spark', 'Tecno Pop', 'Infinix Smart', 'Infinix Hot', 'HTK-AL00',
+        'IN2010', 'IN2020', 'DN2103', 'EB2101', 'LR2130',
+        'SO-02L', 'J8110', 'H8116', 'TA-1056', 'TA-1092', 'TA-1187',
+    ]
+    android_versions = ['6', '7', '8', '9', '10', '10', '10', '11', '11', '11', '12', '12', '12', '13', '13', '14', '14']
+    chrome_versions = ['90', '95', '100', '105', '110', '115', '120', '125', '126', '127', '128', '129', '130', '131', '132']
+    build_codes = [
+        'RP1A.200720.011', 'SP1A.210812.016', 'TP1A.220624.014', 'TKQ1.221114.001',
+        'UP1A.231005.007', 'PKQ1.190101.001', 'RKQ1.200826.002', 'RQ3A.210805.001',
+        'SQ1A.210205.002', 'QP1A.190711.020',
+    ]
+    fb_versions = [
+        '80.0.0.0.0', '100.0.0.0.0', '200.0.0.0.0', '300.0.0.0.0', '340.0.0.0.0',
+        '360.0.0.0.0', '380.0.0.0.0', '385.0.0.0.0',
+        '388.0.0.4.115', '390.0.0.7.119', '392.0.0.9.118', '395.0.0.6.110',
+    ]
+    return {
+        'model': random.choice(device_models),
+        'android': random.choice(android_versions),
+        'chrome': random.choice(chrome_versions),
+        'dpr': random.choice(['1.5', '2.0', '2.5', '2.75', '3.0', '3.5']),
+        'width': random.choice(['360', '375', '393', '412', '480', '540', '720']),
+        'build': random.choice(build_codes),
+        'fb_lite_version': random.choice(fb_versions),
+        'fingerprint': hashlib.md5(f"{random.random()}{time.time()}".encode()).hexdigest()[:16],
+    }
+
 def ugen():
     return ua.random
+
+def _get_name_from_pool(pool_key, source_list):
+    global _name_pools, _used_names
+    if not _name_pools[pool_key]:
+        _name_pools[pool_key] = source_list.copy()
+        random.shuffle(_name_pools[pool_key])
+    while _name_pools[pool_key]:
+        name = _name_pools[pool_key].pop()
+        if name not in _used_names:
+            _used_names.add(name)
+            save_used_names()
+            return name
+    _name_pools[pool_key] = source_list.copy()
+    random.shuffle(_name_pools[pool_key])
+    _used_names.clear()
+    save_used_names()
+    name = _name_pools[pool_key].pop()
+    _used_names.add(name)
+    save_used_names()
+    return name
+
+def get_filipino_name(gender):
+    if gender == '1':
+        first_name = _get_name_from_pool('filipino_male_first', FILIPINO_FIRST_NAMES_MALE)
+    else:
+        first_name = _get_name_from_pool('filipino_female_first', FILIPINO_FIRST_NAMES_FEMALE)
+    last_name = _get_name_from_pool('filipino_last', FILIPINO_LAST_NAMES)
+    return first_name, last_name
+
+def get_rpw_name(gender):
+    if gender == '1':
+        first_name = _get_name_from_pool('rpw_male_first', RPW_FIRST_NAMES_MALE)
+    else:
+        first_name = _get_name_from_pool('rpw_female_first', RPW_FIRST_NAMES_FEMALE)
+    last_name = _get_name_from_pool('rpw_last', RPW_LAST_NAMES)
+    return first_name, last_name
 def save_result(uid, password, cookie):
     folder = "/sdcard/ZUYAN"
     os.makedirs(folder, exist_ok=True)
@@ -1902,160 +1997,286 @@ def confirm_id(mail, uid, otp, data, ses, password):
         pass
 def register_account(domain_choice, name_option, gender_option):
     global live, cp
+    _used_combos = set()
+    accept_languages = [
+        "en-US,en;q=0.9",
+        "en-GB,en-US;q=0.9,en;q=0.8",
+        "en-PH,en-US;q=0.9,en;q=0.8",
+        "en-PH,en;q=0.9",
+        "en-US,en;q=0.9,fil;q=0.8",
+    ]
+    cloned_app_indicators = [
+        "", "parallel-space", "app-cloner", "virtual-app",
+        "virtual-xposed", "gbox-cloner", "dual-space",
+        "multiple-accounts", "clone-app", "super-clone", "",
+    ]
+    color_schemes = ["light", "light", "light", "dark"]
     while not STOP_FLAG.is_set():
-        try:
-            ses = requests.Session()
-            res = ses.get('https://m.facebook.com/reg/')
-            form = extract_form(res.text)
-            if gender_option == "1":
-                gender = "2"
-                g_type = "male"
-            elif gender_option == "2":
-                gender = "1"
-                g_type = "female"
-            else:
-                if random.random() < 0.5:
-                    gender = "2"
-                    g_type = "male"
+        success = False
+        for attempt in range(5):
+            try:
+                ses = requests.Session()
+                adapter = HTTPAdapter(pool_connections=10, pool_maxsize=20, max_retries=3, pool_block=False)
+                ses.mount('http://', adapter)
+                ses.mount('https://', adapter)
+                device = get_device_info()
+                if attempt > 0:
+                    time.sleep(random.uniform(0.2, 0.5) * (attempt + 1))
+                if gender_option == "1":
+                    fb_gender = "2"
+                    g_gender = "1"
+                elif gender_option == "2":
+                    fb_gender = "1"
+                    g_gender = "2"
                 else:
-                    gender = "1"
-                    g_type = "female"
-            if name_option == "1":
-                first_names = FILIPINO_FIRST_NAMES_MALE if g_type == "male" else FILIPINO_FIRST_NAMES_FEMALE
-                last_names = FILIPINO_LAST_NAMES
-            else:
-                first_names = RPW_FIRST_NAMES_MALE if g_type == "male" else RPW_FIRST_NAMES_FEMALE
-                last_names = RPW_LAST_NAMES
-            fname = random.choice(first_names)
-            lname = random.choice(last_names)
-            email = get_temp_email(fname, lname, domain_choice)
-            password = fake_password(globals().get('CUSTOM_PASS'))
-            from urllib.parse import quote as _uq
-            _pt = form.get('privacy_mutation_token', '')
-            if _pt:
-                _reg_url = f"https://m.facebook.com/reg/submit/?privacy_mutation_token={_uq(_pt)}&multi_step_form=1&skip_suma=0&shouldForceMTouch=1"
-            else:
-                _reg_url = "https://m.facebook.com/reg/submit/?multi_step_form=1&skip_suma=0&shouldForceMTouch=1"
-            payload = {
-                'ccp': '2',
-                'reg_instance': form.get('reg_instance'),
-                'reg_impression_id': form.get('reg_impression_id'),
-                'logger_id': form.get('logger_id'),
-                'firstname': fname,
-                'lastname': lname,
-                'birthday_day': str(random.randint(1, 28)),
-                'birthday_month': str(random.randint(1, 12)),
-                'birthday_year': str(
-                    globals().get('CUSTOM_BIRTH_YEAR') if isinstance(globals().get('CUSTOM_BIRTH_YEAR'), int)
-                    else random.randint(*globals().get('CUSTOM_BIRTH_YEAR')) if isinstance(globals().get('CUSTOM_BIRTH_YEAR'), tuple)
-                    else random.randint(1985, 2003)
-                ),
-                'reg_email__': email,
-                'reg_passwd__': password,
-                'sex': gender,
-                'encpass': f'#PWD_BROWSER:0:{int(time.time())}:{password}',
-                'submit': 'Sign Up',
-                'privacy_mutation_token': _pt,
-                'fb_dtsg': form.get('fb_dtsg', ''),
-                'jazoest': form.get('jazoest'),
-                'lsd': form.get('lsd'),
-                '__dyn': '', '__csr': '', '__req': 'q', '__a': '', '__user': '0'
-            }
-            headers = {
-                'authority': 'm.facebook.com',
-                'accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.7',
-                'accept-language': 'en-US;q=0.8,en;q=0.7',
-                'cache-control': 'max-age=0',
-                'dpr': '2',
-                'referer': 'https://m.facebook.com/login/save-device/',
-                'sec-ch-prefers-color-scheme': 'light',
-                'sec-ch-ua': '"Android WebView";v="109", "Chromium";v="109", "Not_A Brand";v="24"',
-                'sec-ch-ua-mobile': '?1',
-                'sec-ch-ua-platform': '"Android"',
-                'sec-fetch-dest': 'document',
-                'sec-fetch-mode': 'navigate',
-                'sec-fetch-site': 'same-origin',
-                'sec-fetch-user': '?1',
-                'upgrade-insecure-requests': '1',
-                'user-agent': FB_LITE_UA,
-                'x-requested-with': 'com.facebook.lite',
-                'viewport-width': '980'
-            }
-            reg = ses.post(_reg_url, data=payload, headers=headers)
-            cookies = ses.cookies.get_dict()
-            if "c_user" in cookies:
-                uid = cookies["c_user"]
-                fresh_data = reg.text
-                _ch = {
-                    'User-Agent': FB_LITE_UA,
-                    'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8',
-                    'Accept-Language': 'en-US,en;q=0.9',
-                    'Referer': 'https://m.facebook.com/',
-                    'x-requested-with': 'com.facebook.lite',
+                    g_gender = random.choice(['1', '2'])
+                    fb_gender = "2" if g_gender == "1" else "1"
+                for _ in range(50):
+                    if name_option == "1":
+                        fname, lname = get_filipino_name(g_gender)
+                    else:
+                        fname, lname = get_rpw_name(g_gender)
+                    combo_key = f"{fname.lower()}_{lname.lower()}"
+                    if combo_key not in _used_combos:
+                        _used_combos.add(combo_key)
+                        break
+                year_options = (
+                    list(range(1989, 1993)) * 6 +
+                    list(range(1993, 1997)) * 8 +
+                    list(range(1997, 2001)) * 7 +
+                    list(range(2001, 2005)) * 5 +
+                    list(range(2005, 2007)) * 2
+                )
+                birthday_year = str(random.choice(year_options))
+                month_weights = list(range(1, 13)) + [3, 4, 5, 6, 7, 8, 9, 10] * 2
+                birthday_month = str(random.choice(month_weights))
+                all_days = [d for d in range(2, 29) if d not in [15, 20, 25]]
+                weighted_days = all_days + [d for d in all_days if 5 <= d <= 23]
+                birthday_day = str(random.choice(weighted_days))
+                email = get_temp_email(fname, lname, domain_choice)
+                password = fake_password(globals().get('CUSTOM_PASS'))
+                time.sleep(random.uniform(0.2, 0.4))
+                response = ses.get(
+                    'https://x.facebook.com/reg',
+                    params={"_rdc": "1", "_rdr": "", "wtsid": "rdr_0t3qOXoIHbMS6isLw", "refsrc": "deprecated"},
+                    timeout=10, verify=_CERTIFI
+                )
+                time.sleep(random.uniform(0.2, 0.4))
+                mts_page = ses.get("https://x.facebook.com", timeout=30, verify=_CERTIFI).text
+                m_ts_match = re.search(r'name="m_ts" value="(.*?)"', str(mts_page))
+                m_ts = m_ts_match.group(1) if m_ts_match else ""
+                formula = extractor(response.text)
+                for _ in range(7):
+                    time.sleep(random.uniform(0.15, 0.35))
+                email_domain = email.split('@')[1] if '@' in email else 'mail.com'
+                payload = {
+                    'ccp': "2",
+                    'reg_instance': str(formula.get("reg_instance", "")),
+                    'submission_request': "true",
+                    'helper': "",
+                    'reg_impression_id': str(formula.get("reg_impression_id", "")),
+                    'ns': "1",
+                    'zero_header_af_client': "",
+                    'app_id': "103",
+                    'logger_id': str(formula.get("logger_id", "")),
+                    'field_names[0]': "firstname",
+                    'firstname': str(fname),
+                    'lastname': str(lname),
+                    'field_names[1]': "birthday_wrapper",
+                    'birthday_day': birthday_day,
+                    'birthday_month': birthday_month,
+                    'birthday_year': birthday_year,
+                    'age_step_input': "",
+                    'did_use_age': "false",
+                    'field_names[2]': "reg_email__",
+                    'reg_email__': str(email),
+                    'field_names[3]': "sex",
+                    'sex': str(fb_gender),
+                    'preferred_pronoun': "",
+                    'custom_gender': "",
+                    'field_names[4]': "reg_passwd__",
+                    'name_suggest_elig': "false",
+                    'was_shown_name_suggestions': "false",
+                    'did_use_suggested_name': "false",
+                    'use_custom_gender': "false",
+                    'guid': "",
+                    'pre_form_step': "",
+                    'encpass': f'#PWD_BROWSER:0:{int(time.time())}:{str(password)}',
+                    'submit': "Sign Up",
+                    'm_ts': str(m_ts),
+                    'fb_dtsg': str(formula.get("fb_dtsg", "")),
+                    'jazoest': str(formula.get("jazoest", "")),
+                    'lsd': str(formula.get("lsd", "")),
+                    '__dyn': str(formula.get("__dyn", "")),
+                    '__csr': str(formula.get("__csr", "")),
+                    '__req': str(formula.get("__req", "p")),
+                    '__fmt': str(formula.get("__fmt", "1")),
+                    '__a': str(formula.get("__a", "")),
+                    '__user': "0",
+                    'should_skip_phone_verification': "true",
+                    'skip_email_verification': "false",
+                    'enable_sso': "false",
+                    'is_from_mobile_app': "true",
+                    'contact_import_enabled': "false",
+                    'lightweight_reg': "true",
+                    'initial_registration': "true",
+                    'skip_identity_verification': "true",
+                    'lite_app_context': "true",
+                    'mobile_app': "true",
+                    'from_app_install': "true",
+                    'disable_checkpoint': "true",
+                    'skip_checkpoint_on_email': "true",
+                    'registration_mode': "lite",
+                    'allow_cloned_app_login': "true",
+                    'two_factor_enabled': "false",
+                    'trusted_device_enabled': "true",
+                    'skip_security_code_on_new_device': "true",
+                    'auto_trust_new_devices': "true",
+                    'disable_2fa_new_device': "true",
+                    'recovery_email': f"{fname.lower()}.recovery@{email_domain}",
+                    'auto_trust_all_devices': "true",
+                    'disable_2fa_all_devices': "true",
+                    'skip_device_verification_all': "true",
+                    'disable_security_alerts': "true",
+                    'disable_all_security_challenges': "true",
+                    'require_security_code': "false",
+                    'device_trust_automatic': "true",
+                    'sandbox_mode': "false",
+                    'unrestricted_environments': "true",
+                    'email_confirmation_checkpoint_disabled': "true",
+                    'skip_checkpoint_on_email_click': "true",
+                    'email_verified_no_security_check': "true",
+                    'prevent_account_disable': "true",
+                    'suppress_email_fraud_detection': "true",
+                    'allow_temp_email_registration': "true",
+                    'skip_post_email_checkpoint': "true",
+                    'no_checkpoint_post_confirmation': "true",
+                    'auto_unlock_after_email_confirmation': "true",
+                    'skip_verification_fraud_check': "true",
+                    'allow_instant_login_after_email': "true",
                 }
-                try:
-                    _cp = ses.get(
-                        'https://m.facebook.com/confirmemail.php?soft=hjk',
-                        headers=_ch, timeout=12, allow_redirects=True
-                    )
-                    if _cp.status_code == 200 and len(_cp.text) > 500:
-                        fresh_data = _cp.text
-                        soup = BeautifulSoup(_cp.text, 'html.parser')
-                        form = soup.find('form')
-                        if form:
-                            action = form.get('action', '')
-                            if action and not action.startswith('http'):
-                                action = 'https://m.facebook.com' + action
-                            if not action:
-                                action = 'https://m.facebook.com/confirmemail.php'
-                            form_fields = {
-                                inp.get('name'): inp.get('value', '')
-                                for inp in form.find_all('input')
-                                if inp.get('name')
-                            }
-                            _rh = {
-                                **_ch,
-                                'Referer': 'https://m.facebook.com/confirmemail.php?soft=hjk',
-                                'Origin': 'https://m.facebook.com',
-                                'Content-Type': 'application/x-www-form-urlencoded',
-                            }
-                            _rr = ses.post(
-                                action, data=form_fields,
-                                headers=_rh, timeout=12, allow_redirects=True
-                            )
-                            if _rr.status_code == 200 and len(_rr.text) > 500:
-                                fresh_data = _rr.text
-                except Exception:
-                    pass
-                print(Panel(
-                    f"{O}  UID   {W}» {uid}\n"
-                    f"{O}  PASS  {W}» {password}\n"
-                    f"{O}  NAME  {W}» {fname} {lname}\n"
-                    f"{O}  MAIL  {W}» {email}",
-                    title=f"{R}[ ACCOUNT CREATED ]{W}",
-                    border_style="bold red",
-                    padding=(0, 2)
-                ))
-                code = get_temp_code(email)
-                if code:
-                    confirm_id(email, uid, code, fresh_data, ses, password)
-                with _live_lock:
-                    live += 1
-                return {
-                    "uid": uid,
-                    "password": password,
-                    "name": f"{fname} {lname}",
-                    "email": email,
+                cloned_indicator = random.choice(cloned_app_indicators)
+                header1 = {
+                    "Host": "m.facebook.com",
+                    "Connection": "keep-alive",
+                    "Cache-Control": "max-age=0, no-store, no-cache, must-revalidate",
+                    "Upgrade-Insecure-Requests": "1",
+                    "User-Agent": f'Mozilla/5.0 (Linux; Android {device["android"]}; {device["model"]}) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/{device["chrome"]}.0.0.0 Mobile Safari/537.36',
+                    "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.7",
+                    "Origin": "https://m.facebook.com",
+                    "Referer": "https://m.facebook.com/",
+                    "Sec-Fetch-Site": "same-origin",
+                    "Sec-Fetch-Mode": "navigate",
+                    "Sec-Fetch-User": "?1",
+                    "Sec-Fetch-Dest": "document",
+                    "X-Requested-With": "com.facebook.lite",
+                    "X-Client-Type": "lite",
+                    "X-Facebook-App-ID": "103",
+                    "X-Is-Mobile-App": "true",
+                    "X-Lightweight-Mode": "true",
+                    "X-App-Version": device["fb_lite_version"],
+                    "X-Requested-Platform": "Android",
+                    "X-Allow-Cloned-App": "true",
+                    "X-Skip-All-Checkpoints": "true",
+                    "X-Disable-All-Verification-Checkpoints": "true",
+                    "X-Disable-Security-Challenge": "true",
+                    "X-Skip-Device-Verification": "true",
+                    "X-Security-Code-Challenge-Disabled": "true",
+                    "X-Bypass-Device-Challenge": "true",
+                    "X-Device-Trust-Level": "high",
+                    "X-Disable-Account-Review": "true",
+                    "X-Auto-Approve-After-Email": "true",
+                    "X-Prevent-Account-Disable": "true",
+                    "X-Skip-Fraud-Review": "true",
+                    "X-Allow-Temp-Email": "true",
+                    "X-Email-Verification-Delay": "86400",
+                    "X-Skip-Immediate-Email-Verify": "true",
+                    "X-Allow-Unconfirmed-Email": "true",
+                    "X-Skip-Post-Email-Checkpoint": "true",
+                    "X-No-Checkpoint-Post-Confirmation": "true",
+                    "X-Auto-Unlock-After-Email": "true",
+                    "X-Email-Confirmed-No-Checkpoint": "true",
+                    "X-FB-HTTP-Engine": "Liger",
+                    "X-FB-Lite-Manual-Email": "true",
+                    "X-Manual-Email-Confirmation-Only": "true",
+                    "X-No-Auto-Checkpoint-After-Email": "true",
+                    "X-Allow-Instant-Login-After-Email": "true",
+                    "Accept-Encoding": "gzip, deflate, br",
+                    "Accept-Language": random.choice(accept_languages),
+                    "Pragma": "no-cache",
+                    "Expires": "0",
                 }
-            else:
-                cp += 1
-                continue
-        except requests.exceptions.ConnectionError:
-            time.sleep(0.3)
-            continue
-        except Exception as e:
+                if cloned_indicator:
+                    header1["X-Cloned-App-Context"] = cloned_indicator
+                    header1["X-Virtual-Environment"] = "true"
+                if random.random() > 0.2:
+                    header1["dpr"] = device["dpr"]
+                    header1["viewport-width"] = device["width"]
+                if int(device["android"]) >= 10:
+                    header1["sec-ch-ua"] = f'"Chromium";v="{device["chrome"]}", "Google Chrome";v="{device["chrome"]}", "Not-A.Brand";v="99"'
+                    header1["sec-ch-ua-mobile"] = "?1"
+                    header1["sec-ch-ua-platform"] = '"Android"'
+                    if random.random() > 0.3:
+                        header1["sec-ch-prefers-color-scheme"] = random.choice(color_schemes)
+                reg_url = "https://www.facebook.com/reg/submit/?privacy_mutation_token=eyJ0eXBlIjowLCJjcmVhdGlvbl90aW1lIjoxNzM0NDE0OTk2LCJjYWxsc2l0ZV9pZCI6OTA3OTI0NDAyOTQ4MDU4fQ%3D%3D&multi_step_form=1&skip_suma=0&shouldForceMTouch=1"
+                py_submit = ses.post(reg_url, data=payload, headers=header1, timeout=60, verify=_CERTIFI)
+                if "c_user" in py_submit.cookies:
+                    uid = str(ses.cookies.get_dict()["c_user"])
+                    success = True
+                    fresh_data = py_submit.text
+                    _ch = {
+                        'User-Agent': header1["User-Agent"],
+                        'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8',
+                        'Accept-Language': 'en-US,en;q=0.9',
+                        'Referer': 'https://m.facebook.com/',
+                        'x-requested-with': 'com.facebook.lite',
+                    }
+                    try:
+                        _cp = ses.get('https://m.facebook.com/confirmemail.php?soft=hjk', headers=_ch, timeout=12, allow_redirects=True)
+                        if _cp.status_code == 200 and len(_cp.text) > 500:
+                            fresh_data = _cp.text
+                    except Exception:
+                        pass
+                    print(Panel(
+                        f"{O}  UID   {W}» {uid}\n"
+                        f"{O}  PASS  {W}» {password}\n"
+                        f"{O}  NAME  {W}» {fname} {lname}\n"
+                        f"{O}  MAIL  {W}» {email}",
+                        title=f"{R}[ ACCOUNT CREATED ]{W}",
+                        border_style="bold red",
+                        padding=(0, 2)
+                    ))
+                    code = get_temp_code(email)
+                    if code:
+                        confirm_id(email, uid, code, fresh_data, ses, password)
+                    with _live_lock:
+                        live += 1
+                    return {
+                        "uid": uid,
+                        "password": password,
+                        "name": f"{fname} {lname}",
+                        "email": email,
+                    }
+                else:
+                    if attempt < 4:
+                        time.sleep(random.uniform(0.3, 0.7))
+                        continue
+                    else:
+                        cp += 1
+            except requests.exceptions.ConnectionError:
+                if attempt < 4:
+                    time.sleep(random.uniform(0.3, 0.5) * (attempt + 1))
+                    continue
+                else:
+                    time.sleep(0.3)
+            except Exception:
+                if attempt < 4:
+                    time.sleep(random.uniform(0.5, 1.0))
+                    continue
+                else:
+                    cp += 1
+        if not success:
             cp += 1
-            continue
     return None
 def main():
     while True:
