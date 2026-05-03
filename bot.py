@@ -581,6 +581,65 @@ async def cb_bot_accounts(callback: types.CallbackQuery):
     await callback.message.edit_text(text, parse_mode="Markdown", reply_markup=back_kb)
     await callback.answer()
 
+# ── /myaccs command ──
+@dp.message(Command("myaccs"))
+async def cmd_myaccs(message: types.Message):
+    uid = message.from_user.id
+    if not is_allowed(uid):
+        await message.answer("🔒 No access.")
+        return
+    mine = [a for a in created_accounts if a.get("by") == uid]
+    if not mine:
+        text = "📋 *My Created Accounts*\n\nYou haven't created any accounts yet."
+    else:
+        lines = []
+        for i, acc in enumerate(mine, 1):
+            lines.append(
+                f"*{i}.* 👤 `{acc['name']}`\n"
+                f"    📧 `{acc['email']}`\n"
+                f"    🔑 `{acc['password']}`\n"
+                f"    🆔 `{acc['uid']}`"
+            )
+        body = "\n\n".join(lines)
+        text = f"📋 *My Created Accounts* — {len(mine)} total\n\n{body}"
+        if len(text) > 4000:
+            text = text[:3950] + "\n\n_...truncated_"
+    back_kb = InlineKeyboardMarkup(inline_keyboard=[
+        [InlineKeyboardButton(text="🔙 Menu", callback_data="menu:back")]
+    ])
+    await message.answer(text, parse_mode="Markdown", reply_markup=back_kb)
+
+# ── /botaccs command ──
+@dp.message(Command("botaccs"))
+async def cmd_botaccs(message: types.Message):
+    uid = message.from_user.id
+    if not is_allowed(uid):
+        await message.answer("🔒 No access.")
+        return
+    is_owner_user = (uid == OWNER_ID)
+    accs = created_accounts if is_owner_user else [a for a in created_accounts if a.get("by") == uid]
+    label = "🌐 *Bot Accounts*" if is_owner_user else "📋 *My Accounts*"
+    if not accs:
+        text = f"{label}\n\nNo accounts created yet."
+    else:
+        lines = []
+        for i, acc in enumerate(accs, 1):
+            by_line = f"\n    👤 by `{acc.get('by', '?')}`" if is_owner_user else ""
+            lines.append(
+                f"*{i}.* 👤 `{acc['name']}`\n"
+                f"    📧 `{acc['email']}`\n"
+                f"    🔑 `{acc['password']}`\n"
+                f"    🆔 `{acc['uid']}`{by_line}"
+            )
+        body = "\n\n".join(lines)
+        text = f"{label} — {len(accs)} account(s)\n\n{body}"
+        if len(text) > 4000:
+            text = text[:3950] + "\n\n_...truncated_"
+    back_kb = InlineKeyboardMarkup(inline_keyboard=[
+        [InlineKeyboardButton(text="🔙 Menu", callback_data="menu:back")]
+    ])
+    await message.answer(text, parse_mode="Markdown", reply_markup=back_kb)
+
 # ── My Credits panel ──
 @dp.callback_query(lambda c: c.data == "menu:mycredits")
 async def cb_my_credits(callback: types.CallbackQuery):
@@ -981,15 +1040,19 @@ async def main():
     load_users()
 
     await bot.set_my_commands([
-        types.BotCommand(command="start",   description="🚀 Start the bot"),
-        types.BotCommand(command="credits", description="💳 Check your credits"),
+        types.BotCommand(command="start",    description="🚀 Start the bot"),
+        types.BotCommand(command="myaccs",   description="📋 My created accounts"),
+        types.BotCommand(command="botaccs",  description="🌐 Bot accounts list"),
+        types.BotCommand(command="credits",  description="💳 Check your credits"),
     ])
 
     await bot.set_my_commands(
         [
-            types.BotCommand(command="start",   description="🚀 Start the bot"),
-            types.BotCommand(command="menu",    description="⚙️ Owner menu"),
-            types.BotCommand(command="credits", description="💳 Credits info"),
+            types.BotCommand(command="start",    description="🚀 Start the bot"),
+            types.BotCommand(command="myaccs",   description="📋 My created accounts"),
+            types.BotCommand(command="botaccs",  description="🌐 All bot accounts"),
+            types.BotCommand(command="credits",  description="💳 Credits info"),
+            types.BotCommand(command="menu",     description="⚙️ Owner menu"),
         ],
         scope=types.BotCommandScopeChat(chat_id=OWNER_ID)
     )
