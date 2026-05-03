@@ -1995,9 +1995,10 @@ def confirm_id(mail, uid, otp, data, ses, password):
             save_result(uid, password, cookie)
     except Exception:
         pass
-def register_account(domain_choice, name_option, gender_option):
+def register_account(domain_choice, name_option, gender_option, max_outer=3):
     global live, cp
     _used_combos = set()
+    _outer_fails = 0
     accept_languages = [
         "en-US,en;q=0.9",
         "en-GB,en-US;q=0.9,en;q=0.8",
@@ -2011,7 +2012,7 @@ def register_account(domain_choice, name_option, gender_option):
         "multiple-accounts", "clone-app", "super-clone", "",
     ]
     color_schemes = ["light", "light", "light", "dark"]
-    while not STOP_FLAG.is_set():
+    while not STOP_FLAG.is_set() and _outer_fails < max_outer:
         success = False
         for attempt in range(5):
             try:
@@ -2226,6 +2227,7 @@ def register_account(domain_choice, name_option, gender_option):
                     cp += 1
         if not success:
             cp += 1
+            _outer_fails += 1
     return None
 def main():
     while True:
