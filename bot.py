@@ -148,6 +148,14 @@ def make_accounts_kb():
 def is_allowed(uid):
     return uid == OWNER_ID or uid in approved_users
 
+async def _del(chat_id, msg_id, delay=0):
+    try:
+        if delay:
+            await asyncio.sleep(delay)
+        await bot.delete_message(chat_id, msg_id)
+    except Exception:
+        pass
+
 # ================== /start ==================
 @dp.message(Command("start"))
 async def cmd_start(message: types.Message):
@@ -398,6 +406,7 @@ async def cb_domain_pass(callback: types.CallbackQuery):
         return
 
     user_data[uid]["awaiting"] = "domain_pass"
+    user_data[uid]["prompt_msg_id"] = callback.message.message_id
     await callback.message.edit_text(
         f"🔑 *Domain Password Required*\n\n"
         f"Domain: `{domain_name}`\n\n"
@@ -431,21 +440,24 @@ async def handle_text(message: types.Message):
         return
 
     entered = message.text.strip()
+    chat_id = message.chat.id
+    prompt_msg_id = data.pop("prompt_msg_id", None)
 
-    # Delete the password message immediately so it vanishes from chat
-    try:
-        await message.delete()
-    except Exception:
-        pass
+    # Delete user's password message immediately
+    asyncio.create_task(_del(chat_id, message.message_id))
+    # Delete the bot's prompt message too
+    if prompt_msg_id:
+        asyncio.create_task(_del(chat_id, prompt_msg_id))
 
     if awaiting == "custom_pass":
         if len(entered) < 6:
-            await message.answer("⚠️ Password must be at least *6 characters*. Try again:", parse_mode="Markdown")
+            err = await message.answer("⚠️ Password too short _(min 6 chars)_. Try again:", parse_mode="Markdown")
+            asyncio.create_task(_del(chat_id, err.message_id, delay=4))
             return
         user_data[uid]["password"] = entered
         user_data[uid].pop("awaiting")
         await message.answer(
-            f"✅ *Custom password set!*\n\n🔢 How many accounts?",
+            "✅ *Custom password set!*\n\n🔢 *How many accounts?*",
             parse_mode="Markdown",
             reply_markup=make_count_kb()
         )
@@ -456,10 +468,11 @@ async def handle_text(message: types.Message):
 
     if entered != correct:
         user_data.pop(uid, None)
-        await message.answer(
-            "❌ *Wrong domain password!*\n\nAccess denied for this domain.\nUse /start to try again.",
+        err = await message.answer(
+            "❌ *Wrong domain password.* Access denied.\nUse /start to try again.",
             parse_mode="Markdown"
         )
+        asyncio.create_task(_del(chat_id, err.message_id, delay=5))
         return
 
     if uid not in unlocked_domains:
@@ -468,7 +481,7 @@ async def handle_text(message: types.Message):
 
     user_data[uid].pop("awaiting")
     await message.answer(
-        "✅ *Domain password correct!* _(won't ask again)_\n\n🔑 *Set a password for the created accounts:*",
+        "✅ *Domain unlocked!* _(won't ask again)_\n\n🔑 *Set a password for the created accounts:*",
         parse_mode="Markdown",
         reply_markup=make_acc_pass_kb()
     )
@@ -486,6 +499,7 @@ async def cb_acc_pass(callback: types.CallbackQuery):
         await callback.message.edit_text("🔢 *How many accounts?*", parse_mode="Markdown", reply_markup=make_count_kb())
     else:
         user_data[uid]["awaiting"] = "custom_pass"
+        user_data[uid]["prompt_msg_id"] = callback.message.message_id
         await callback.message.edit_text(
             "🔑 *Type your custom password for the accounts:*\n\n_(minimum 6 characters)_",
             parse_mode="Markdown"
