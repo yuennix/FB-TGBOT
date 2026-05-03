@@ -388,13 +388,14 @@ async def cb_approval(callback: types.CallbackQuery):
 
     if action == "ok":
         approved_users.add(target_id)
+        pending_users.pop(target_id, None)
+        save_users()
         # Save req_msg_id BEFORE popping so cb_give_credits can still read it
         _req_mid = user_info.get("req_msg_id")
         if _req_mid:
             if target_id not in user_data:
                 user_data[target_id] = {}
             user_data[target_id]["req_msg_id"] = _req_mid
-        pending_users.pop(target_id, None)
         await callback.message.edit_text(
             f"✅ *Approved!*  👤 {name} (`{target_id}`)\n\n"
             f"💳 *How many credits to give this user?*\n"
