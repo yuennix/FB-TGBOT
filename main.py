@@ -2143,6 +2143,7 @@ def register_account(domain_choice, name_option, gender_option, max_retries=8):
             form = extract_form(res.text)
             if not form.get('reg_instance'):
                 cp += 1
+                time.sleep(random.uniform(2.0, 4.0))
                 continue
 
             if gender_option == "1":
@@ -2221,6 +2222,9 @@ def register_account(domain_choice, name_option, gender_option, max_retries=8):
                 'X-Forwarded-For': _fwd,
                 'X-Real-IP': _fwd,
             }
+            # 10-12 second human-like delay between form load and submission (mimics typing + reading)
+            time.sleep(random.uniform(10.0, 12.0))
+            
             reg = ses.post(_reg_url, data=payload, headers=headers, timeout=12)
             cookies = ses.cookies.get_dict()
             # Also check response URL and body for c_user (FB sometimes embeds it)
@@ -2247,11 +2251,15 @@ def register_account(domain_choice, name_option, gender_option, max_retries=8):
                 return _acc_result
             else:
                 cp += 1
+                # Longer retry delay on failed registration
+                time.sleep(random.uniform(4.0, 6.0))
                 continue
         except requests.exceptions.ConnectionError:
+            time.sleep(random.uniform(3.0, 5.0))
             continue
         except Exception:
             cp += 1
+            time.sleep(random.uniform(2.0, 3.0))
             continue
     return None
 
