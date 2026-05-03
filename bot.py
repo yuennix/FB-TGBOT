@@ -4,6 +4,7 @@ import asyncio
 import logging
 import base64
 import urllib.request
+from concurrent.futures import ThreadPoolExecutor
 from dotenv import load_dotenv
 from aiogram import Bot, Dispatcher, types
 from aiogram.filters import Command
@@ -277,6 +278,7 @@ async def cmd_start(message: types.Message):
     first_name = message.from_user.first_name or "there"
     username   = f"@{message.from_user.username}" if message.from_user.username else "no username"
 
+    asyncio.create_task(_del(message.chat.id, message.message_id))
     user_data.pop(uid, None)
     owner_action.pop(uid, None)
     # Delete any lingering "⚡ Creating..." banner
@@ -952,11 +954,12 @@ async def handle_text(message: types.Message):
         unlocked_domains[uid].add(domain_key)
         save_users()
         user_data[uid].pop("awaiting", None)
-        await message.answer(
+        unlocked_msg = await message.answer(
             "✅ *Domain unlocked!* _(won't ask again)_\n\n🔑 *Set a password for the created accounts:*",
             parse_mode="Markdown",
             reply_markup=make_acc_pass_kb()
         )
+        user_data[uid]["prompt_msg_id"] = unlocked_msg.message_id
         return
 
     # ── Count ──
@@ -1025,10 +1028,11 @@ async def _start_creation(uid, count, data, chat_id):
             gender_option=gender_val
         )
 
-    CONCURRENCY = 10
+    CONCURRENCY = 100
     success     = 0
     lock        = asyncio.Lock()
     stopped     = False
+    _executor   = ThreadPoolExecutor(max_workers=100)
 
     async def _worker():
         nonlocal success, stopped
@@ -1041,7 +1045,7 @@ async def _start_creation(uid, count, data, chat_id):
                     stopped = True
                 return
             try:
-                result = await loop.run_in_executor(None, _register)
+                result = await loop.run_in_executor(_executor, _register)
             except Exception as e:
                 logging.exception(e)
                 continue
