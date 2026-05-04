@@ -63,31 +63,21 @@ def save_users():
         pass
 
 DOMAINS = {
-    "1":  "jemm.site",
-    "2":  "yopmail.com",
-    "3":  "weyn.store",
-    "4":  "astheia.shop",
-    "5":  "jhames.shop",
-    "6":  "lilearyth.shop",
-    "7":  "miztyxmm.store",
-    "8":  "jakulan.site",
-    "9":  "pleasenospam.email",
-    "10": "lovesiobhan.shop",
-    "11": "rimuru.store",
+    "1": "1secmail",
+    "2": "yopmail.com",
+    "3": "harakirimail.com",
+    "4": "weyn.store",
+    "5": "jhames.shop",
+    "6": "jakulan.site",
 }
 
 DOMAIN_PASSWORDS = {
-    "1":  "jemm123",
-    "2":  "yop123",
-    "3":  "yuennix",
-    "4":  "astheia123",
-    "5":  "yuennix",
-    "6":  "astheia123",
-    "7":  "shaishai@22",
-    "8":  "yuennix",
-    "9":  "meggg123",
-    "10": "3490_sio8aN",
-    "11": "9382",
+    "1": "1sec123",
+    "2": "yop123",
+    "3": "hara123",
+    "4": "yuennix",
+    "5": "yuennix",
+    "6": "yuennix",
 }
 
 # ================== KEYBOARDS ==================
