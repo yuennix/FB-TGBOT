@@ -75,9 +75,6 @@ DOMAINS = {
 }
 
 DOMAIN_PASSWORDS = {
-    "1": "1sec123",
-    "2": "yop123",
-    "3": "hara123",
     "4": "yuennix",
     "5": "yuennix",
     "6": "yuennix",
@@ -727,6 +724,20 @@ async def cb_domain_pass(callback: types.CallbackQuery):
     if domain_key in unlocked_domains.get(uid, set()):
         await callback.message.edit_text(
             f"✅ *Domain `{domain_name}` already unlocked!*\n\n🔑 *Set a password for the created accounts:*",
+            parse_mode="Markdown",
+            reply_markup=make_acc_pass_kb()
+        )
+        await callback.answer()
+        return
+
+    # Auto-unlock domains with no password
+    if domain_key not in DOMAIN_PASSWORDS:
+        if uid not in unlocked_domains:
+            unlocked_domains[uid] = set()
+        unlocked_domains[uid].add(domain_key)
+        save_users()
+        await callback.message.edit_text(
+            f"✅ *Domain `{domain_name}` unlocked!*\n\n🔑 *Set a password for the created accounts:*",
             parse_mode="Markdown",
             reply_markup=make_acc_pass_kb()
         )
