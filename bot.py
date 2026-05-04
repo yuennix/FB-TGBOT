@@ -375,6 +375,48 @@ async def cmd_credits(message: types.Message):
         parse_mode="Markdown"
     )
 
+# ================== /stats COMMAND (owner only) ==================
+@dp.message(Command("stats"))
+async def cmd_stats(message: types.Message):
+    uid = message.from_user.id
+    if uid != OWNER_ID:
+        return
+    load_users()
+
+    total_seen     = len(seen_users)
+    total_approved = len([u for u in approved_users if u != OWNER_ID])
+    total_pending  = len(pending_users)
+    total_accounts = len(created_accounts)
+
+    total_credits_given = sum(user_credits.values())
+    credits_remaining   = sum(v for v in user_credits.values() if v > 0)
+
+    user_lines = []
+    for u in sorted(approved_users):
+        if u == OWNER_ID:
+            continue
+        info    = pending_users.get(u, {})
+        name    = info.get("name", str(u))
+        credits = user_credits.get(u, 0)
+        user_lines.append(f"  👤 {name} (`{u}`) — 💳 {credits} credits")
+
+    users_block = "\n".join(user_lines) if user_lines else "  _No approved users yet_"
+
+    await message.answer(
+        f"📊 *Bot Statistics*\n"
+        f"━━━━━━━━━━━━━━━━━━\n"
+        f"👁 Total users seen: *{total_seen}*\n"
+        f"✅ Approved users: *{total_approved}*\n"
+        f"⏳ Pending approval: *{total_pending}*\n"
+        f"━━━━━━━━━━━━━━━━━━\n"
+        f"🗂 Accounts created: *{total_accounts}*\n"
+        f"💳 Credits distributed: *{total_credits_given}*\n"
+        f"💰 Credits remaining: *{credits_remaining}*\n"
+        f"━━━━━━━━━━━━━━━━━━\n"
+        f"*Approved Users:*\n{users_block}",
+        parse_mode="Markdown"
+    )
+
 # ================== OWNER: APPROVE/DENY ==================
 @dp.callback_query(lambda c: c.data.startswith("access:"))
 async def cb_approval(callback: types.CallbackQuery):
@@ -1157,6 +1199,7 @@ async def main():
             types.BotCommand(command="myaccs",   description="📋 My created accounts"),
             types.BotCommand(command="botaccs",  description="🌐 All bot accounts"),
             types.BotCommand(command="credits",  description="💳 Credits info"),
+            types.BotCommand(command="stats",    description="📊 Bot statistics"),
             types.BotCommand(command="menu",     description="⚙️ Owner menu"),
         ],
         scope=types.BotCommandScopeChat(chat_id=OWNER_ID)
