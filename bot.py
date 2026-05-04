@@ -101,6 +101,7 @@ def make_name_kb():
     return InlineKeyboardMarkup(inline_keyboard=[
         [InlineKeyboardButton(text="🇵🇭 Filipino Names", callback_data="name:1")],
         [InlineKeyboardButton(text="🔥 RPW Names",       callback_data="name:2")],
+        [InlineKeyboardButton(text="🔙 Back",            callback_data="back:main")],
     ])
 
 def make_gender_kb():
@@ -108,18 +109,21 @@ def make_gender_kb():
         [InlineKeyboardButton(text="👨 Male",  callback_data="gender:1")],
         [InlineKeyboardButton(text="👩 Female",callback_data="gender:2")],
         [InlineKeyboardButton(text="⚧ Mixed", callback_data="gender:3")],
+        [InlineKeyboardButton(text="🔙 Back",  callback_data="back:name")],
     ])
 
 def make_domain_kb():
     rows = []
     for k, v in DOMAINS.items():
         rows.append([InlineKeyboardButton(text=f"{k} • {v}", callback_data=f"domain:{k}")])
+    rows.append([InlineKeyboardButton(text="🔙 Back", callback_data="back:gender")])
     return InlineKeyboardMarkup(inline_keyboard=rows)
 
 def make_acc_pass_kb():
     return InlineKeyboardMarkup(inline_keyboard=[
         [InlineKeyboardButton(text="🔑 Set Custom Password", callback_data="accpass:custom")],
         [InlineKeyboardButton(text="🎲 Use Random Password",  callback_data="accpass:random")],
+        [InlineKeyboardButton(text="🔙 Back",                callback_data="back:domain")],
     ])
 
 def make_stop_kb(uid):
@@ -687,6 +691,32 @@ async def cb_name_style(callback: types.CallbackQuery):
     await callback.message.edit_text(
         "📛 Choose *Name Style*:", parse_mode="Markdown", reply_markup=make_name_kb()
     )
+    await callback.answer()
+
+# ================== BACK NAVIGATION ==================
+@dp.callback_query(lambda c: c.data.startswith("back:"))
+async def cb_back(callback: types.CallbackQuery):
+    uid  = callback.from_user.id
+    step = callback.data.split(":")[1]
+    if step == "main":
+        user_data.pop(uid, None)
+        await callback.message.edit_text(
+            "🤖 *Facebook Auto Creator*\n\nSelect options step by step 👇",
+            parse_mode="Markdown",
+            reply_markup=make_start_kb(uid)
+        )
+    elif step == "name":
+        await callback.message.edit_text(
+            "📛 Choose *Name Style*:", parse_mode="Markdown", reply_markup=make_name_kb()
+        )
+    elif step == "gender":
+        await callback.message.edit_text(
+            "⚤ Choose *Gender*:", parse_mode="Markdown", reply_markup=make_gender_kb()
+        )
+    elif step == "domain":
+        await callback.message.edit_text(
+            "📧 Choose *Email Domain*:", parse_mode="Markdown", reply_markup=make_domain_kb()
+        )
     await callback.answer()
 
 # ================== NAME ==================
