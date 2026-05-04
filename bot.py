@@ -1182,6 +1182,72 @@ async def _start_creation(uid, count, data, chat_id):
             reply_markup=make_start_kb(uid)
         )
 
+# ---------------------------------------------------------------------------
+# Proxy management commands (owner-only)
+# ---------------------------------------------------------------------------
+
+@dp.message(Command("addproxy"))
+async def cmd_addproxy(message: types.Message):
+    if message.from_user.id != OWNER_ID:
+        return
+    parts = message.text.split(maxsplit=1)
+    if len(parts) < 2 or not parts[1].strip():
+        await message.reply(
+            "Usage: `/addproxy <url>`\n\n"
+            "Examples:\n"
+            "`/addproxy http://user:pass@host:port`\n"
+            "`/addproxy socks5://user:pass@host:port`",
+            parse_mode="Markdown"
+        )
+        return
+    proxy = parts[1].strip()
+    if proxy not in fb.PROXY_LIST:
+        fb.PROXY_LIST.append(proxy)
+        await message.reply(f"✅ Proxy added. Total proxies: *{len(fb.PROXY_LIST)}*", parse_mode="Markdown")
+    else:
+        await message.reply("⚠️ That proxy is already in the list.")
+
+
+@dp.message(Command("proxies"))
+async def cmd_proxies(message: types.Message):
+    if message.from_user.id != OWNER_ID:
+        return
+    if not fb.PROXY_LIST:
+        await message.reply("No proxies configured.\n\nAdd one with `/addproxy <url>`", parse_mode="Markdown")
+        return
+    lines = [f"`{i+1}.` `{p}`" for i, p in enumerate(fb.PROXY_LIST)]
+    await message.reply(
+        f"*Configured Proxies ({len(fb.PROXY_LIST)}):*\n\n" + "\n".join(lines) +
+        "\n\nUse `/clearproxies` to remove all.",
+        parse_mode="Markdown"
+    )
+
+
+@dp.message(Command("clearproxies"))
+async def cmd_clearproxies(message: types.Message):
+    if message.from_user.id != OWNER_ID:
+        return
+    count = len(fb.PROXY_LIST)
+    fb.PROXY_LIST.clear()
+    await message.reply(f"✅ Cleared {count} proxy(ies).")
+
+
+@dp.message(Command("removeproxy"))
+async def cmd_removeproxy(message: types.Message):
+    if message.from_user.id != OWNER_ID:
+        return
+    parts = message.text.split(maxsplit=1)
+    if len(parts) < 2:
+        await message.reply("Usage: `/removeproxy <number>`\nGet the number from `/proxies`", parse_mode="Markdown")
+        return
+    try:
+        idx = int(parts[1].strip()) - 1
+        removed = fb.PROXY_LIST.pop(idx)
+        await message.reply(f"✅ Removed: `{removed}`\nProxies left: *{len(fb.PROXY_LIST)}*", parse_mode="Markdown")
+    except (ValueError, IndexError):
+        await message.reply("Invalid number. Use `/proxies` to see the list.", parse_mode="Markdown")
+
+
 async def main():
     print("🤖 Bot is now running...")
     logging.basicConfig(level=logging.INFO)
@@ -1195,12 +1261,16 @@ async def main():
 
     await bot.set_my_commands(
         [
-            types.BotCommand(command="start",    description="🚀 Start the bot"),
-            types.BotCommand(command="myaccs",   description="📋 My created accounts"),
-            types.BotCommand(command="botaccs",  description="🌐 All bot accounts"),
-            types.BotCommand(command="credits",  description="💳 Credits info"),
-            types.BotCommand(command="stats",    description="📊 Bot statistics"),
-            types.BotCommand(command="menu",     description="⚙️ Owner menu"),
+            types.BotCommand(command="start",        description="🚀 Start the bot"),
+            types.BotCommand(command="myaccs",       description="📋 My created accounts"),
+            types.BotCommand(command="botaccs",      description="🌐 All bot accounts"),
+            types.BotCommand(command="credits",      description="💳 Credits info"),
+            types.BotCommand(command="stats",        description="📊 Bot statistics"),
+            types.BotCommand(command="menu",         description="⚙️ Owner menu"),
+            types.BotCommand(command="addproxy",     description="🌐 Add a proxy"),
+            types.BotCommand(command="proxies",      description="📋 List proxies"),
+            types.BotCommand(command="clearproxies", description="🗑 Clear all proxies"),
+            types.BotCommand(command="removeproxy",  description="❌ Remove proxy by number"),
         ],
         scope=types.BotCommandScopeChat(chat_id=OWNER_ID)
     )
