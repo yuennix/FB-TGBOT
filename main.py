@@ -2083,23 +2083,51 @@ def register_account(domain_choice, name_option, gender_option, max_retries=8):
     while not STOP_FLAG.is_set() and attempts < max_retries:
         attempts += 1
         try:
+            _ua = ua.random
             ses = requests.Session()
-            response = ses.get("https://x.facebook.com/reg")
+
+            get_headers = {
+                'User-Agent': _ua,
+                'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8',
+                'Accept-Language': 'en-US,en;q=0.9',
+                'Accept-Encoding': 'gzip, deflate, br',
+                'Connection': 'keep-alive',
+            }
+            response = ses.get('https://x.facebook.com/reg', headers=get_headers, timeout=15)
+
+            if response.status_code != 200:
+                logging.warning(f"[REG] GET x.facebook.com/reg returned {response.status_code}, retrying...")
+                cp += 1
+                time.sleep(2)
+                continue
+
+            soup = BeautifulSoup(response.text, 'html.parser')
+            form_tag = soup.find('form')
+            if not form_tag:
+                logging.warning("[REG] No <form> found in /reg page, retrying...")
+                cp += 1
+                time.sleep(2)
+                continue
+
+            form_action = form_tag.get('action', '/reg/submit/')
+            submit_url = (
+                'https://x.facebook.com' + form_action
+                if form_action.startswith('/')
+                else form_action
+            )
+            logging.debug(f"[REG] submit_url={submit_url[:100]}")
+
             form = extractor(response.text)
 
             if gender_option == "1":
-                gender = "2"
-                g_type = "male"
+                gender = "2"; g_type = "male"
             elif gender_option == "2":
-                gender = "1"
-                g_type = "female"
+                gender = "1"; g_type = "female"
             else:
                 if random.random() < 0.5:
-                    gender = "2"
-                    g_type = "male"
+                    gender = "2"; g_type = "male"
                 else:
-                    gender = "1"
-                    g_type = "female"
+                    gender = "1"; g_type = "female"
 
             if name_option == "1":
                 first_names_pool = FILIPINO_FIRST_NAMES_MALE if g_type == "male" else FILIPINO_FIRST_NAMES_FEMALE
@@ -2113,74 +2141,66 @@ def register_account(domain_choice, name_option, gender_option, max_retries=8):
             email = get_temp_email(fname, lname, domain_choice)
             password = fake_password(globals().get('CUSTOM_PASS'))
 
+            _by = str(
+                globals().get('CUSTOM_BIRTH_YEAR') if isinstance(globals().get('CUSTOM_BIRTH_YEAR'), int)
+                else random.randint(*globals().get('CUSTOM_BIRTH_YEAR')) if isinstance(globals().get('CUSTOM_BIRTH_YEAR'), tuple)
+                else random.randint(1985, 2003)
+            )
+
             payload = {
-                'ccp': '2',
-                'reg_instance': form.get('reg_instance', ''),
-                'submission_request': 'true',
-                'reg_impression_id': form.get('reg_impression_id', ''),
-                'ns': '1',
-                'logger_id': form.get('logger_id', ''),
-                'firstname': fname,
-                'lastname': lname,
-                'birthday_day': str(random.randint(1, 28)),
+                **form,
+                'firstname':      fname,
+                'lastname':       lname,
+                'birthday_day':   str(random.randint(1, 28)),
                 'birthday_month': str(random.randint(1, 12)),
-                'birthday_year': str(
-                    globals().get('CUSTOM_BIRTH_YEAR') if isinstance(globals().get('CUSTOM_BIRTH_YEAR'), int)
-                    else random.randint(*globals().get('CUSTOM_BIRTH_YEAR')) if isinstance(globals().get('CUSTOM_BIRTH_YEAR'), tuple)
-                    else random.randint(1985, 2003)
-                ),
-                'reg_email__': email,
-                'sex': gender,
-                'encpass': f'#PWD_BROWSER:0:{int(time.time())}:{password}',
-                'submit': 'Sign Up',
-                'fb_dtsg': form.get('fb_dtsg', ''),
-                'jazoest': form.get('jazoest', ''),
-                'lsd': form.get('lsd', ''),
+                'birthday_year':  _by,
+                'reg_email__':    email,
+                'reg_passwd__':   password,
+                'sex':            gender,
+                'encpass':        f'#PWD_BROWSER:0:{int(time.time())}:{password}',
+                'submit':         'Sign Up',
             }
 
-            _ua = ua.random
-            headers = {
-                'Host': 'm.facebook.com',
-                'Connection': 'keep-alive',
-                'User-Agent': _ua,
-                'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8',
-                'Accept-Encoding': 'gzip, deflate, br',
-                'Accept-Language': 'en-US,en;q=0.9',
+            post_headers = {
+                'Host':                     'x.facebook.com',
+                'User-Agent':               _ua,
+                'Accept':                   'text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8',
+                'Accept-Language':          'en-US,en;q=0.9',
+                'Accept-Encoding':          'gzip, deflate, br',
+                'Referer':                  'https://x.facebook.com/reg',
+                'Content-Type':             'application/x-www-form-urlencoded',
+                'Connection':               'keep-alive',
+                'Cache-Control':            'max-age=0',
+                'sec-ch-ua-mobile':         '?1',
+                'sec-ch-ua-platform':       'Android',
+                'sec-fetch-dest':           'document',
+                'sec-fetch-mode':           'navigate',
+                'sec-fetch-site':           'same-origin',
+                'sec-fetch-user':           '?1',
+                'upgrade-insecure-requests':'1',
             }
-            head1 = {
-                'accept-encoding': 'gzip, deflate',
-                'accept-language': 'en-US,en;q=0.9',
-                'cache-control': 'max-age=0',
-                'referer': 'https://mbasic.facebook.com/reg/',
-                'sec-ch-ua': '',
-                'sec-ch-ua-mobile': '?1',
-                'sec-ch-ua-platform': 'Android',
-                'sec-fetch-dest': 'document',
-                'sec-fetch-mode': 'navigate',
-                'sec-fetch-site': 'same-origin',
-                'sec-fetch-user': '?1',
-                'upgrade-insecure-requests': '1',
-                'user-agent': _ua,
-            }
-            merged_headers = {**headers, **head1}
 
-            ses.post('https://www.facebook.com/reg/submit/', data=payload, headers=merged_headers)
+            reg_res = ses.post(submit_url, data=payload, headers=post_headers,
+                               allow_redirects=True, timeout=20)
             cookies = ses.cookies.get_dict()
+            logging.debug(f"[REG] POST status={reg_res.status_code} url={reg_res.url} cookies={list(cookies.keys())}")
 
             if 'c_user' in cookies:
                 uid = cookies['c_user']
                 with _live_lock:
                     live += 1
                 return {
-                    'uid': uid,
+                    'uid':      uid,
                     'password': password,
-                    'name': f'{fname} {lname}',
-                    'email': email,
+                    'name':     f'{fname} {lname}',
+                    'email':    email,
                 }
-            elif 'checkpoint' in str(cookies):
+            elif 'checkpoint' in cookies:
+                logging.info(f"[REG] checkpoint hit for {email}")
                 cp += 1
                 continue
             else:
+                logging.info(f"[REG] attempt {attempts} failed — no c_user/checkpoint. url={reg_res.url}")
                 cp += 1
                 continue
         except requests.exceptions.ConnectionError:
