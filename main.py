@@ -2084,8 +2084,9 @@ def register_account(domain_choice, name_option, gender_option, max_retries=8):
         attempts += 1
         try:
             ses = requests.Session()
-            res = ses.get('https://m.facebook.com/reg/')
-            form = extract_form(res.text)
+            response = ses.get("https://x.facebook.com/reg")
+            form = extractor(response.text)
+
             if gender_option == "1":
                 gender = "2"
                 g_type = "male"
@@ -2099,27 +2100,26 @@ def register_account(domain_choice, name_option, gender_option, max_retries=8):
                 else:
                     gender = "1"
                     g_type = "female"
+
             if name_option == "1":
-                first_names = FILIPINO_FIRST_NAMES_MALE if g_type == "male" else FILIPINO_FIRST_NAMES_FEMALE
-                last_names = FILIPINO_LAST_NAMES
+                first_names_pool = FILIPINO_FIRST_NAMES_MALE if g_type == "male" else FILIPINO_FIRST_NAMES_FEMALE
+                last_names_pool = FILIPINO_LAST_NAMES
             else:
-                first_names = RPW_FIRST_NAMES_MALE if g_type == "male" else RPW_FIRST_NAMES_FEMALE
-                last_names = RPW_LAST_NAMES
-            fname = random.choice(first_names)
-            lname = random.choice(last_names)
+                first_names_pool = RPW_FIRST_NAMES_MALE if g_type == "male" else RPW_FIRST_NAMES_FEMALE
+                last_names_pool = RPW_LAST_NAMES
+
+            fname = random.choice(first_names_pool)
+            lname = random.choice(last_names_pool)
             email = get_temp_email(fname, lname, domain_choice)
             password = fake_password(globals().get('CUSTOM_PASS'))
-            from urllib.parse import quote as _uq
-            _pt = form.get('privacy_mutation_token', '')
-            if _pt:
-                _reg_url = f"https://m.facebook.com/reg/submit/?privacy_mutation_token={_uq(_pt)}&multi_step_form=1&skip_suma=0&shouldForceMTouch=1"
-            else:
-                _reg_url = "https://m.facebook.com/reg/submit/?multi_step_form=1&skip_suma=0&shouldForceMTouch=1"
+
             payload = {
                 'ccp': '2',
-                'reg_instance': form.get('reg_instance'),
-                'reg_impression_id': form.get('reg_impression_id'),
-                'logger_id': form.get('logger_id'),
+                'reg_instance': form.get('reg_instance', ''),
+                'submission_request': 'true',
+                'reg_impression_id': form.get('reg_impression_id', ''),
+                'ns': '1',
+                'logger_id': form.get('logger_id', ''),
                 'firstname': fname,
                 'lastname': lname,
                 'birthday_day': str(random.randint(1, 28)),
@@ -2130,94 +2130,56 @@ def register_account(domain_choice, name_option, gender_option, max_retries=8):
                     else random.randint(1985, 2003)
                 ),
                 'reg_email__': email,
-                'reg_passwd__': password,
                 'sex': gender,
                 'encpass': f'#PWD_BROWSER:0:{int(time.time())}:{password}',
                 'submit': 'Sign Up',
-                'privacy_mutation_token': _pt,
                 'fb_dtsg': form.get('fb_dtsg', ''),
-                'jazoest': form.get('jazoest'),
-                'lsd': form.get('lsd'),
-                '__dyn': '', '__csr': '', '__req': 'q', '__a': '', '__user': '0'
+                'jazoest': form.get('jazoest', ''),
+                'lsd': form.get('lsd', ''),
             }
+
+            _ua = ua.random
             headers = {
-                'authority': 'm.facebook.com',
-                'accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.7',
-                'accept-language': 'en-US;q=0.8,en;q=0.7',
+                'Host': 'm.facebook.com',
+                'Connection': 'keep-alive',
+                'User-Agent': _ua,
+                'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8',
+                'Accept-Encoding': 'gzip, deflate, br',
+                'Accept-Language': 'en-US,en;q=0.9',
+            }
+            head1 = {
+                'accept-encoding': 'gzip, deflate',
+                'accept-language': 'en-US,en;q=0.9',
                 'cache-control': 'max-age=0',
-                'dpr': '2',
-                'referer': 'https://m.facebook.com/login/save-device/',
-                'sec-ch-prefers-color-scheme': 'light',
-                'sec-ch-ua': '"Android WebView";v="109", "Chromium";v="109", "Not_A Brand";v="24"',
+                'referer': 'https://mbasic.facebook.com/reg/',
+                'sec-ch-ua': '',
                 'sec-ch-ua-mobile': '?1',
-                'sec-ch-ua-platform': '"Android"',
+                'sec-ch-ua-platform': 'Android',
                 'sec-fetch-dest': 'document',
                 'sec-fetch-mode': 'navigate',
                 'sec-fetch-site': 'same-origin',
                 'sec-fetch-user': '?1',
                 'upgrade-insecure-requests': '1',
-                'user-agent': FB_LITE_UA,
-                'x-requested-with': 'com.facebook.lite',
-                'viewport-width': '980'
+                'user-agent': _ua,
             }
-            reg = ses.post(_reg_url, data=payload, headers=headers)
+            merged_headers = {**headers, **head1}
+
+            ses.post('https://www.facebook.com/reg/submit/', data=payload, headers=merged_headers)
             cookies = ses.cookies.get_dict()
-            if "c_user" in cookies:
-                uid = cookies["c_user"]
-                fresh_data = reg.text
-                _ch = {
-                    'User-Agent': FB_LITE_UA,
-                    'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8',
-                    'Accept-Language': 'en-US,en;q=0.9',
-                    'Referer': 'https://m.facebook.com/',
-                    'x-requested-with': 'com.facebook.lite',
-                }
-                try:
-                    _cp = ses.get(
-                        'https://m.facebook.com/confirmemail.php?soft=hjk',
-                        headers=_ch, timeout=12, allow_redirects=True
-                    )
-                    if _cp.status_code == 200 and len(_cp.text) > 500:
-                        fresh_data = _cp.text
-                        soup = BeautifulSoup(_cp.text, 'html.parser')
-                        form2 = soup.find('form')
-                        if form2:
-                            action = form2.get('action', '')
-                            if action and not action.startswith('http'):
-                                action = 'https://m.facebook.com' + action
-                            if not action:
-                                action = 'https://m.facebook.com/confirmemail.php'
-                            form_fields = {
-                                inp.get('name'): inp.get('value', '')
-                                for inp in form2.find_all('input')
-                                if inp.get('name')
-                            }
-                            _rh = {
-                                **_ch,
-                                'Referer': 'https://m.facebook.com/confirmemail.php?soft=hjk',
-                                'Origin': 'https://m.facebook.com',
-                                'Content-Type': 'application/x-www-form-urlencoded',
-                            }
-                            _rr = ses.post(
-                                action, data=form_fields,
-                                headers=_rh, timeout=12, allow_redirects=True
-                            )
-                            if _rr.status_code == 200 and len(_rr.text) > 500:
-                                fresh_data = _rr.text
-                except Exception:
-                    pass
-                time.sleep(2)
-                code = get_temp_code(email)
-                if code:
-                    confirm_id(email, uid, code, fresh_data, ses, password)
+
+            if 'c_user' in cookies:
+                uid = cookies['c_user']
                 with _live_lock:
                     live += 1
                 return {
-                    "uid": uid,
-                    "password": password,
-                    "name": f"{fname} {lname}",
-                    "email": email,
+                    'uid': uid,
+                    'password': password,
+                    'name': f'{fname} {lname}',
+                    'email': email,
                 }
+            elif 'checkpoint' in str(cookies):
+                cp += 1
+                continue
             else:
                 cp += 1
                 continue
