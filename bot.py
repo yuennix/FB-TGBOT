@@ -2,6 +2,7 @@ import os
 import json
 import asyncio
 import logging
+from concurrent.futures import ThreadPoolExecutor
 from dotenv import load_dotenv
 from aiogram import Bot, Dispatcher, types
 from aiogram.filters import Command
@@ -10,6 +11,8 @@ from aiogram.types import InlineKeyboardMarkup, InlineKeyboardButton
 load_dotenv()
 
 import main as fb
+
+_executor = ThreadPoolExecutor(max_workers=32)
 
 BOT_TOKEN = os.getenv("BOT_TOKEN")
 OWNER_ID  = int(os.getenv("OWNER_ID", "0"))
@@ -960,7 +963,7 @@ async def _start_creation(uid, count, data, chat_id):
             gender_option=gender_val
         )
 
-    CONCURRENCY = 5
+    CONCURRENCY = 32
     success     = 0
     lock        = asyncio.Lock()
     stopped     = False
@@ -976,7 +979,7 @@ async def _start_creation(uid, count, data, chat_id):
                     stopped = True
                 return
             try:
-                result = await loop.run_in_executor(None, _register)
+                result = await loop.run_in_executor(_executor, _register)
             except Exception as e:
                 logging.exception(e)
                 continue
