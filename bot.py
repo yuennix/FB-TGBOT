@@ -1248,6 +1248,84 @@ async def cmd_removeproxy(message: types.Message):
         await message.reply("Invalid number. Use `/proxies` to see the list.", parse_mode="Markdown")
 
 
+@dp.message(Command("testproxy"))
+async def cmd_testproxy(message: types.Message):
+    """Test proxy connectivity to Facebook registration endpoints."""
+    if message.from_user.id != OWNER_ID:
+        return
+
+    import time as _time
+    import requests as _req
+
+    ENDPOINTS = [
+        ("x.facebook.com/reg",  "https://x.facebook.com/reg"),
+        ("m.facebook.com/reg/", "https://m.facebook.com/reg/"),
+    ]
+    UA = "Mozilla/5.0 (Linux; Android 11; SM-A217F) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Mobile Safari/537.36"
+
+    # Decide what to test: specific proxy from arg, all proxies, or direct
+    parts = message.text.split(maxsplit=1)
+    if len(parts) > 1:
+        candidates = [("custom", parts[1].strip())]
+    elif fb.PROXY_LIST:
+        candidates = [(f"proxy {i+1}", p) for i, p in enumerate(fb.PROXY_LIST)]
+    else:
+        candidates = [("direct (no proxy)", None)]
+
+    status_msg = await message.reply("🔍 Testing connection to Facebook... please wait.")
+
+    def _test_one(label, proxy_url):
+        proxies = {"http": proxy_url, "https": proxy_url} if proxy_url else None
+        results = []
+        for ep_name, ep_url in ENDPOINTS:
+            t0 = _time.time()
+            try:
+                r = _req.get(
+                    ep_url,
+                    headers={"User-Agent": UA, "Accept-Language": "en-US,en;q=0.9"},
+                    proxies=proxies,
+                    timeout=12,
+                    allow_redirects=False,
+                )
+                ms = int((_time.time() - t0) * 1000)
+                loc = r.headers.get("Location", "")
+                if r.status_code == 200:
+                    from bs4 import BeautifulSoup as _BS
+                    has_form = bool(_BS(r.text, "html.parser").find("form"))
+                    icon = "✅" if has_form else "⚠️"
+                    detail = "form found" if has_form else "200 but no form"
+                else:
+                    icon = "❌"
+                    detail = f"HTTP {r.status_code}"
+                    if loc:
+                        detail += f" → {loc[:40]}"
+                results.append(f"  {icon} `{ep_name}` — {detail} ({ms}ms)")
+            except Exception as e:
+                ms = int((_time.time() - t0) * 1000)
+                results.append(f"  ❌ `{ep_name}` — {str(e)[:60]} ({ms}ms)")
+        return results
+
+    loop = asyncio.get_event_loop()
+    lines = []
+    for label, proxy_url in candidates:
+        proxy_display = f"`{proxy_url}`" if proxy_url else "_none_"
+        results = await loop.run_in_executor(None, _test_one, label, proxy_url)
+        lines.append(f"*{label}* ({proxy_display}):")
+        lines.extend(results)
+        lines.append("")
+
+    summary = "\n".join(lines).strip()
+    await bot.edit_message_text(
+        f"📡 *Proxy Test Results*\n\n{summary}\n\n"
+        "_✅ = form found (registration page accessible)_\n"
+        "_⚠️ = reachable but no form_\n"
+        "_❌ = blocked or error_",
+        chat_id=message.chat.id,
+        message_id=status_msg.message_id,
+        parse_mode="Markdown",
+    )
+
+
 async def main():
     print("🤖 Bot is now running...")
     logging.basicConfig(level=logging.INFO)
@@ -1271,6 +1349,7 @@ async def main():
             types.BotCommand(command="proxies",      description="📋 List proxies"),
             types.BotCommand(command="clearproxies", description="🗑 Clear all proxies"),
             types.BotCommand(command="removeproxy",  description="❌ Remove proxy by number"),
+            types.BotCommand(command="testproxy",    description="🧪 Test proxy/IP connectivity"),
         ],
         scope=types.BotCommandScopeChat(chat_id=OWNER_ID)
     )
