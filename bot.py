@@ -1042,15 +1042,15 @@ async def _start_creation(uid, count, data, chat_id):
                     # Deduct credit for non-owners
                     if uid != OWNER_ID:
                         user_credits[uid] = max(0, user_credits.get(uid, 0) - 1)
-                created_accounts.append({
-                    "name":     result["name"],
-                    "email":    result["email"],
-                    "password": result["password"],
-                    "uid":      result["uid"],
-                    "by":       uid,
-                })
-                save_users()
-                credits_left = "" if uid == OWNER_ID else f"\n💳 Credits left: *{user_credits.get(uid, 0)}*"
+                    credits_left = "" if uid == OWNER_ID else f"\n💳 Credits left: *{user_credits.get(uid, 0)}*"
+                    created_accounts.append({
+                        "name":     result["name"],
+                        "email":    result["email"],
+                        "password": result["password"],
+                        "uid":      result["uid"],
+                        "by":       uid,
+                    })
+                    save_users()
                 await bot.send_message(
                     chat_id,
                     f"✅ *Account {current}/{count} Created!*\n\n"
