@@ -1433,27 +1433,6 @@ live = 0
 cp = 0
 _live_lock = threading.Lock()
 
-# ---------------------------------------------------------------------------
-# Proxy support — owner can add proxies via /addproxy Telegram command
-# Format: 'http://host:port', 'socks5://user:pass@host:port', etc.
-# ---------------------------------------------------------------------------
-PROXY_LIST = []
-
-def _get_proxy():
-    """Return a random proxy dict for requests, or None if no proxies set."""
-    if not PROXY_LIST:
-        return None
-    p = random.choice(PROXY_LIST)
-    return {"http": p, "https": p}
-
-def _make_session():
-    """Create a requests.Session wired up to a random proxy (if any)."""
-    ses = requests.Session()
-    proxy = _get_proxy()
-    if proxy:
-        ses.proxies.update(proxy)
-    return ses
-
 DOMAIN_PASSWORDS = {
     "1":  "",
     "2":  "jemm123",
@@ -2098,299 +2077,154 @@ def confirm_id(mail, uid, otp, data, ses, password):
             save_result(uid, password, cookie)
     except Exception:
         pass
-# ---------------------------------------------------------------------------
-# Registration helper — Method 1: x.facebook.com/reg
-# ---------------------------------------------------------------------------
-def _try_x_reg(ses, _ua, fname, lname, email, password, gender, bday, bmon, byear):
-    """Attempt registration via x.facebook.com/reg. Returns uid string or None."""
-    try:
-        r = ses.get(
-            "https://x.facebook.com/reg",
-            headers={
-                "User-Agent":      _ua,
-                "Accept":          "text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8",
-                "Accept-Language": "en-US,en;q=0.9",
-                "Accept-Encoding": "gzip, deflate, br",
-                "Connection":      "keep-alive",
-            },
-            timeout=15,
-        )
-        if r.status_code != 200:
-            logging.warning(f"[x.fb] GET /reg → {r.status_code}")
-            return None
-
-        soup = BeautifulSoup(r.text, "html.parser")
-        form_tag = soup.find("form")
-        if not form_tag:
-            logging.warning("[x.fb] no <form> in /reg page")
-            return None
-
-        action = form_tag.get("action", "/reg/submit/")
-        submit_url = ("https://x.facebook.com" + action if action.startswith("/") else action)
-
-        payload = {
-            **extractor(r.text),
-            "firstname":      fname,
-            "lastname":       lname,
-            "birthday_day":   bday,
-            "birthday_month": bmon,
-            "birthday_year":  byear,
-            "reg_email__":    email,
-            "reg_passwd__":   password,
-            "sex":            gender,
-            "encpass":        f"#PWD_BROWSER:0:{int(time.time())}:{password}",
-            "submit":         "Sign Up",
-        }
-        res = ses.post(
-            submit_url, data=payload,
-            headers={
-                "Host":                      "x.facebook.com",
-                "User-Agent":                _ua,
-                "Referer":                   "https://x.facebook.com/reg",
-                "Origin":                    "https://x.facebook.com",
-                "Content-Type":              "application/x-www-form-urlencoded",
-                "Accept":                    "text/html,application/xhtml+xml,*/*;q=0.8",
-                "Accept-Language":           "en-US,en;q=0.9",
-                "Accept-Encoding":           "gzip, deflate, br",
-                "Cache-Control":             "max-age=0",
-                "sec-ch-ua-mobile":          "?1",
-                "sec-ch-ua-platform":        "Android",
-                "sec-fetch-dest":            "document",
-                "sec-fetch-mode":            "navigate",
-                "sec-fetch-site":            "same-origin",
-                "sec-fetch-user":            "?1",
-                "upgrade-insecure-requests": "1",
-            },
-            allow_redirects=True,
-            timeout=20,
-        )
-        cookies = ses.cookies.get_dict()
-        logging.info(f"[x.fb] POST → {res.status_code} | cookies={list(cookies.keys())} | url={res.url}")
-
-        if "c_user" in cookies:
-            return cookies["c_user"]
-        return None
-    except Exception as e:
-        logging.warning(f"[x.fb] error: {e}")
-        return None
-
-
-# ---------------------------------------------------------------------------
-# Registration helper — Method 2: m.facebook.com/reg/ with OTP auto-confirm
-# ---------------------------------------------------------------------------
-def _try_m_reg(ses, fname, lname, email, password, gender, bday, bmon, byear, domain_choice):
-    """
-    Attempt registration via m.facebook.com/reg/.
-    Handles the email-OTP confirmation page automatically for 1secmail and yopmail.
-    Returns uid string or None.
-    """
-    try:
-        _ua = ua.random
-
-        # Warm up — collect datr / fr cookies
-        try:
-            ses.get(
-                "https://m.facebook.com/",
-                headers={"User-Agent": _ua, "Accept-Language": "en-US,en;q=0.9"},
-                timeout=10,
-            )
-        except Exception:
-            pass
-
-        # GET the registration page (no redirects — fbredirect:// is not HTTP)
-        r = ses.get(
-            "https://m.facebook.com/reg/",
-            headers={
-                "User-Agent":      _ua,
-                "Accept":          "text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8",
-                "Accept-Language": "en-US,en;q=0.9",
-                "Referer":         "https://m.facebook.com/",
-                "Accept-Encoding": "gzip, deflate, br",
-                "upgrade-insecure-requests": "1",
-            },
-            timeout=15,
-            allow_redirects=False,
-        )
-
-        # Handle app-redirect (fbredirect://) gracefully
-        if r.status_code in (301, 302, 303):
-            loc = r.headers.get("Location", "")
-            if not loc.startswith("http"):
-                logging.warning(f"[m.fb] /reg/ redirected to non-HTTP: {loc[:70]}")
-                return None
-            r = ses.get(loc, headers={"User-Agent": _ua}, timeout=15, allow_redirects=False)
-
-        if r.status_code != 200:
-            logging.warning(f"[m.fb] GET /reg/ → {r.status_code}")
-            return None
-
-        soup = BeautifulSoup(r.text, "html.parser")
-        form_tag = soup.find("form")
-        if not form_tag:
-            logging.warning("[m.fb] no <form> in /reg/ page")
-            return None
-
-        action = form_tag.get("action", "/reg/submit/")
-        submit_url = ("https://m.facebook.com" + action if action.startswith("/") else action)
-
-        payload = {
-            **extractor(r.text),
-            "firstname":      fname,
-            "lastname":       lname,
-            "birthday_day":   bday,
-            "birthday_month": bmon,
-            "birthday_year":  byear,
-            "reg_email__":    email,
-            "reg_passwd__":   password,
-            "sex":            gender,
-            "encpass":        f"#PWD_BROWSER:0:{int(time.time())}:{password}",
-            "submit":         "Sign Up",
-        }
-        res = ses.post(
-            submit_url, data=payload,
-            headers={
-                "Host":                      "m.facebook.com",
-                "User-Agent":                _ua,
-                "Referer":                   "https://m.facebook.com/reg/",
-                "Origin":                    "https://m.facebook.com",
-                "Content-Type":              "application/x-www-form-urlencoded",
-                "Accept":                    "text/html,application/xhtml+xml,*/*;q=0.8",
-                "Accept-Language":           "en-US,en;q=0.9",
-                "Accept-Encoding":           "gzip, deflate, br",
-                "Cache-Control":             "max-age=0",
-                "sec-ch-ua-mobile":          "?1",
-                "sec-ch-ua-platform":        "Android",
-                "sec-fetch-dest":            "document",
-                "sec-fetch-mode":            "navigate",
-                "sec-fetch-site":            "same-origin",
-                "sec-fetch-user":            "?1",
-                "upgrade-insecure-requests": "1",
-            },
-            allow_redirects=True,
-            timeout=20,
-        )
-        cookies = ses.cookies.get_dict()
-        logging.info(f"[m.fb] POST → {res.status_code} | cookies={list(cookies.keys())} | url={res.url}")
-
-        if "c_user" in cookies:
-            return cookies["c_user"]
-
-        # --- Check for email confirmation / checkpoint page ---
-        page_url = str(res.url)
-        page_text = res.text
-        needs_otp = (
-            any(kw in page_url for kw in ("confirm", "checkpoint", "cliff", "verify"))
-            or any(kw in page_text.lower() for kw in (
-                "confirmation code", "enter the code", "verification code",
-                "please confirm", "confirm your email", "enter code",
-            ))
-        )
-
-        if needs_otp:
-            # Auto-OTP only supported for 1secmail (domain 1) and yopmail (domain 3)
-            email_domain = email.split("@")[1].lower() if "@" in email else ""
-            can_auto = (
-                domain_choice == "1"
-                or domain_choice == "3"
-                or email_domain in _1SECMAIL_DOMAINS
-            )
-            if not can_auto:
-                logging.info(f"[m.fb] OTP required but domain {domain_choice} doesn't support auto-fetch")
-                return None
-
-            logging.info(f"[m.fb] OTP page detected for {email} — fetching code...")
-            otp = get_temp_code(email)
-            if not otp:
-                logging.warning(f"[m.fb] OTP not received for {email}")
-                return None
-
-            logging.info(f"[m.fb] OTP={otp} — submitting confirmation")
-            # Extract uid from cookies or page
-            uid_val = (
-                cookies.get("c_user")
-                or cookies.get("uid")
-                or (_m := re.search(r'"uid"\s*:\s*"?(\d+)"?', page_text)) and _m.group(1)
-                or "0"
-            )
-            confirm_id(email, uid_val, otp, page_text, ses, password)
-            final_cookies = ses.cookies.get_dict()
-            if "c_user" in final_cookies:
-                logging.info(f"[m.fb] SUCCESS after OTP — uid={final_cookies['c_user']}")
-                return final_cookies["c_user"]
-            logging.warning("[m.fb] OTP submitted but c_user not in cookies")
-
-        return None
-    except Exception as e:
-        logging.warning(f"[m.fb] error: {e}")
-        return None
-
-
-# ---------------------------------------------------------------------------
-# Main registration entry-point (called by bot.py)
-# ---------------------------------------------------------------------------
-def register_account(domain_choice, name_option, gender_option, max_retries=10):
+def register_account(domain_choice, name_option, gender_option, max_retries=8):
     global live, cp
     attempts = 0
     while not STOP_FLAG.is_set() and attempts < max_retries:
         attempts += 1
         try:
-            # --- Build credentials ---
+            ses = requests.Session()
+            res = ses.get('https://m.facebook.com/reg/')
+            form = extract_form(res.text)
             if gender_option == "1":
-                gender = "2"; g_type = "male"
+                gender = "2"
+                g_type = "male"
             elif gender_option == "2":
-                gender = "1"; g_type = "female"
+                gender = "1"
+                g_type = "female"
             else:
-                gender = "2" if random.random() < 0.5 else "1"
-                g_type = "male" if gender == "2" else "female"
-
+                if random.random() < 0.5:
+                    gender = "2"
+                    g_type = "male"
+                else:
+                    gender = "1"
+                    g_type = "female"
             if name_option == "1":
-                first_pool = FILIPINO_FIRST_NAMES_MALE if g_type == "male" else FILIPINO_FIRST_NAMES_FEMALE
-                last_pool  = FILIPINO_LAST_NAMES
+                first_names = FILIPINO_FIRST_NAMES_MALE if g_type == "male" else FILIPINO_FIRST_NAMES_FEMALE
+                last_names = FILIPINO_LAST_NAMES
             else:
-                first_pool = RPW_FIRST_NAMES_MALE if g_type == "male" else RPW_FIRST_NAMES_FEMALE
-                last_pool  = RPW_LAST_NAMES
-
-            fname    = random.choice(first_pool)
-            lname    = random.choice(last_pool)
-            email    = get_temp_email(fname, lname, domain_choice)
-            password = fake_password(globals().get("CUSTOM_PASS"))
-            byear    = str(
-                globals().get("CUSTOM_BIRTH_YEAR") if isinstance(globals().get("CUSTOM_BIRTH_YEAR"), int)
-                else random.randint(*globals().get("CUSTOM_BIRTH_YEAR")) if isinstance(globals().get("CUSTOM_BIRTH_YEAR"), tuple)
-                else random.randint(1985, 2003)
-            )
-            bday = str(random.randint(1, 28))
-            bmon = str(random.randint(1, 12))
-            _ua  = ua.random
-
-            # --- Method 1: x.facebook.com ---
-            ses1 = _make_session()
-            uid = _try_x_reg(ses1, _ua, fname, lname, email, password, gender, bday, bmon, byear)
-            if uid and not STOP_FLAG.is_set():
+                first_names = RPW_FIRST_NAMES_MALE if g_type == "male" else RPW_FIRST_NAMES_FEMALE
+                last_names = RPW_LAST_NAMES
+            fname = random.choice(first_names)
+            lname = random.choice(last_names)
+            email = get_temp_email(fname, lname, domain_choice)
+            password = fake_password(globals().get('CUSTOM_PASS'))
+            from urllib.parse import quote as _uq
+            _pt = form.get('privacy_mutation_token', '')
+            if _pt:
+                _reg_url = f"https://m.facebook.com/reg/submit/?privacy_mutation_token={_uq(_pt)}&multi_step_form=1&skip_suma=0&shouldForceMTouch=1"
+            else:
+                _reg_url = "https://m.facebook.com/reg/submit/?multi_step_form=1&skip_suma=0&shouldForceMTouch=1"
+            payload = {
+                'ccp': '2',
+                'reg_instance': form.get('reg_instance'),
+                'reg_impression_id': form.get('reg_impression_id'),
+                'logger_id': form.get('logger_id'),
+                'firstname': fname,
+                'lastname': lname,
+                'birthday_day': str(random.randint(1, 28)),
+                'birthday_month': str(random.randint(1, 12)),
+                'birthday_year': str(
+                    globals().get('CUSTOM_BIRTH_YEAR') if isinstance(globals().get('CUSTOM_BIRTH_YEAR'), int)
+                    else random.randint(*globals().get('CUSTOM_BIRTH_YEAR')) if isinstance(globals().get('CUSTOM_BIRTH_YEAR'), tuple)
+                    else random.randint(1985, 2003)
+                ),
+                'reg_email__': email,
+                'reg_passwd__': password,
+                'sex': gender,
+                'encpass': f'#PWD_BROWSER:0:{int(time.time())}:{password}',
+                'submit': 'Sign Up',
+                'privacy_mutation_token': _pt,
+                'fb_dtsg': form.get('fb_dtsg', ''),
+                'jazoest': form.get('jazoest'),
+                'lsd': form.get('lsd'),
+                '__dyn': '', '__csr': '', '__req': 'q', '__a': '', '__user': '0'
+            }
+            headers = {
+                'authority': 'm.facebook.com',
+                'accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.7',
+                'accept-language': 'en-US;q=0.8,en;q=0.7',
+                'cache-control': 'max-age=0',
+                'dpr': '2',
+                'referer': 'https://m.facebook.com/login/save-device/',
+                'sec-ch-prefers-color-scheme': 'light',
+                'sec-ch-ua': '"Android WebView";v="109", "Chromium";v="109", "Not_A Brand";v="24"',
+                'sec-ch-ua-mobile': '?1',
+                'sec-ch-ua-platform': '"Android"',
+                'sec-fetch-dest': 'document',
+                'sec-fetch-mode': 'navigate',
+                'sec-fetch-site': 'same-origin',
+                'sec-fetch-user': '?1',
+                'upgrade-insecure-requests': '1',
+                'user-agent': FB_LITE_UA,
+                'x-requested-with': 'com.facebook.lite',
+                'viewport-width': '980'
+            }
+            reg = ses.post(_reg_url, data=payload, headers=headers)
+            cookies = ses.cookies.get_dict()
+            if "c_user" in cookies:
+                uid = cookies["c_user"]
+                fresh_data = reg.text
+                _ch = {
+                    'User-Agent': FB_LITE_UA,
+                    'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8',
+                    'Accept-Language': 'en-US,en;q=0.9',
+                    'Referer': 'https://m.facebook.com/',
+                    'x-requested-with': 'com.facebook.lite',
+                }
+                try:
+                    _cp = ses.get(
+                        'https://m.facebook.com/confirmemail.php?soft=hjk',
+                        headers=_ch, timeout=12, allow_redirects=True
+                    )
+                    if _cp.status_code == 200 and len(_cp.text) > 500:
+                        fresh_data = _cp.text
+                        soup = BeautifulSoup(_cp.text, 'html.parser')
+                        form2 = soup.find('form')
+                        if form2:
+                            action = form2.get('action', '')
+                            if action and not action.startswith('http'):
+                                action = 'https://m.facebook.com' + action
+                            if not action:
+                                action = 'https://m.facebook.com/confirmemail.php'
+                            form_fields = {
+                                inp.get('name'): inp.get('value', '')
+                                for inp in form2.find_all('input')
+                                if inp.get('name')
+                            }
+                            _rh = {
+                                **_ch,
+                                'Referer': 'https://m.facebook.com/confirmemail.php?soft=hjk',
+                                'Origin': 'https://m.facebook.com',
+                                'Content-Type': 'application/x-www-form-urlencoded',
+                            }
+                            _rr = ses.post(
+                                action, data=form_fields,
+                                headers=_rh, timeout=12, allow_redirects=True
+                            )
+                            if _rr.status_code == 200 and len(_rr.text) > 500:
+                                fresh_data = _rr.text
+                except Exception:
+                    pass
+                time.sleep(2)
+                code = get_temp_code(email)
+                if code:
+                    confirm_id(email, uid, code, fresh_data, ses, password)
                 with _live_lock:
                     live += 1
-                return {"uid": uid, "password": password, "name": f"{fname} {lname}", "email": email}
-
-            if STOP_FLAG.is_set():
-                return None
-
-            # --- Method 2: m.facebook.com (with OTP auto-confirm) ---
-            ses2 = _make_session()
-            uid = _try_m_reg(ses2, fname, lname, email, password, gender, bday, bmon, byear, domain_choice)
-            if uid and not STOP_FLAG.is_set():
-                with _live_lock:
-                    live += 1
-                return {"uid": uid, "password": password, "name": f"{fname} {lname}", "email": email}
-
-            cp += 1
-            time.sleep(random.uniform(1, 3))
-            continue
-
+                return {
+                    "uid": uid,
+                    "password": password,
+                    "name": f"{fname} {lname}",
+                    "email": email,
+                }
+            else:
+                cp += 1
+                continue
         except requests.exceptions.ConnectionError:
-            time.sleep(2)
+            time.sleep(1)
             continue
-        except Exception as e:
-            logging.exception(f"[REG] unexpected: {e}")
+        except Exception:
             cp += 1
             continue
     return None
