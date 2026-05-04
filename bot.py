@@ -821,15 +821,22 @@ async def cb_stop(callback: types.CallbackQuery):
         return
     stop_flags[uid] = True
     creating_msg.pop(uid, None)
-    await callback.answer("🛑 Stopping after current account finishes...", show_alert=True)
-    # Delete the "⚡ Creating..." banner (this IS the banner message)
+    await callback.answer("🛑 Stopped!", show_alert=False)
     try:
         await callback.message.delete()
     except Exception:
-        try:
-            await callback.message.edit_text("🛑 *Stopped.*", parse_mode="Markdown", reply_markup=None)
-        except Exception:
-            pass
+        pass
+    await bot.send_message(
+        uid,
+        "🛑 *Creation stopped.*",
+        parse_mode="Markdown"
+    )
+    await bot.send_message(
+        uid,
+        "🤖 *Facebook Auto Creator*\n\nSelect options step by step 👇",
+        parse_mode="Markdown",
+        reply_markup=make_start_kb(uid)
+    )
 
 # ================== TEXT INPUT HANDLER ==================
 @dp.message()
@@ -1076,17 +1083,7 @@ async def _start_creation(uid, count, data, chat_id):
     )
 
     if stopped:
-        await bot.send_message(
-            chat_id,
-            "🛑 *Creation stopped.*",
-            parse_mode="Markdown"
-        )
-        await bot.send_message(
-            chat_id,
-            "🤖 *Facebook Auto Creator*\n\nSelect options step by step 👇",
-            parse_mode="Markdown",
-            reply_markup=make_start_kb(uid)
-        )
+        pass  # menu already sent instantly from stop button callback
     elif success == 0:
         await bot.send_message(
             chat_id,
