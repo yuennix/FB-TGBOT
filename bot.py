@@ -298,6 +298,28 @@ async def cmd_credits(message: types.Message):
         parse_mode="Markdown"
     )
 
+# ================== /stats COMMAND ==================
+@dp.message(Command("stats"))
+async def cmd_stats(message: types.Message):
+    if message.from_user.id != OWNER_ID:
+        await message.answer("🔒 Owner only.")
+        return
+    total_seen      = len(seen_users)
+    total_approved  = len([u for u in approved_users if u != OWNER_ID])
+    total_pending   = len(pending_users)
+    total_credits_remaining = sum(user_credits.values())
+    total_accounts  = len(created_accounts)
+    await message.answer(
+        f"📊 *Bot Statistics*\n\n"
+        f"👥 Total Users Seen: *{total_seen}*\n"
+        f"✅ Approved Users: *{total_approved}*\n"
+        f"⏳ Pending Requests: *{total_pending}*\n\n"
+        f"💳 Total Credits Used: *{total_accounts}*\n"
+        f"💰 Total Credits Remaining: *{total_credits_remaining}*\n\n"
+        f"🤖 Total Accounts Created: *{total_accounts}*",
+        parse_mode="Markdown"
+    )
+
 # ================== OWNER: APPROVE/DENY ==================
 @dp.callback_query(lambda c: c.data.startswith("access:"))
 async def cb_approval(callback: types.CallbackQuery):
@@ -1041,6 +1063,7 @@ async def main():
             types.BotCommand(command="myaccs",   description="📋 My created accounts"),
             types.BotCommand(command="botaccs",  description="🌐 All bot accounts"),
             types.BotCommand(command="credits",  description="💳 Credits info"),
+            types.BotCommand(command="stats",    description="📊 Bot statistics"),
             types.BotCommand(command="menu",     description="⚙️ Owner menu"),
         ],
         scope=types.BotCommandScopeChat(chat_id=OWNER_ID)
