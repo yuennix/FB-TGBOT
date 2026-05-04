@@ -698,6 +698,10 @@ async def cb_name_style(callback: types.CallbackQuery):
 async def cb_back(callback: types.CallbackQuery):
     uid  = callback.from_user.id
     step = callback.data.split(":")[1]
+    # Clear any pending awaiting state so text handler ignores next message
+    if uid in user_data:
+        user_data[uid].pop("awaiting", None)
+        user_data[uid].pop("prompt_msg_id", None)
     if step == "main":
         user_data.pop(uid, None)
         await callback.message.edit_text(
@@ -716,6 +720,12 @@ async def cb_back(callback: types.CallbackQuery):
     elif step == "domain":
         await callback.message.edit_text(
             "📧 Choose *Email Domain*:", parse_mode="Markdown", reply_markup=make_domain_kb()
+        )
+    elif step == "accpass":
+        await callback.message.edit_text(
+            "🔑 *Set a password for the created accounts:*",
+            parse_mode="Markdown",
+            reply_markup=make_acc_pass_kb()
         )
     await callback.answer()
 
@@ -782,7 +792,10 @@ async def cb_domain_pass(callback: types.CallbackQuery):
         f"🔑 *Domain Password Required*\n\n"
         f"Domain: `{domain_name}`\n\n"
         f"Type the password for this domain:",
-        parse_mode="Markdown"
+        parse_mode="Markdown",
+        reply_markup=InlineKeyboardMarkup(inline_keyboard=[
+            [InlineKeyboardButton(text="🔙 Back", callback_data="back:domain")]
+        ])
     )
     await callback.answer()
 
@@ -801,14 +814,20 @@ async def cb_acc_pass(callback: types.CallbackQuery):
         await callback.message.edit_text(
             "🔢 *How many accounts do you want to create?*\n\n"
             "_(Type a number, e.g. 5)_",
-            parse_mode="Markdown"
+            parse_mode="Markdown",
+            reply_markup=InlineKeyboardMarkup(inline_keyboard=[
+                [InlineKeyboardButton(text="🔙 Back", callback_data="back:accpass")]
+            ])
         )
     else:
         user_data[uid]["awaiting"]      = "custom_pass"
         user_data[uid]["prompt_msg_id"] = callback.message.message_id
         await callback.message.edit_text(
             "🔑 *Type your custom password for the accounts:*\n\n_(minimum 6 characters)_",
-            parse_mode="Markdown"
+            parse_mode="Markdown",
+            reply_markup=InlineKeyboardMarkup(inline_keyboard=[
+                [InlineKeyboardButton(text="🔙 Back", callback_data="back:accpass")]
+            ])
         )
     await callback.answer()
 
@@ -915,7 +934,10 @@ async def handle_text(message: types.Message):
             "✅ *Custom password set!*\n\n"
             "🔢 *How many accounts do you want to create?*\n\n"
             "_(Type a number, e.g. 5)_",
-            parse_mode="Markdown"
+            parse_mode="Markdown",
+            reply_markup=InlineKeyboardMarkup(inline_keyboard=[
+                [InlineKeyboardButton(text="🔙 Back", callback_data="back:accpass")]
+            ])
         )
         user_data[uid]["awaiting"]      = "count"
         user_data[uid]["prompt_msg_id"] = prompt.message_id
