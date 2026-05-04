@@ -75,9 +75,9 @@ DOMAINS = {
 }
 
 DOMAIN_PASSWORDS = {
-    "4": "yuennix",
-    "5": "yuennix",
-    "6": "yuennix",
+    "weyn.store":   "yuennix",
+    "jhames.shop":  "yuennix",
+    "jakulan.site": "yuennix",
 }
 
 # ================== KEYBOARDS ==================
@@ -760,10 +760,10 @@ async def cb_domain_pass(callback: types.CallbackQuery):
         await callback.answer("Session expired. Use /start", show_alert=True)
         return
     domain_key  = callback.data.split(":")[1]
-    user_data[uid]["domain"] = domain_key
     domain_name = DOMAINS.get(domain_key, domain_key)
+    user_data[uid]["domain"] = domain_name   # store actual domain name, not key
 
-    if domain_key in unlocked_domains.get(uid, set()):
+    if domain_name in unlocked_domains.get(uid, set()):
         await callback.message.edit_text(
             f"✅ *Domain `{domain_name}` already unlocked!*\n\n🔑 *Set a password for the created accounts:*",
             parse_mode="Markdown",
@@ -773,10 +773,10 @@ async def cb_domain_pass(callback: types.CallbackQuery):
         return
 
     # Auto-unlock domains with no password
-    if domain_key not in DOMAIN_PASSWORDS:
+    if domain_name not in DOMAIN_PASSWORDS:
         if uid not in unlocked_domains:
             unlocked_domains[uid] = set()
-        unlocked_domains[uid].add(domain_key)
+        unlocked_domains[uid].add(domain_name)
         save_users()
         await callback.message.edit_text(
             f"✅ *Domain `{domain_name}` unlocked!*\n\n🔑 *Set a password for the created accounts:*",
@@ -947,7 +947,7 @@ async def handle_text(message: types.Message):
     if awaiting == "domain_pass":
         if prompt_msg_id:
             asyncio.create_task(_del(chat_id, prompt_msg_id))
-        domain_key = data.get("domain")
+        domain_key = data.get("domain")   # now stores the actual domain name
         correct    = DOMAIN_PASSWORDS.get(domain_key, "")
         if entered != correct:
             user_data.pop(uid, None)

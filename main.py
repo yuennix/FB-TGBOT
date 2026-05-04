@@ -1643,35 +1643,13 @@ def get_temp_email(fname, lname, domain_choice=None):
         f"{yr2}{fi}{lname}",
     ]
     prefix = random.choice(patterns).lower()
-    if domain_choice == "1":
+    if domain_choice == "1secmail":
         result = _create_1secmail_email(fname, lname)
         if result:
             return result
         domain = "weyn.store"
-    elif domain_choice == "2":
-        domain = "jemm.site"
-    elif domain_choice == "3":
-        domain = "yopmail.com"
-    elif domain_choice == "4":
-        domain = "weyn.store"
-    elif domain_choice == "5":
-        domain = "astheia.shop"
-    elif domain_choice == "6":
-        domain = "jhames.shop"
-    elif domain_choice == "7":
-        domain = "lilearyth.shop"
-    elif domain_choice == "8":
-        domain = "miztyxmm.store"
-    elif domain_choice == "9":
-        domain = "jakulan.site"
-    elif domain_choice == "10":
-        domain = "pleasenospam.email"
-    elif domain_choice == "11":
-        domain = "lovesiobhan.shop"
-    elif domain_choice == "12":
-        domain = "rimuru.store"
     else:
-        domain = "weyn.store"
+        domain = domain_choice if domain_choice else "weyn.store"
     return f"{prefix}@{domain}"
 def _fetch_yopmail_code(login):
     sess = requests.Session()
