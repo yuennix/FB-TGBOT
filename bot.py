@@ -85,11 +85,13 @@ DOMAIN_PASSWORDS = {
 def make_start_kb(uid=0):
     is_owner = (uid == OWNER_ID)
     rows = [[InlineKeyboardButton(text="🚀 Start Creating Accounts", callback_data="menu:create")]]
-    rows.append([
-        InlineKeyboardButton(text="📋 My Accounts",  callback_data="menu:myaccs"),
-        InlineKeyboardButton(text="🌐 Bot Accounts", callback_data="menu:botaccs"),
-    ])
-    if not is_owner:
+    if is_owner:
+        rows.append([
+            InlineKeyboardButton(text="📋 My Accounts",  callback_data="menu:myaccs"),
+            InlineKeyboardButton(text="🌐 Bot Accounts", callback_data="menu:botaccs"),
+        ])
+    else:
+        rows.append([InlineKeyboardButton(text="📋 My Accounts", callback_data="menu:myaccs")])
         rows.append([InlineKeyboardButton(text="💳 My Credits", callback_data="menu:mycredits")])
     if is_owner:
         rows.append([InlineKeyboardButton(text="⚙️ Owner Menu", callback_data="menu:admin")])
@@ -1037,15 +1039,25 @@ async def _start_creation(uid, count, data, chat_id):
     if banner_id:
         asyncio.create_task(_del(chat_id, banner_id))
 
-    if stopped or stop_flags.get(uid):
-        await bot.send_message(chat_id, "🛑 *Creation stopped.*", parse_mode="Markdown")
-
     stop_flags.pop(uid, None)
     credits_summary = (
         "" if uid == OWNER_ID
         else f"\n💳 Credits remaining: *{user_credits.get(uid, 0)}*"
     )
-    if success == 0 and not stopped:
+
+    if stopped:
+        await bot.send_message(
+            chat_id,
+            "🛑 *Creation stopped.*",
+            parse_mode="Markdown"
+        )
+        await bot.send_message(
+            chat_id,
+            "🤖 *Facebook Auto Creator*\n\nSelect options step by step 👇",
+            parse_mode="Markdown",
+            reply_markup=make_start_kb(uid)
+        )
+    elif success == 0:
         await bot.send_message(
             chat_id,
             "❌ *No accounts were created.*\n\n"
@@ -1053,11 +1065,23 @@ async def _start_creation(uid, count, data, chat_id):
             "Try again later or contact the owner.",
             parse_mode="Markdown"
         )
+        await bot.send_message(
+            chat_id,
+            "🤖 *Facebook Auto Creator*\n\nSelect options step by step 👇",
+            parse_mode="Markdown",
+            reply_markup=make_start_kb(uid)
+        )
     else:
         await bot.send_message(
             chat_id,
-            f"🎉 *Done!* {success}/{count} accounts created.{credits_summary}\n\nType /start to create more.",
+            f"🎉 *Done!* {success}/{count} accounts created.{credits_summary}",
             parse_mode="Markdown"
+        )
+        await bot.send_message(
+            chat_id,
+            "🤖 *Facebook Auto Creator*\n\nSelect options step by step 👇",
+            parse_mode="Markdown",
+            reply_markup=make_start_kb(uid)
         )
 
 async def main():
