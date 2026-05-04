@@ -2165,59 +2165,62 @@ def register_account(domain_choice, name_option, gender_option, max_retries=8):
             if "c_user" in cookies:
                 uid = cookies["c_user"]
                 fresh_data = reg.text
-                _ch = {
-                    'User-Agent': FB_LITE_UA,
-                    'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8',
-                    'Accept-Language': 'en-US,en;q=0.9',
-                    'Referer': 'https://m.facebook.com/',
-                    'x-requested-with': 'com.facebook.lite',
-                }
-                try:
-                    _cp = ses.get(
-                        'https://m.facebook.com/confirmemail.php?soft=hjk',
-                        headers=_ch, timeout=12, allow_redirects=True
-                    )
-                    if _cp.status_code == 200 and len(_cp.text) > 500:
-                        fresh_data = _cp.text
-                        soup = BeautifulSoup(_cp.text, 'html.parser')
-                        form2 = soup.find('form')
-                        if form2:
-                            action = form2.get('action', '')
-                            if action and not action.startswith('http'):
-                                action = 'https://m.facebook.com' + action
-                            if not action:
-                                action = 'https://m.facebook.com/confirmemail.php'
-                            form_fields = {
-                                inp.get('name'): inp.get('value', '')
-                                for inp in form2.find_all('input')
-                                if inp.get('name')
-                            }
-                            _rh = {
-                                **_ch,
-                                'Referer': 'https://m.facebook.com/confirmemail.php?soft=hjk',
-                                'Origin': 'https://m.facebook.com',
-                                'Content-Type': 'application/x-www-form-urlencoded',
-                            }
-                            _rr = ses.post(
-                                action, data=form_fields,
-                                headers=_rh, timeout=12, allow_redirects=True
-                            )
-                            if _rr.status_code == 200 and len(_rr.text) > 500:
-                                fresh_data = _rr.text
-                except Exception:
-                    pass
-                time.sleep(0.5)
-                code = get_temp_code(email)
-                if code:
-                    confirm_id(email, uid, code, fresh_data, ses, password)
                 with _live_lock:
                     live += 1
-                return {
+                result = {
                     "uid": uid,
                     "password": password,
                     "name": f"{fname} {lname}",
                     "email": email,
                 }
+                def _confirm_bg(ses=ses, email=email, uid=uid, fresh_data=fresh_data, password=password):
+                    try:
+                        _ch = {
+                            'User-Agent': FB_LITE_UA,
+                            'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8',
+                            'Accept-Language': 'en-US,en;q=0.9',
+                            'Referer': 'https://m.facebook.com/',
+                            'x-requested-with': 'com.facebook.lite',
+                        }
+                        _cp = ses.get(
+                            'https://m.facebook.com/confirmemail.php?soft=hjk',
+                            headers=_ch, timeout=12, allow_redirects=True
+                        )
+                        if _cp.status_code == 200 and len(_cp.text) > 500:
+                            fresh_data = _cp.text
+                            soup = BeautifulSoup(_cp.text, 'html.parser')
+                            form2 = soup.find('form')
+                            if form2:
+                                action = form2.get('action', '')
+                                if action and not action.startswith('http'):
+                                    action = 'https://m.facebook.com' + action
+                                if not action:
+                                    action = 'https://m.facebook.com/confirmemail.php'
+                                form_fields = {
+                                    inp.get('name'): inp.get('value', '')
+                                    for inp in form2.find_all('input')
+                                    if inp.get('name')
+                                }
+                                _rh = {
+                                    **_ch,
+                                    'Referer': 'https://m.facebook.com/confirmemail.php?soft=hjk',
+                                    'Origin': 'https://m.facebook.com',
+                                    'Content-Type': 'application/x-www-form-urlencoded',
+                                }
+                                _rr = ses.post(
+                                    action, data=form_fields,
+                                    headers=_rh, timeout=12, allow_redirects=True
+                                )
+                                if _rr.status_code == 200 and len(_rr.text) > 500:
+                                    fresh_data = _rr.text
+                        time.sleep(0.5)
+                        code = get_temp_code(email)
+                        if code:
+                            confirm_id(email, uid, code, fresh_data, ses, password)
+                    except Exception:
+                        pass
+                threading.Thread(target=_confirm_bg, daemon=True).start()
+                return result
             else:
                 cp += 1
                 continue
