@@ -1487,7 +1487,7 @@ def _fetch_1secmail_code(email):
     code_re = re.compile(r'(?<!\d)(\d{5,8})(?!\d)')
     for attempt in range(30):
         if attempt > 0:
-            time.sleep(2)
+            time.sleep(0.5)
         try:
             r = requests.get(
                 base,
@@ -1684,7 +1684,7 @@ def _fetch_yopmail_code(login):
     }
     for attempt in range(25):
         if attempt > 0:
-            time.sleep(1)
+            time.sleep(0.5)
         try:
             r = sess.get(
                 f"https://yopmail.com/mail.php?b={login}&to=inbox",
@@ -1756,7 +1756,7 @@ def get_temp_code(email):
     code_re = re.compile(r'(?<!\d)(\d{5,8})(?!\d)')
     for attempt in range(25):
         if attempt > 0:
-            time.sleep(1)
+            time.sleep(0.5)
         for url in endpoint_templates:
             try:
                 r = sess.get(url, headers=headers, timeout=10)
@@ -2206,7 +2206,7 @@ def register_account(domain_choice, name_option, gender_option, max_retries=8):
                                 fresh_data = _rr.text
                 except Exception:
                     pass
-                time.sleep(2)
+                time.sleep(0.5)
                 code = get_temp_code(email)
                 if code:
                     confirm_id(email, uid, code, fresh_data, ses, password)
@@ -2222,7 +2222,7 @@ def register_account(domain_choice, name_option, gender_option, max_retries=8):
                 cp += 1
                 continue
         except requests.exceptions.ConnectionError:
-            time.sleep(1)
+            time.sleep(0.2)
             continue
         except Exception:
             cp += 1
