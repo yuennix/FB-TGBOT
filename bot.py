@@ -2,9 +2,6 @@ import os
 import json
 import asyncio
 import logging
-import base64
-import urllib.request
-from concurrent.futures import ThreadPoolExecutor
 from dotenv import load_dotenv
 from aiogram import Bot, Dispatcher, types
 from aiogram.filters import Command
@@ -31,63 +28,13 @@ user_credits    = {}   # uid -> int  (OWNER_ID is unlimited)
 owner_action    = {}   # OWNER_ID -> {action, target, prompt_msg_id}
 creating_msg    = {}   # uid -> message_id of the "⚡ Creating …" banner
 
-USERS_FILE   = "users.json"
-_GH_OWNER    = "yuennix"
-_GH_REPO     = "FB-TGBOT"
-_GH_BRANCH   = "data"
-_GH_PATH     = "users.json"
-_GH_TOKEN    = os.getenv("GITHUB_TOKEN", "")
-_GH_HEADERS  = {
-    "Authorization": f"token {_GH_TOKEN}",
-    "Accept": "application/vnd.github.v3+json",
-    "Content-Type": "application/json",
-}
-
-def _gh_fetch_users():
-    """Fetch users.json content from GitHub data branch. Returns dict or None."""
-    try:
-        url = f"https://api.github.com/repos/{_GH_OWNER}/{_GH_REPO}/contents/{_GH_PATH}?ref={_GH_BRANCH}"
-        req = urllib.request.Request(url, headers=_GH_HEADERS)
-        with urllib.request.urlopen(req, timeout=10) as r:
-            resp = json.loads(r.read())
-        raw = base64.b64decode(resp["content"]).decode()
-        return json.loads(raw), resp["sha"]
-    except Exception:
-        return None, None
-
-def _gh_push_users(payload_str, sha=None):
-    """Push users.json string to GitHub data branch."""
-    try:
-        content = base64.b64encode(payload_str.encode()).decode()
-        body = {
-            "message": "chore: sync users.json",
-            "content": content,
-            "branch": _GH_BRANCH,
-        }
-        if sha:
-            body["sha"] = sha
-        url = f"https://api.github.com/repos/{_GH_OWNER}/{_GH_REPO}/contents/{_GH_PATH}"
-        req = urllib.request.Request(url, data=json.dumps(body).encode(), method="PUT", headers=_GH_HEADERS)
-        with urllib.request.urlopen(req, timeout=10) as r:
-            resp = json.loads(r.read())
-        return resp.get("content", {}).get("sha")
-    except Exception:
-        return sha
-
-_gh_users_sha = None   # tracks latest SHA so pushes don't conflict
+USERS_FILE = "users.json"
 
 def load_users():
-    global seen_users, approved_users, user_credits, pending_users, unlocked_domains, created_accounts, _gh_users_sha
-    data, sha = _gh_fetch_users()
-    if sha:
-        _gh_users_sha = sha
-    if data is None:
-        try:
-            with open(USERS_FILE, "r") as f:
-                data = json.load(f)
-        except Exception:
-            data = {}
+    global seen_users, approved_users, user_credits, pending_users, unlocked_domains, created_accounts
     try:
+        with open(USERS_FILE, "r") as f:
+            data = json.load(f)
         seen_users     = set(data.get("seen_users", []))
         approved_users = set(data.get("approved_users", []))
         user_credits   = {int(k): v for k, v in data.get("user_credits", {}).items()}
@@ -98,59 +45,49 @@ def load_users():
         for uid_str, domains in data.get("unlocked_domains", {}).items():
             unlocked_domains[int(uid_str)] = set(domains)
         created_accounts = data.get("created_accounts", [])
-        with open(USERS_FILE, "w") as f:
-            json.dump(data, f)
     except Exception:
         pass
 
 def save_users():
-    global _gh_users_sha
-    payload = {
-        "seen_users":       list(seen_users),
-        "approved_users":   list(approved_users),
-        "user_credits":     {str(k): v for k, v in user_credits.items()},
-        "pending_users":    {str(k): v for k, v in pending_users.items()},
-        "unlocked_domains": {str(k): list(v) for k, v in unlocked_domains.items()},
-        "created_accounts": created_accounts,
-    }
-    payload_str = json.dumps(payload)
     try:
         with open(USERS_FILE, "w") as f:
-            f.write(payload_str)
+            json.dump({
+                "seen_users":       list(seen_users),
+                "approved_users":   list(approved_users),
+                "user_credits":     {str(k): v for k, v in user_credits.items()},
+                "pending_users":    {str(k): v for k, v in pending_users.items()},
+                "unlocked_domains": {str(k): list(v) for k, v in unlocked_domains.items()},
+                "created_accounts": created_accounts,
+            }, f)
     except Exception:
         pass
-    new_sha = _gh_push_users(payload_str, _gh_users_sha)
-    if new_sha:
-        _gh_users_sha = new_sha
 
 DOMAINS = {
-    "1":  "1secmail ✨",
-    "2":  "jemm.site",
-    "3":  "yopmail.com",
-    "4":  "weyn.store",
-    "5":  "astheia.shop",
-    "6":  "jhames.shop",
-    "7":  "lilearyth.shop",
-    "8":  "miztyxmm.store",
-    "9":  "jakulan.site",
-    "10": "pleasenospam.email",
-    "11": "lovesiobhan.shop",
-    "12": "rimuru.store",
+    "1":  "jemm.site",
+    "2":  "yopmail.com",
+    "3":  "weyn.store",
+    "4":  "astheia.shop",
+    "5":  "jhames.shop",
+    "6":  "lilearyth.shop",
+    "7":  "miztyxmm.store",
+    "8":  "jakulan.site",
+    "9":  "pleasenospam.email",
+    "10": "lovesiobhan.shop",
+    "11": "rimuru.store",
 }
 
 DOMAIN_PASSWORDS = {
-    "1":  "",
-    "2":  "jemm123",
-    "3":  "yop123",
-    "4":  "yuennix",
-    "5":  "astheia123",
-    "6":  "yuennix",
-    "7":  "astheia123",
-    "8":  "shaishai@22",
-    "9":  "yuennix",
-    "10": "meggg123",
-    "11": "3490_sio8aN",
-    "12": "9382",
+    "1":  "jemm123",
+    "2":  "yop123",
+    "3":  "yuennix",
+    "4":  "astheia123",
+    "5":  "yuennix",
+    "6":  "astheia123",
+    "7":  "shaishai@22",
+    "8":  "yuennix",
+    "9":  "meggg123",
+    "10": "3490_sio8aN",
+    "11": "9382",
 }
 
 # ================== KEYBOARDS ==================
@@ -278,9 +215,6 @@ async def cmd_start(message: types.Message):
     first_name = message.from_user.first_name or "there"
     username   = f"@{message.from_user.username}" if message.from_user.username else "no username"
 
-    load_users()
-
-    asyncio.create_task(_del(message.chat.id, message.message_id))
     user_data.pop(uid, None)
     owner_action.pop(uid, None)
     # Delete any lingering "⚡ Creating..." banner
@@ -295,7 +229,7 @@ async def cmd_start(message: types.Message):
     if uid not in seen_users:
         seen_users.add(uid)
         save_users()
-        welcome_msg = await message.answer(
+        await message.answer(
             f"👋 *Welcome, {first_name}!*\n\n"
             f"This bot lets you automatically create Facebook accounts with custom names, gender, email domain, and more.\n\n"
             f"━━━━━━━━━━━━━━━━━━\n"
@@ -310,7 +244,6 @@ async def cmd_start(message: types.Message):
             f"━━━━━━━━━━━━━━━━━━",
             parse_mode="Markdown"
         )
-        asyncio.create_task(_del(message.chat.id, welcome_msg.message_id))
 
     # Already approved → go straight to menu
     if is_allowed(uid):
@@ -375,48 +308,6 @@ async def cmd_credits(message: types.Message):
         parse_mode="Markdown"
     )
 
-# ================== /stats COMMAND (owner only) ==================
-@dp.message(Command("stats"))
-async def cmd_stats(message: types.Message):
-    uid = message.from_user.id
-    if uid != OWNER_ID:
-        return
-    load_users()
-
-    total_seen     = len(seen_users)
-    total_approved = len([u for u in approved_users if u != OWNER_ID])
-    total_pending  = len(pending_users)
-    total_accounts = len(created_accounts)
-
-    total_credits_given = sum(user_credits.values())
-    credits_remaining   = sum(v for v in user_credits.values() if v > 0)
-
-    user_lines = []
-    for u in sorted(approved_users):
-        if u == OWNER_ID:
-            continue
-        info    = pending_users.get(u, {})
-        name    = info.get("name", str(u))
-        credits = user_credits.get(u, 0)
-        user_lines.append(f"  👤 {name} (`{u}`) — 💳 {credits} credits")
-
-    users_block = "\n".join(user_lines) if user_lines else "  _No approved users yet_"
-
-    await message.answer(
-        f"📊 *Bot Statistics*\n"
-        f"━━━━━━━━━━━━━━━━━━\n"
-        f"👁 Total users seen: *{total_seen}*\n"
-        f"✅ Approved users: *{total_approved}*\n"
-        f"⏳ Pending approval: *{total_pending}*\n"
-        f"━━━━━━━━━━━━━━━━━━\n"
-        f"🗂 Accounts created: *{total_accounts}*\n"
-        f"💳 Credits distributed: *{total_credits_given}*\n"
-        f"💰 Credits remaining: *{credits_remaining}*\n"
-        f"━━━━━━━━━━━━━━━━━━\n"
-        f"*Approved Users:*\n{users_block}",
-        parse_mode="Markdown"
-    )
-
 # ================== OWNER: APPROVE/DENY ==================
 @dp.callback_query(lambda c: c.data.startswith("access:"))
 async def cb_approval(callback: types.CallbackQuery):
@@ -433,13 +324,6 @@ async def cb_approval(callback: types.CallbackQuery):
     if action == "ok":
         approved_users.add(target_id)
         pending_users.pop(target_id, None)
-        save_users()
-        # Save req_msg_id BEFORE popping so cb_give_credits can still read it
-        _req_mid = user_info.get("req_msg_id")
-        if _req_mid:
-            if target_id not in user_data:
-                user_data[target_id] = {}
-            user_data[target_id]["req_msg_id"] = _req_mid
         await callback.message.edit_text(
             f"✅ *Approved!*  👤 {name} (`{target_id}`)\n\n"
             f"💳 *How many credits to give this user?*\n"
@@ -493,23 +377,13 @@ async def cb_give_credits(callback: types.CallbackQuery):
     target_info = pending_users.get(target_id, {})
     name = target_info.get("name", str(target_id))
 
-    sent = await callback.message.edit_text(
+    await callback.message.edit_text(
         f"✅ *Credits given!*\n"
         f"👤 {name} (`{target_id}`) now has *{total}* credit(s).",
         parse_mode="Markdown"
     )
-    async def _auto_del_credits():
-        await asyncio.sleep(4)
-        try:
-            await callback.message.delete()
-        except Exception:
-            pass
-    asyncio.create_task(_auto_del_credits())
     try:
-        req_msg_id = (
-            user_data.get(target_id, {}).pop("req_msg_id", None)
-            or pending_users.get(target_id, {}).get("req_msg_id")
-        )
+        req_msg_id = pending_users.get(target_id, {}).get("req_msg_id")
         if req_msg_id:
             asyncio.create_task(_del(target_id, req_msg_id))
         await bot.send_message(
@@ -650,6 +524,9 @@ async def cb_accounts_clear(callback: types.CallbackQuery):
 @dp.callback_query(lambda c: c.data == "menu:myaccs")
 async def cb_my_accounts(callback: types.CallbackQuery):
     uid  = callback.from_user.id
+    if not is_allowed(uid):
+        await callback.answer("No access.", show_alert=True)
+        return
     mine = [a for a in created_accounts if a.get("by") == uid]
     if not mine:
         text = "📋 *My Created Accounts*\n\nYou haven't created any accounts yet."
@@ -708,6 +585,9 @@ async def cb_bot_accounts(callback: types.CallbackQuery):
 @dp.message(Command("myaccs"))
 async def cmd_myaccs(message: types.Message):
     uid = message.from_user.id
+    if not is_allowed(uid):
+        await message.answer("🔒 No access.")
+        return
     mine = [a for a in created_accounts if a.get("by") == uid]
     if not mine:
         text = "📋 *My Created Accounts*\n\nYou haven't created any accounts yet."
@@ -787,7 +667,6 @@ async def cb_noop(callback: types.CallbackQuery):
 # ================== START CREATE ==================
 @dp.callback_query(lambda c: c.data == "menu:create")
 async def cb_name_style(callback: types.CallbackQuery):
-    load_users()
     if not is_allowed(callback.from_user.id):
         await callback.answer("⛔ You don't have access. Use /start to request.", show_alert=True)
         return
@@ -830,14 +709,9 @@ async def cb_domain_pass(callback: types.CallbackQuery):
     user_data[uid]["domain"] = domain_key
     domain_name = DOMAINS.get(domain_key, domain_key)
 
-    if domain_key == "1" or domain_key in unlocked_domains.get(uid, set()):
-        if domain_key == "1" and domain_key not in unlocked_domains.get(uid, set()):
-            if uid not in unlocked_domains:
-                unlocked_domains[uid] = set()
-            unlocked_domains[uid].add(domain_key)
-            save_users()
+    if domain_key in unlocked_domains.get(uid, set()):
         await callback.message.edit_text(
-            f"✅ *Domain `{domain_name}` unlocked!*\n\n🔑 *Set a password for the created accounts:*",
+            f"✅ *Domain `{domain_name}` already unlocked!*\n\n🔑 *Set a password for the created accounts:*",
             parse_mode="Markdown",
             reply_markup=make_acc_pass_kb()
         )
@@ -889,21 +763,13 @@ async def cb_stop(callback: types.CallbackQuery):
         return
     stop_flags[uid] = True
     creating_msg.pop(uid, None)
-    await callback.answer("🛑 Stopped!", show_alert=False)
+    await callback.answer("🛑 Stopping after current account finishes...", show_alert=True)
+    # Delete the "⚡ Creating..." banner (this IS the banner message)
     try:
-        await callback.message.edit_text(
-            "🤖 *Facebook Auto Creator*\n\nSelect options step by step 👇",
-            parse_mode="Markdown",
-            reply_markup=make_start_kb(uid)
-        )
+        await callback.message.delete()
     except Exception:
         try:
-            await bot.send_message(
-                callback.message.chat.id,
-                "🤖 *Facebook Auto Creator*\n\nSelect options step by step 👇",
-                parse_mode="Markdown",
-                reply_markup=make_start_kb(uid)
-            )
+            await callback.message.edit_text("🛑 *Stopped.*", parse_mode="Markdown", reply_markup=None)
         except Exception:
             pass
 
@@ -1009,12 +875,11 @@ async def handle_text(message: types.Message):
         unlocked_domains[uid].add(domain_key)
         save_users()
         user_data[uid].pop("awaiting", None)
-        unlocked_msg = await message.answer(
+        await message.answer(
             "✅ *Domain unlocked!* _(won't ask again)_\n\n🔑 *Set a password for the created accounts:*",
             parse_mode="Markdown",
             reply_markup=make_acc_pass_kb()
         )
-        user_data[uid]["prompt_msg_id"] = unlocked_msg.message_id
         return
 
     # ── Count ──
@@ -1083,16 +948,13 @@ async def _start_creation(uid, count, data, chat_id):
             gender_option=gender_val
         )
 
-    CONCURRENCY = 100
+    CONCURRENCY = 5
     success     = 0
     lock        = asyncio.Lock()
     stopped     = False
-    _executor   = ThreadPoolExecutor(max_workers=100)
 
-    async def _worker(worker_id):
+    async def _worker():
         nonlocal success, stopped
-        # Stagger workers: 0.3-0.5s apart per worker to prevent IP hammering but still fast
-        await asyncio.sleep(worker_id * random.uniform(0.3, 0.5))
         while True:
             async with lock:
                 if stopped or success >= count:
@@ -1102,10 +964,9 @@ async def _start_creation(uid, count, data, chat_id):
                     stopped = True
                 return
             try:
-                result = await loop.run_in_executor(_executor, _register)
+                result = await loop.run_in_executor(None, _register)
             except Exception as e:
                 logging.exception(e)
-                await asyncio.sleep(3)
                 continue
             if result:
                 async with lock:
@@ -1142,7 +1003,7 @@ async def _start_creation(uid, count, data, chat_id):
                     stopped = True
                 return
 
-    workers = [asyncio.create_task(_worker(i)) for i in range(min(count, CONCURRENCY))]
+    workers = [asyncio.create_task(_worker()) for _ in range(min(count, CONCURRENCY))]
     await asyncio.gather(*workers)
 
     # Delete the "⚡ Creating..." banner
@@ -1150,181 +1011,28 @@ async def _start_creation(uid, count, data, chat_id):
     if banner_id:
         asyncio.create_task(_del(chat_id, banner_id))
 
+    if stopped or stop_flags.get(uid):
+        await bot.send_message(chat_id, "🛑 *Creation stopped.*", parse_mode="Markdown")
+
     stop_flags.pop(uid, None)
     credits_summary = (
         "" if uid == OWNER_ID
         else f"\n💳 Credits remaining: *{user_credits.get(uid, 0)}*"
     )
-    if stopped:
-        # Menu already shown instantly by cb_stop — only notify if accounts were made
-        if success > 0:
-            await bot.send_message(
-                chat_id,
-                f"✅ *{success} account(s) created before stopping.*{credits_summary}",
-                parse_mode="Markdown"
-            )
-    elif success == 0:
+    if success == 0 and not stopped:
         await bot.send_message(
             chat_id,
             "❌ *No accounts were created.*\n\n"
             "Facebook may be blocking registrations from this server's IP. "
-            "Try again later or contact the owner.\n\n"
-            "🤖 *Facebook Auto Creator*\n\nSelect options step by step 👇",
-            parse_mode="Markdown",
-            reply_markup=make_start_kb(uid)
+            "Try again later or contact the owner.",
+            parse_mode="Markdown"
         )
     else:
         await bot.send_message(
             chat_id,
-            f"🎉 *Done!* {success}/{count} accounts created.{credits_summary}\n\n"
-            "🤖 *Facebook Auto Creator*\n\nSelect options step by step 👇",
-            parse_mode="Markdown",
-            reply_markup=make_start_kb(uid)
-        )
-
-# ---------------------------------------------------------------------------
-# Proxy management commands (owner-only)
-# ---------------------------------------------------------------------------
-
-@dp.message(Command("addproxy"))
-async def cmd_addproxy(message: types.Message):
-    if message.from_user.id != OWNER_ID:
-        return
-    parts = message.text.split(maxsplit=1)
-    if len(parts) < 2 or not parts[1].strip():
-        await message.reply(
-            "Usage: `/addproxy <url>`\n\n"
-            "Examples:\n"
-            "`/addproxy http://user:pass@host:port`\n"
-            "`/addproxy socks5://user:pass@host:port`",
+            f"🎉 *Done!* {success}/{count} accounts created.{credits_summary}\n\nType /start to create more.",
             parse_mode="Markdown"
         )
-        return
-    proxy = parts[1].strip()
-    if proxy not in fb.PROXY_LIST:
-        fb.PROXY_LIST.append(proxy)
-        await message.reply(f"✅ Proxy added. Total proxies: *{len(fb.PROXY_LIST)}*", parse_mode="Markdown")
-    else:
-        await message.reply("⚠️ That proxy is already in the list.")
-
-
-@dp.message(Command("proxies"))
-async def cmd_proxies(message: types.Message):
-    if message.from_user.id != OWNER_ID:
-        return
-    if not fb.PROXY_LIST:
-        await message.reply("No proxies configured.\n\nAdd one with `/addproxy <url>`", parse_mode="Markdown")
-        return
-    lines = [f"`{i+1}.` `{p}`" for i, p in enumerate(fb.PROXY_LIST)]
-    await message.reply(
-        f"*Configured Proxies ({len(fb.PROXY_LIST)}):*\n\n" + "\n".join(lines) +
-        "\n\nUse `/clearproxies` to remove all.",
-        parse_mode="Markdown"
-    )
-
-
-@dp.message(Command("clearproxies"))
-async def cmd_clearproxies(message: types.Message):
-    if message.from_user.id != OWNER_ID:
-        return
-    count = len(fb.PROXY_LIST)
-    fb.PROXY_LIST.clear()
-    await message.reply(f"✅ Cleared {count} proxy(ies).")
-
-
-@dp.message(Command("removeproxy"))
-async def cmd_removeproxy(message: types.Message):
-    if message.from_user.id != OWNER_ID:
-        return
-    parts = message.text.split(maxsplit=1)
-    if len(parts) < 2:
-        await message.reply("Usage: `/removeproxy <number>`\nGet the number from `/proxies`", parse_mode="Markdown")
-        return
-    try:
-        idx = int(parts[1].strip()) - 1
-        removed = fb.PROXY_LIST.pop(idx)
-        await message.reply(f"✅ Removed: `{removed}`\nProxies left: *{len(fb.PROXY_LIST)}*", parse_mode="Markdown")
-    except (ValueError, IndexError):
-        await message.reply("Invalid number. Use `/proxies` to see the list.", parse_mode="Markdown")
-
-
-@dp.message(Command("testproxy"))
-async def cmd_testproxy(message: types.Message):
-    """Test proxy connectivity to Facebook registration endpoints."""
-    if message.from_user.id != OWNER_ID:
-        return
-
-    import time as _time
-    import requests as _req
-
-    ENDPOINTS = [
-        ("x.facebook.com/reg",  "https://x.facebook.com/reg"),
-        ("m.facebook.com/reg/", "https://m.facebook.com/reg/"),
-    ]
-    UA = "Mozilla/5.0 (Linux; Android 11; SM-A217F) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Mobile Safari/537.36"
-
-    # Decide what to test: specific proxy from arg, all proxies, or direct
-    parts = message.text.split(maxsplit=1)
-    if len(parts) > 1:
-        candidates = [("custom", parts[1].strip())]
-    elif fb.PROXY_LIST:
-        candidates = [(f"proxy {i+1}", p) for i, p in enumerate(fb.PROXY_LIST)]
-    else:
-        candidates = [("direct (no proxy)", None)]
-
-    status_msg = await message.reply("🔍 Testing connection to Facebook... please wait.")
-
-    def _test_one(label, proxy_url):
-        proxies = {"http": proxy_url, "https": proxy_url} if proxy_url else None
-        results = []
-        for ep_name, ep_url in ENDPOINTS:
-            t0 = _time.time()
-            try:
-                r = _req.get(
-                    ep_url,
-                    headers={"User-Agent": UA, "Accept-Language": "en-US,en;q=0.9"},
-                    proxies=proxies,
-                    timeout=12,
-                    allow_redirects=False,
-                )
-                ms = int((_time.time() - t0) * 1000)
-                loc = r.headers.get("Location", "")
-                if r.status_code == 200:
-                    from bs4 import BeautifulSoup as _BS
-                    has_form = bool(_BS(r.text, "html.parser").find("form"))
-                    icon = "✅" if has_form else "⚠️"
-                    detail = "form found" if has_form else "200 but no form"
-                else:
-                    icon = "❌"
-                    detail = f"HTTP {r.status_code}"
-                    if loc:
-                        detail += f" → {loc[:40]}"
-                results.append(f"  {icon} `{ep_name}` — {detail} ({ms}ms)")
-            except Exception as e:
-                ms = int((_time.time() - t0) * 1000)
-                results.append(f"  ❌ `{ep_name}` — {str(e)[:60]} ({ms}ms)")
-        return results
-
-    loop = asyncio.get_event_loop()
-    lines = []
-    for label, proxy_url in candidates:
-        proxy_display = f"`{proxy_url}`" if proxy_url else "_none_"
-        results = await loop.run_in_executor(None, _test_one, label, proxy_url)
-        lines.append(f"*{label}* ({proxy_display}):")
-        lines.extend(results)
-        lines.append("")
-
-    summary = "\n".join(lines).strip()
-    await bot.edit_message_text(
-        f"📡 *Proxy Test Results*\n\n{summary}\n\n"
-        "_✅ = form found (registration page accessible)_\n"
-        "_⚠️ = reachable but no form_\n"
-        "_❌ = blocked or error_",
-        chat_id=message.chat.id,
-        message_id=status_msg.message_id,
-        parse_mode="Markdown",
-    )
-
 
 async def main():
     print("🤖 Bot is now running...")
@@ -1339,17 +1047,11 @@ async def main():
 
     await bot.set_my_commands(
         [
-            types.BotCommand(command="start",        description="🚀 Start the bot"),
-            types.BotCommand(command="myaccs",       description="📋 My created accounts"),
-            types.BotCommand(command="botaccs",      description="🌐 All bot accounts"),
-            types.BotCommand(command="credits",      description="💳 Credits info"),
-            types.BotCommand(command="stats",        description="📊 Bot statistics"),
-            types.BotCommand(command="menu",         description="⚙️ Owner menu"),
-            types.BotCommand(command="addproxy",     description="🌐 Add a proxy"),
-            types.BotCommand(command="proxies",      description="📋 List proxies"),
-            types.BotCommand(command="clearproxies", description="🗑 Clear all proxies"),
-            types.BotCommand(command="removeproxy",  description="❌ Remove proxy by number"),
-            types.BotCommand(command="testproxy",    description="🧪 Test proxy/IP connectivity"),
+            types.BotCommand(command="start",    description="🚀 Start the bot"),
+            types.BotCommand(command="myaccs",   description="📋 My created accounts"),
+            types.BotCommand(command="botaccs",  description="🌐 All bot accounts"),
+            types.BotCommand(command="credits",  description="💳 Credits info"),
+            types.BotCommand(command="menu",     description="⚙️ Owner menu"),
         ],
         scope=types.BotCommandScopeChat(chat_id=OWNER_ID)
     )
