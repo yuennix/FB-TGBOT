@@ -14,6 +14,33 @@ try:
     _CERTIFI = certifi.where()
 except ImportError:
     _CERTIFI = True
+
+# ── Proxy rotation ────────────────────────────────────────────────────────────
+_proxy_list = []
+_proxy_lock = threading.Lock()
+_proxy_index = 0
+
+def _load_proxies(path="proxies.txt"):
+    global _proxy_list
+    try:
+        with open(path, "r") as f:
+            lines = [l.strip() for l in f if l.strip()]
+        _proxy_list = lines
+    except FileNotFoundError:
+        _proxy_list = []
+
+def _get_proxy():
+    """Return the next proxy dict in round-robin order, or None if no proxies loaded."""
+    global _proxy_index
+    if not _proxy_list:
+        return None
+    with _proxy_lock:
+        proxy_url = _proxy_list[_proxy_index % len(_proxy_list)]
+        _proxy_index += 1
+    return {"http": proxy_url, "https": proxy_url}
+
+_load_proxies()
+# ─────────────────────────────────────────────────────────────────────────────
 _name_pools = {
 'filipino_male_first': [],
 'filipino_female_first': [],
@@ -2176,6 +2203,10 @@ def register_account(domain_choice, name_option, gender_option, max_retries=1, c
         try:
             dev = _random_device()
             ses = requests.Session()
+            # Attach a rotating proxy if available
+            _proxy = _get_proxy()
+            if _proxy:
+                ses.proxies.update(_proxy)
             # Use bare WebKit UA — full Chrome UA and sec-ch-ua headers trigger 400 blocks from FB
             _android_ver = dev.get('android', random.choice(['11','12','13','14']))
             _get_ua = f"Mozilla/5.0 (Linux; Android {_android_ver}; {dev['model']}) AppleWebKit/537.36"
