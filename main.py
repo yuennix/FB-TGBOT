@@ -32,7 +32,7 @@ def _load_proxies(path="proxies.txt"):
         _proxy_list = []
 
 def _mark_proxy_dead(proxy_url):
-    """Permanently skip this proxy URL for the rest of the session."""
+    """Remove a dead proxy from the live pool permanently."""
     if not proxy_url:
         return
     with _dead_lock:
@@ -40,6 +40,21 @@ def _mark_proxy_dead(proxy_url):
         # If >90% of proxies are dead, clear the dead set to allow reuse
         if len(_dead_proxies) > len(_proxy_list) * 0.9:
             _dead_proxies.clear()
+    # Also remove from the live list so it never comes up again
+    with _proxy_lock:
+        try:
+            _proxy_list.remove(proxy_url)
+        except ValueError:
+            pass
+
+def get_proxy_stats():
+    """Return a dict with total, live, and dead proxy counts."""
+    with _dead_lock:
+        dead = len(_dead_proxies)
+    with _proxy_lock:
+        total_loaded = len(_proxy_list)
+    live = total_loaded - dead
+    return {"total": total_loaded + dead, "live": max(live, 0), "dead": dead}
 
 def _get_proxy():
     """Return the next live proxy dict in round-robin order, skipping dead ones.
