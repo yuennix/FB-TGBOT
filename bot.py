@@ -326,6 +326,66 @@ async def cmd_stats(message: types.Message):
         parse_mode="Markdown"
     )
 
+# ================== /testdomains COMMAND ==================
+@dp.message(Command("testdomains"))
+async def cmd_testdomains(message: types.Message):
+    if message.from_user.id != OWNER_ID:
+        await message.answer("🔒 Owner only.")
+        return
+
+    await message.answer(
+        "🧪 *Domain Test Started*\n\nTesting all 6 domains — 10 accounts total. Please wait...",
+        parse_mode="Markdown"
+    )
+
+    loop = asyncio.get_event_loop()
+    keys = list(DOMAINS.keys())
+    tasks = [(keys[i % len(keys)], DOMAINS[keys[i % len(keys)]]) for i in range(10)]
+
+    def _do_register(domain_name, name_opt, gender_opt):
+        return fb.register_account(domain_name, name_opt, gender_opt, max_retries=3)
+
+    results = []
+    executor = __import__('concurrent.futures', fromlist=['ThreadPoolExecutor']).ThreadPoolExecutor(max_workers=10)
+    futs = {
+        executor.submit(_do_register, domain_name, str((i % 2) + 1), str((i % 3) + 1)): (key, domain_name)
+        for i, (key, domain_name) in enumerate(tasks)
+    }
+
+    import concurrent.futures as _cf
+    for fut in _cf.as_completed(futs):
+        key, domain_name = futs[fut]
+        try:
+            result = fut.result()
+        except Exception as e:
+            result = None
+        results.append((key, domain_name, result))
+
+    executor.shutdown(wait=False)
+
+    ok = [(k, d, r) for k, d, r in results if isinstance(r, dict)]
+    blocked = [(k, d, r) for k, d, r in results if r == "BLOCKED"]
+    failed  = [(k, d, r) for k, d, r in results if r is None]
+
+    lines = [f"✅ *{len(ok)}/10 accounts created* | 🚫 {len(blocked)} blocked | ❌ {len(failed)} failed\n"]
+
+    for key, domain_name, r in results:
+        domain_label = f"[{key}] {domain_name}"
+        if isinstance(r, dict):
+            lines.append(
+                f"✅ *{domain_label}*\n"
+                f"  👤 `{r['name']}`\n"
+                f"  📧 `{r['email']}`\n"
+                f"  🔑 `{r['password']}`\n"
+                f"  🆔 `{r['uid']}`"
+            )
+        elif r == "BLOCKED":
+            lines.append(f"🚫 *{domain_label}* — IP blocked by Facebook")
+        else:
+            lines.append(f"❌ *{domain_label}* — Failed (no account)")
+
+    await message.answer("\n\n".join(lines), parse_mode="Markdown")
+
 # ================== OWNER: APPROVE/DENY ==================
 @dp.callback_query(lambda c: c.data.startswith("access:"))
 async def cb_approval(callback: types.CallbackQuery):
@@ -1018,15 +1078,18 @@ async def _start_creation(uid, count, data, chat_id):
     creating_msg[uid] = banner.message_id
 
     loop       = asyncio.get_event_loop()
-    domain_val = str(data.get("domain", ""))
+    domain_key = str(data.get("domain", ""))
     name_val   = str(data.get("name", "1"))
     gender_val = str(data.get("gender", "1"))
     custom_pw  = data.get("password", None)  # local — avoids global race condition
 
-    if not domain_val:
+    if not domain_key:
         await bot.send_message(chat_id, "❌ Session error: domain not set. Use /start to try again.")
         creating_msg.pop(uid, None)
         return
+
+    # Resolve numeric key → actual domain name expected by register_account / get_temp_email
+    domain_val = DOMAINS.get(domain_key, domain_key)
 
     N_WORKERS        = 300
     session_executor = ThreadPoolExecutor(max_workers=N_WORKERS, thread_name_prefix=f"fb_{uid}")
