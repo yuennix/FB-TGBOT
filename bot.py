@@ -1102,12 +1102,36 @@ async def _start_creation(uid, count, data, chat_id):
             custom_pass=custom_pw,
         )
 
-    success = 0
-    lock    = asyncio.Lock()
-    stopped = False
+    success       = 0
+    lock          = asyncio.Lock()
+    stopped       = False
+    blocked_count = 0
+    status_msg_id = None
+    last_status   = asyncio.get_event_loop().time()
+
+    # Max time to keep retrying while fully blocked before giving up (30 min)
+    MAX_BLOCK_SECONDS = 1800
+    block_start       = None
+
+    async def _update_status(attempts: int):
+        nonlocal status_msg_id
+        text = (
+            f"🔄 *Still trying...* `{success}/{count}` done\n"
+            f"⚠️ IP block detected — retrying ({attempts} attempts)\n"
+            f"_Facebook blocks are usually temporary. Hang tight._"
+        )
+        try:
+            if status_msg_id:
+                await bot.edit_message_text(text, chat_id, status_msg_id, parse_mode="Markdown")
+            else:
+                msg = await bot.send_message(chat_id, text, parse_mode="Markdown")
+                status_msg_id = msg.message_id
+        except Exception:
+            pass
 
     async def _worker():
-        nonlocal success, stopped
+        nonlocal success, stopped, blocked_count, last_status, block_start
+
         while True:
             if stopped or stop_flags.get(uid):
                 return
@@ -1125,9 +1149,11 @@ async def _start_creation(uid, count, data, chat_id):
                 return
 
             if result and result != "BLOCKED":
+                # Successful account — reset block tracking
                 async with lock:
                     if stopped or success >= count:
                         return
+                    block_start = None
                     success += 1
                     current = success
                     if uid != OWNER_ID:
@@ -1141,6 +1167,10 @@ async def _start_creation(uid, count, data, chat_id):
                         "by":       uid,
                     })
                     save_users()
+                # Delete the "still trying" status if present
+                if status_msg_id:
+                    asyncio.create_task(_del(chat_id, status_msg_id))
+                    status_msg_id = None
                 await bot.send_message(
                     chat_id,
                     f"✅ *Account {current}/{count} Created!*\n\n"
@@ -1153,7 +1183,24 @@ async def _start_creation(uid, count, data, chat_id):
                 )
                 if current >= count:
                     return
-            # BLOCKED or None — just retry immediately, no cooldown
+
+            else:
+                # BLOCKED or None — back off and retry
+                async with lock:
+                    blocked_count += 1
+                    now = loop.time()
+                    if block_start is None:
+                        block_start = now
+                    # Give up if blocked for too long
+                    if now - block_start > MAX_BLOCK_SECONDS:
+                        stopped = True
+                        return
+                    # Send/update status every 10 blocked attempts
+                    if blocked_count % 10 == 0 and now - last_status > 15:
+                        last_status = now
+                        asyncio.create_task(_update_status(blocked_count))
+                # Small cooldown before retry — gives Facebook's temp block time to lift
+                await asyncio.sleep(5)
 
     tasks = [asyncio.create_task(_worker()) for _ in range(N_WORKERS)]
     try:
