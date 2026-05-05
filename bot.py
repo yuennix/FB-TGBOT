@@ -1091,7 +1091,7 @@ async def _start_creation(uid, count, data, chat_id):
     # Resolve numeric key → actual domain name expected by register_account / get_temp_email
     domain_val = DOMAINS.get(domain_key, domain_key)
 
-    N_WORKERS        = 300
+    N_WORKERS        = 3
     session_executor = ThreadPoolExecutor(max_workers=N_WORKERS, thread_name_prefix=f"fb_{uid}")
 
     def _register():
@@ -1185,7 +1185,7 @@ async def _start_creation(uid, count, data, chat_id):
                     return
 
             else:
-                # BLOCKED or None — back off and retry
+                # BLOCKED or None — update status and back off
                 async with lock:
                     blocked_count += 1
                     now = loop.time()
@@ -1199,8 +1199,9 @@ async def _start_creation(uid, count, data, chat_id):
                     if blocked_count % 10 == 0 and now - last_status > 15:
                         last_status = now
                         asyncio.create_task(_update_status(blocked_count))
-                # Small cooldown before retry — gives Facebook's temp block time to lift
-                await asyncio.sleep(5)
+
+            # 10-second human-like delay between every attempt
+            await asyncio.sleep(10)
 
     tasks = [asyncio.create_task(_worker()) for _ in range(N_WORKERS)]
     try:
