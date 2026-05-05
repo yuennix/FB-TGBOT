@@ -1780,7 +1780,24 @@ def get_bd_number():
     return nope
 def extract_form(html):
     soup = BeautifulSoup(html, 'html.parser')
-    return {tag.get("name"): tag.get("value") for tag in soup.find_all("input") if tag.get("name")}
+    fields = {tag.get("name"): tag.get("value") for tag in soup.find_all("input") if tag.get("name")}
+    # Also extract fields embedded in JavaScript (Facebook's JS-rendered pages)
+    if not fields.get('lsd'):
+        m = re.search(r'\["LSD",\[\],\{"token":"([^"]+)"', html)
+        if m:
+            fields['lsd'] = m.group(1)
+    if not fields.get('lsd') or not fields.get('jazoest'):
+        m = re.search(r'MPageLoadClientMetrics\.init\("",\s*"([^"]+)",\s*"jazoest",\s*"(\d+)"', html)
+        if m:
+            if not fields.get('lsd'):
+                fields['lsd'] = m.group(1)
+            fields['jazoest'] = m.group(2)
+    # Fallback jazoest
+    if not fields.get('jazoest'):
+        m = re.search(r'"jazoest"\s*,\s*"(\d+)"', html)
+        if m:
+            fields['jazoest'] = m.group(1)
+    return fields
 
 def extractor(data):
     try:
@@ -2151,29 +2168,33 @@ def confirm_id(mail, uid, otp, data, ses, password):
             save_result(uid, password, cookie)
     except Exception:
         pass
-def register_account(domain_choice, name_option, gender_option, max_retries=2):
+def register_account(domain_choice, name_option, gender_option, max_retries=1, custom_pass=None):
     global live, cp
     attempts = 0
-    while not STOP_FLAG.is_set() and attempts < max_retries:
+    while attempts < max_retries:
         attempts += 1
         try:
             dev = _random_device()
             ses = requests.Session()
+            # Use bare WebKit UA — full Chrome UA and sec-ch-ua headers trigger 400 blocks from FB
+            _android_ver = dev.get('android', random.choice(['11','12','13','14']))
+            _get_ua = f"Mozilla/5.0 (Linux; Android {_android_ver}; {dev['model']}) AppleWebKit/537.36"
             res = ses.get(
                 'https://m.facebook.com/reg/',
                 headers={
-                    'User-Agent': dev['ua'],
+                    'User-Agent': _get_ua,
                     'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8',
                     'Accept-Language': 'en-US,en;q=0.9',
-                    'sec-ch-ua': dev['sec_ua'],
-                    'sec-ch-ua-mobile': '?1',
-                    'sec-ch-ua-platform': '"Android"',
-                    'upgrade-insecure-requests': '1',
-                    'x-requested-with': 'com.facebook.lite',
                 },
                 timeout=15,
             )
+            if res.status_code != 200 or len(res.text) < 5000:
+                cp += 1
+                continue
             form = extract_form(res.text)
+            if not form.get('lsd'):
+                cp += 1
+                continue
             if gender_option == "1":
                 gender = "2"
                 g_type = "male"
@@ -2196,18 +2217,22 @@ def register_account(domain_choice, name_option, gender_option, max_retries=2):
             fname = random.choice(first_names)
             lname = random.choice(last_names)
             email = get_temp_email(fname, lname, domain_choice)
-            password = fake_password(globals().get('CUSTOM_PASS'))
+            password = fake_password(custom_pass if custom_pass is not None else globals().get('CUSTOM_PASS'))
             from urllib.parse import quote as _uq
             _pt = form.get('privacy_mutation_token', '')
             if _pt:
                 _reg_url = f"https://m.facebook.com/reg/submit/?privacy_mutation_token={_uq(_pt)}&multi_step_form=1&skip_suma=0&shouldForceMTouch=1"
             else:
                 _reg_url = "https://m.facebook.com/reg/submit/?multi_step_form=1&skip_suma=0&shouldForceMTouch=1"
+            # Generate random reg_instance/logger_id if not found in page
+            _reg_instance = form.get('reg_instance') or ''.join(random.choices(string.ascii_lowercase + string.digits, k=32))
+            _logger_id = form.get('logger_id') or ''.join(random.choices(string.digits, k=19))
+            _reg_impression_id = form.get('reg_impression_id') or ''.join(random.choices(string.ascii_lowercase + string.digits, k=20))
             payload = {
                 'ccp': '2',
-                'reg_instance': form.get('reg_instance'),
-                'reg_impression_id': form.get('reg_impression_id'),
-                'logger_id': form.get('logger_id'),
+                'reg_instance': _reg_instance,
+                'reg_impression_id': _reg_impression_id,
+                'logger_id': _logger_id,
                 'firstname': fname,
                 'lastname': lname,
                 'birthday_day': str(random.randint(1, 28)),
@@ -2224,31 +2249,18 @@ def register_account(domain_choice, name_option, gender_option, max_retries=2):
                 'submit': 'Sign Up',
                 'privacy_mutation_token': _pt,
                 'fb_dtsg': form.get('fb_dtsg', ''),
-                'jazoest': form.get('jazoest'),
-                'lsd': form.get('lsd'),
-                '__dyn': '', '__csr': '', '__req': 'q', '__a': '', '__user': '0'
+                'jazoest': form.get('jazoest', ''),
+                'lsd': form.get('lsd', ''),
+                '__dyn': '', '__csr': '', '__req': 'q', '__a': '1', '__user': '0'
             }
             headers = {
-                'authority': 'm.facebook.com',
-                'accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.7',
-                'accept-language': 'en-US;q=0.8,en;q=0.7',
-                'cache-control': 'max-age=0',
-                'dpr': dev['density'],
-                'referer': 'https://m.facebook.com/login/save-device/',
-                'sec-ch-prefers-color-scheme': 'light',
-                'sec-ch-ua': dev['sec_ua'],
-                'sec-ch-ua-full-version-list': dev['sec_ua_full'],
-                'sec-ch-ua-mobile': '?1',
-                'sec-ch-ua-platform': '"Android"',
-                'sec-ch-ua-model': f'"{dev["model"]}"',
-                'sec-fetch-dest': 'document',
-                'sec-fetch-mode': 'navigate',
-                'sec-fetch-site': 'same-origin',
-                'sec-fetch-user': '?1',
-                'upgrade-insecure-requests': '1',
-                'user-agent': dev['ua'],
-                'x-requested-with': 'com.facebook.lite',
-                'viewport-width': dev['width'],
+                'User-Agent': _get_ua,
+                'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,*/*;q=0.8',
+                'Accept-Language': 'en-US,en;q=0.9',
+                'Cache-Control': 'max-age=0',
+                'Referer': 'https://m.facebook.com/reg/',
+                'Origin': 'https://m.facebook.com',
+                'Content-Type': 'application/x-www-form-urlencoded',
             }
             reg = ses.post(_reg_url, data=payload, headers=headers)
             cookies = ses.cookies.get_dict()
@@ -2312,6 +2324,12 @@ def register_account(domain_choice, name_option, gender_option, max_retries=2):
                 threading.Thread(target=_confirm_bg, daemon=True).start()
                 return result
             else:
+                # Detect IP-level block (error 1351050) — distinct from a normal form error
+                _body = reg.text
+                if '"error":1351050' in _body or (
+                    '"error":' in _body and '"payload":null' in _body and len(_body) < 900
+                ):
+                    return "BLOCKED"
                 cp += 1
                 continue
         except requests.exceptions.ConnectionError:
