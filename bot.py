@@ -326,6 +326,31 @@ async def cmd_stats(message: types.Message):
         parse_mode="Markdown"
     )
 
+# ================== /proxystats COMMAND ==================
+@dp.message(Command("proxystats"))
+async def cmd_proxystats(message: types.Message):
+    if message.from_user.id != OWNER_ID:
+        await message.answer("🔒 Owner only.")
+        return
+
+    stats = fb.get_proxy_stats()
+    total = stats["total"]
+    live  = stats["live"]
+    dead  = stats["dead"]
+    pct   = round((live / total * 100) if total else 0, 1)
+    bar_filled = int(pct / 10)
+    bar = "🟢" * bar_filled + "⬛" * (10 - bar_filled)
+
+    await message.answer(
+        f"🌐 *Proxy Pool Status*\n\n"
+        f"{bar} `{pct}%` live\n\n"
+        f"✅ *Live:*  `{live}`\n"
+        f"❌ *Dead:*  `{dead}` _(auto-removed)_\n"
+        f"📦 *Total loaded:* `{total}`\n\n"
+        f"_Dead proxies are removed automatically on connection error or timeout._",
+        parse_mode="Markdown"
+    )
+
 # ================== /testdomains COMMAND ==================
 @dp.message(Command("testdomains"))
 async def cmd_testdomains(message: types.Message):
@@ -1282,6 +1307,7 @@ async def main():
             types.BotCommand(command="stats",       description="📊 Bot statistics"),
             types.BotCommand(command="menu",        description="⚙️ Owner menu"),
             types.BotCommand(command="testdomains", description="🧪 Test all domains (10 accs)"),
+            types.BotCommand(command="proxystats",  description="🌐 Proxy pool live/dead status"),
         ],
         scope=types.BotCommandScopeChat(chat_id=OWNER_ID)
     )
