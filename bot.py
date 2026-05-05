@@ -1228,12 +1228,13 @@ async def main():
 
     await bot.set_my_commands(
         [
-            types.BotCommand(command="start",    description="🚀 Start the bot"),
-            types.BotCommand(command="myaccs",   description="📋 My created accounts"),
-            types.BotCommand(command="botaccs",  description="🌐 All bot accounts"),
-            types.BotCommand(command="credits",  description="💳 Credits info"),
-            types.BotCommand(command="stats",    description="📊 Bot statistics"),
-            types.BotCommand(command="menu",     description="⚙️ Owner menu"),
+            types.BotCommand(command="start",       description="🚀 Start the bot"),
+            types.BotCommand(command="myaccs",      description="📋 My created accounts"),
+            types.BotCommand(command="botaccs",     description="🌐 All bot accounts"),
+            types.BotCommand(command="credits",     description="💳 Credits info"),
+            types.BotCommand(command="stats",       description="📊 Bot statistics"),
+            types.BotCommand(command="menu",        description="⚙️ Owner menu"),
+            types.BotCommand(command="testdomains", description="🧪 Test all domains (10 accs)"),
         ],
         scope=types.BotCommandScopeChat(chat_id=OWNER_ID)
     )
