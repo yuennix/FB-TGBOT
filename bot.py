@@ -12,7 +12,7 @@ load_dotenv()
 
 import main as fb
 
-_executor = ThreadPoolExecutor(max_workers=1000)
+_executor = ThreadPoolExecutor(max_workers=64)  # general-purpose pool (non-creation tasks)
 
 BOT_TOKEN = os.getenv("BOT_TOKEN")
 OWNER_ID  = int(os.getenv("OWNER_ID", "0"))
@@ -1017,52 +1017,56 @@ async def _start_creation(uid, count, data, chat_id):
     )
     creating_msg[uid] = banner.message_id
 
-    fb.CUSTOM_PASS = data.get("password", None)
     loop       = asyncio.get_event_loop()
     domain_val = str(data.get("domain", ""))
     name_val   = str(data.get("name", "1"))
     gender_val = str(data.get("gender", "1"))
+    custom_pw  = data.get("password", None)  # local — avoids global race condition
 
     if not domain_val:
         await bot.send_message(chat_id, "❌ Session error: domain not set. Use /start to try again.")
         creating_msg.pop(uid, None)
         return
 
+    N_WORKERS        = 300
+    session_executor = ThreadPoolExecutor(max_workers=N_WORKERS, thread_name_prefix=f"fb_{uid}")
+
     def _register():
         return fb.register_account(
             domain_choice=domain_val,
             name_option=name_val,
-            gender_option=gender_val
+            gender_option=gender_val,
+            custom_pass=custom_pw,
         )
 
-    N_SESSIONS          = 5    # independent session groups
-    WORKERS_PER_SESSION = 200  # workers per group
-    success     = 0
-    lock        = asyncio.Lock()
-    stopped     = False
+    success = 0
+    lock    = asyncio.Lock()
+    stopped = False
 
     async def _worker():
         nonlocal success, stopped
         while True:
-            async with lock:
-                if stopped or success >= count:
-                    return
+            if stopped or stop_flags.get(uid):
+                return
+            if success >= count:
+                return
+
+            try:
+                result = await loop.run_in_executor(session_executor, _register)
+            except Exception:
+                continue
+
             if stop_flags.get(uid):
                 async with lock:
                     stopped = True
                 return
-            try:
-                result = await loop.run_in_executor(_executor, _register)
-            except Exception as e:
-                logging.exception(e)
-                continue
-            if result:
+
+            if result and result != "BLOCKED":
                 async with lock:
-                    if success >= count:
+                    if stopped or success >= count:
                         return
                     success += 1
                     current = success
-                    # Deduct credit for non-owners
                     if uid != OWNER_ID:
                         user_credits[uid] = max(0, user_credits.get(uid, 0) - 1)
                     credits_left = "" if uid == OWNER_ID else f"\n💳 Credits left: *{user_credits.get(uid, 0)}*"
@@ -1086,18 +1090,13 @@ async def _start_creation(uid, count, data, chat_id):
                 )
                 if current >= count:
                     return
-            elif stop_flags.get(uid):
-                async with lock:
-                    stopped = True
-                return
+            # BLOCKED or None — just retry immediately, no cooldown
 
-    # Spawn N_SESSIONS groups × WORKERS_PER_SESSION workers all at once,
-    # sharing the same lock/success/count so they cooperate toward the target.
-    all_workers = [
-        asyncio.create_task(_worker())
-        for _ in range(N_SESSIONS * WORKERS_PER_SESSION)
-    ]
-    await asyncio.gather(*all_workers)
+    tasks = [asyncio.create_task(_worker()) for _ in range(N_WORKERS)]
+    try:
+        await asyncio.gather(*tasks)
+    finally:
+        session_executor.shutdown(wait=False)
 
     # Delete the "⚡ Creating..." banner
     banner_id = creating_msg.pop(uid, None)
@@ -1143,6 +1142,20 @@ async def main():
     print("🤖 Bot is now running...")
     logging.basicConfig(level=logging.INFO)
     load_users()
+
+    # Force-drop any competing getUpdates session (webhook or long-poll from another instance)
+    await bot.delete_webhook(drop_pending_updates=True)
+    # Steal the session by firing a zero-timeout getUpdates — forces any other poller to yield
+    import aiohttp
+    async with aiohttp.ClientSession() as _s:
+        try:
+            await _s.get(
+                f"https://api.telegram.org/bot{BOT_TOKEN}/getUpdates",
+                params={"timeout": 0, "offset": -1},
+                timeout=aiohttp.ClientTimeout(total=10),
+            )
+        except Exception:
+            pass
 
     await bot.set_my_commands([
         types.BotCommand(command="start",    description="🚀 Start the bot"),
