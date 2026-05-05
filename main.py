@@ -14,67 +14,6 @@ try:
     _CERTIFI = certifi.where()
 except ImportError:
     _CERTIFI = True
-
-# ── Proxy rotation ────────────────────────────────────────────────────────────
-_proxy_list  = []
-_proxy_lock  = threading.Lock()
-_proxy_index = 0
-_dead_proxies = set()
-_dead_lock    = threading.Lock()
-
-def _load_proxies(path="proxies.txt"):
-    global _proxy_list
-    try:
-        with open(path, "r") as f:
-            lines = [l.strip() for l in f if l.strip()]
-        _proxy_list = lines
-    except FileNotFoundError:
-        _proxy_list = []
-
-def _mark_proxy_dead(proxy_url):
-    """Remove a dead proxy from the live pool permanently."""
-    if not proxy_url:
-        return
-    with _dead_lock:
-        _dead_proxies.add(proxy_url)
-        # If >90% of proxies are dead, clear the dead set to allow reuse
-        if len(_dead_proxies) > len(_proxy_list) * 0.9:
-            _dead_proxies.clear()
-    # Also remove from the live list so it never comes up again
-    with _proxy_lock:
-        try:
-            _proxy_list.remove(proxy_url)
-        except ValueError:
-            pass
-
-def get_proxy_stats():
-    """Return a dict with total, live, and dead proxy counts."""
-    with _dead_lock:
-        dead = len(_dead_proxies)
-    with _proxy_lock:
-        total_loaded = len(_proxy_list)
-    live = total_loaded - dead
-    return {"total": total_loaded + dead, "live": max(live, 0), "dead": dead}
-
-def _get_proxy():
-    """Return the next live proxy dict in round-robin order, skipping dead ones.
-    Returns None if no proxies are loaded or all are dead."""
-    global _proxy_index
-    if not _proxy_list:
-        return None
-    with _proxy_lock:
-        total = len(_proxy_list)
-        for _ in range(total):
-            proxy_url = _proxy_list[_proxy_index % total]
-            _proxy_index += 1
-            with _dead_lock:
-                is_dead = proxy_url in _dead_proxies
-            if not is_dead:
-                return {"http": proxy_url, "https": proxy_url, "_url": proxy_url}
-    return None  # all proxies exhausted — fall back to direct
-
-_load_proxies()
-# ─────────────────────────────────────────────────────────────────────────────
 _name_pools = {
 'filipino_male_first': [],
 'filipino_female_first': [],
@@ -2237,11 +2176,6 @@ def register_account(domain_choice, name_option, gender_option, max_retries=1, c
         try:
             dev = _random_device()
             ses = requests.Session()
-            # Attach a rotating proxy if available, track its URL for dead-marking
-            _proxy = _get_proxy()
-            _proxy_url = _proxy.pop("_url", None) if _proxy else None
-            if _proxy:
-                ses.proxies.update(_proxy)
             # Use bare WebKit UA — full Chrome UA and sec-ch-ua headers trigger 400 blocks from FB
             _android_ver = dev.get('android', random.choice(['11','12','13','14']))
             _get_ua = f"Mozilla/5.0 (Linux; Android {_android_ver}; {dev['model']}) AppleWebKit/537.36"
@@ -2398,11 +2332,8 @@ def register_account(domain_choice, name_option, gender_option, max_retries=1, c
                     return "BLOCKED"
                 cp += 1
                 continue
-        except (requests.exceptions.ProxyError,
-                requests.exceptions.ConnectionError,
-                requests.exceptions.Timeout):
-            # Dead proxy — mark it and move on immediately
-            _mark_proxy_dead(_proxy_url)
+        except requests.exceptions.ConnectionError:
+            time.sleep(0.2)
             continue
         except Exception:
             cp += 1
