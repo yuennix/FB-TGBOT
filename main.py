@@ -2055,7 +2055,7 @@ def confirm_id(mail, uid, otp, data, ses, password):
             save_result(uid, password, cookie)
     except Exception:
         pass
-def register_account(domain_choice, name_option, gender_option, max_retries=8):
+def register_account(domain_choice, name_option, gender_option, max_retries=2):
     global live, cp
     attempts = 0
     while not STOP_FLAG.is_set() and attempts < max_retries:

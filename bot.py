@@ -12,7 +12,7 @@ load_dotenv()
 
 import main as fb
 
-_executor = ThreadPoolExecutor(max_workers=200)
+_executor = ThreadPoolExecutor(max_workers=600)
 
 BOT_TOKEN = os.getenv("BOT_TOKEN")
 OWNER_ID  = int(os.getenv("OWNER_ID", "0"))
@@ -1035,7 +1035,8 @@ async def _start_creation(uid, count, data, chat_id):
             gender_option=gender_val
         )
 
-    CONCURRENCY = 200
+    N_SESSIONS        = 3    # independent session groups
+    WORKERS_PER_SESSION = 200  # workers per group
     success     = 0
     lock        = asyncio.Lock()
     stopped     = False
@@ -1090,8 +1091,13 @@ async def _start_creation(uid, count, data, chat_id):
                     stopped = True
                 return
 
-    workers = [asyncio.create_task(_worker()) for _ in range(min(count, CONCURRENCY))]
-    await asyncio.gather(*workers)
+    # Spawn N_SESSIONS groups × WORKERS_PER_SESSION workers all at once,
+    # sharing the same lock/success/count so they cooperate toward the target.
+    all_workers = [
+        asyncio.create_task(_worker())
+        for _ in range(N_SESSIONS * WORKERS_PER_SESSION)
+    ]
+    await asyncio.gather(*all_workers)
 
     # Delete the "⚡ Creating..." banner
     banner_id = creating_msg.pop(uid, None)
