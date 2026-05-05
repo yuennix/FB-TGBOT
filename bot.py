@@ -12,7 +12,7 @@ load_dotenv()
 
 import main as fb
 
-_executor = ThreadPoolExecutor(max_workers=600)
+_executor = ThreadPoolExecutor(max_workers=1000)
 
 BOT_TOKEN = os.getenv("BOT_TOKEN")
 OWNER_ID  = int(os.getenv("OWNER_ID", "0"))
@@ -1035,7 +1035,7 @@ async def _start_creation(uid, count, data, chat_id):
             gender_option=gender_val
         )
 
-    N_SESSIONS        = 3    # independent session groups
+    N_SESSIONS          = 5    # independent session groups
     WORKERS_PER_SESSION = 200  # workers per group
     success     = 0
     lock        = asyncio.Lock()

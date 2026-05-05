@@ -1798,41 +1798,137 @@ def extractor(data):
     except Exception:
         return {"fb_dtsg": "", "jazoest": "", "lsd": "", "__dyn": "", "__csr": "", "reg_instance": "", "reg_impression_id": "", "logger_id": ""}
 
-def get_device_info():
-    device_models = [
-        'SM-A145F', 'SM-A135F', 'SM-A055F', 'SM-A225F', 'SM-A035F', 'SM-A505F', 'SM-A115F', 'SM-A025F',
-        'SM-S918B', 'SM-S911B', 'SM-G991B', 'SM-G990B', 'SM-G973F',
-        'Redmi 10A', 'Redmi 9A', 'Redmi 9', 'Redmi 8A', 'Redmi 10', 'Redmi 12', 'Redmi Note 11', 'Redmi Note 9',
-        'MI 9T', 'MI 10', 'MI 11', 'MI A2', 'MI A3',
-        'RMX3231', 'RMX3195', 'RMX1911', 'RMX1803', 'RMX3081',
-        'CPH2209', 'CPH2269', 'CPH1859', 'V2203', 'V2250', 'V1938', 'CPH2179',
-        'LM-Q610', 'Moto E20', 'Moto G30', 'Moto E5', 'Moto G4', 'LG-M250',
-        'Tecno Spark', 'Tecno Pop', 'Infinix Smart', 'Infinix Hot', 'HTK-AL00',
-        'IN2010', 'IN2020', 'DN2103', 'EB2101', 'LR2130',
-        'SO-02L', 'J8110', 'H8116', 'TA-1056', 'TA-1092', 'TA-1187',
+def _random_device():
+    """Generate a fully randomized device fingerprint — thousands of unique combinations."""
+    _models = [
+        # Samsung Galaxy A
+        'SM-A025F','SM-A035F','SM-A037F','SM-A055F','SM-A115F','SM-A125F','SM-A135F',
+        'SM-A145F','SM-A155F','SM-A225F','SM-A235F','SM-A325F','SM-A335F','SM-A505F',
+        'SM-A515F','SM-A525F','SM-A526B','SM-A536B','SM-A546B','SM-A556B','SM-A715F',
+        'SM-A736B','SM-A756B',
+        # Samsung Galaxy S
+        'SM-S901B','SM-S906B','SM-S908B','SM-S911B','SM-S916B','SM-S918B','SM-S921B',
+        'SM-S926B','SM-S928B','SM-G991B','SM-G996B','SM-G998B','SM-G973F','SM-G975F',
+        'SM-G980F','SM-G985F','SM-G990B','SM-G990B2',
+        # Samsung Galaxy M/F
+        'SM-M135F','SM-M145F','SM-M235F','SM-M315F','SM-M336B','SM-M515F','SM-M536B',
+        'SM-F721B','SM-F926B','SM-F936B',
+        # Xiaomi/Redmi/POCO
+        '2201117TY','22101316C','21121119SC','2109119DG','220333QNY','23021RAA2Y',
+        '22120RN86G','2304FPN6DC','23049PCD8G','2306EPN60G','23078RKD5G',
+        'Redmi 9A','Redmi 9C','Redmi 9T','Redmi 10','Redmi 10A','Redmi 10C',
+        'Redmi 12','Redmi 12C','Redmi 13C','Redmi Note 8','Redmi Note 9',
+        'Redmi Note 10','Redmi Note 10S','Redmi Note 11','Redmi Note 11S',
+        'Redmi Note 12','Redmi Note 12S','Redmi Note 13','Redmi Note 13 Pro',
+        'MI 9','MI 9T','MI 10','MI 10T','MI 11','MI 11X','MI 11 Lite','MI A2','MI A3',
+        'POCO M2','POCO M3','POCO M4','POCO M5','POCO M6','POCO X3','POCO X4','POCO X5',
+        'POCO C31','POCO C40','POCO C51','POCO C55','POCO C65',
+        # Realme
+        'RMX1911','RMX1992','RMX2001','RMX2061','RMX2063','RMX3081','RMX3085',
+        'RMX3171','RMX3191','RMX3195','RMX3231','RMX3261','RMX3363','RMX3371',
+        'RMX3461','RMX3471','RMX3511','RMX3521','RMX3612','RMX3710','RMX3760',
+        # OPPO
+        'CPH1859','CPH1931','CPH2069','CPH2127','CPH2179','CPH2185','CPH2209',
+        'CPH2239','CPH2251','CPH2269','CPH2293','CPH2325','CPH2339','CPH2357',
+        'CPH2387','CPH2423','CPH2449','CPH2471','CPH2505','CPH2527',
+        # Vivo
+        'V1938','V2036','V2061','V2109','V2111','V2130','V2203','V2219',
+        'V2250','V2307','V2318','V2324','V2336','V2354','V2401',
+        # Tecno
+        'Tecno Spark 8','Tecno Spark 9','Tecno Spark 10','Tecno Spark 20',
+        'Tecno Pop 5','Tecno Pop 6','Tecno Pop 7','Tecno Pop 8',
+        'Tecno Camon 19','Tecno Camon 20','Tecno Phantom X2',
+        # Infinix
+        'Infinix Smart 6','Infinix Smart 7','Infinix Smart 8',
+        'Infinix Hot 11','Infinix Hot 12','Infinix Hot 20','Infinix Hot 30',
+        'Infinix Note 12','Infinix Note 30','Infinix Zero 20',
+        # Nokia/Motorola/Others
+        'TA-1056','TA-1092','TA-1187','TA-1212','TA-1274','TA-1315','TA-1336',
+        'Moto E20','Moto E30','Moto E40','Moto G20','Moto G30','Moto G31',
+        'Moto G32','Moto G50','Moto G51','Moto G52','Moto G62','Moto G72',
+        'LM-Q610','LM-K500','LG-M250',
+        # OnePlus
+        'IN2010','IN2015','IN2017','IN2019','IN2020','IN2023','IN2025',
+        'DN2101','DN2103','EB2101','EB2103','LR2101','LR2130','NE2211','NE2213',
+        # Sony Xperia
+        'XQ-AT51','XQ-AT52','XQ-BE52','XQ-BT52','XQ-CC54','XQ-CQ54','XQ-DC54',
+        # Huawei/Honor
+        'HTK-AL00','JNY-LX1','CRT-LX1','ELS-NX9','RKY-LX1','WDY-LX1',
+        'Honor X6','Honor X7','Honor X8','Honor X9','Honor 90',
     ]
-    android_versions = ['6', '7', '8', '9', '10', '10', '10', '11', '11', '11', '12', '12', '12', '13', '13', '14', '14']
-    chrome_versions = ['90', '95', '100', '105', '110', '115', '120', '125', '126', '127', '128', '129', '130', '131', '132']
-    build_codes = [
-        'RP1A.200720.011', 'SP1A.210812.016', 'TP1A.220624.014', 'TKQ1.221114.001',
-        'UP1A.231005.007', 'PKQ1.190101.001', 'RKQ1.200826.002', 'RQ3A.210805.001',
-        'SQ1A.210205.002', 'QP1A.190711.020',
+    _android = ['8','9','10','10','10','11','11','11','12','12','12','13','13','13','14','14','14']
+    _chrome_builds = [
+        ('109','109.0.5414.86'),('110','110.0.5481.100'),('111','111.0.5563.57'),
+        ('112','112.0.5615.48'),('113','113.0.5672.163'),('114','114.0.5735.131'),
+        ('115','115.0.5790.166'),('116','116.0.5845.92'),('117','117.0.5938.60'),
+        ('118','118.0.5993.80'),('119','119.0.6045.134'),('120','120.0.6099.144'),
+        ('121','121.0.6167.101'),('122','122.0.6261.111'),('123','123.0.6312.99'),
+        ('124','124.0.6367.82'),('125','125.0.6422.72'),('126','126.0.6478.122'),
+        ('127','127.0.6533.84'),('128','128.0.6613.88'),('129','129.0.6668.100'),
+        ('130','130.0.6723.70'),('131','131.0.6778.135'),('132','132.0.6834.163'),
+        ('133','133.0.6943.98'),('134','134.0.6998.135'),('135','135.0.7049.114'),
+        ('136','136.0.7103.125'),('137','137.0.7151.68'),
     ]
-    fb_versions = [
-        '80.0.0.0.0', '100.0.0.0.0', '200.0.0.0.0', '300.0.0.0.0', '340.0.0.0.0',
-        '360.0.0.0.0', '380.0.0.0.0', '385.0.0.0.0',
-        '388.0.0.4.115', '390.0.0.7.119', '392.0.0.9.118', '395.0.0.6.110',
+    _fb_versions = [
+        ('360.0.0.0.0','380000000'),('370.0.0.0.0','390000000'),
+        ('380.0.0.0.0','400000000'),('385.0.0.0.0','420000000'),
+        ('388.0.0.4.115','443200018'),('390.0.0.7.119','443200019'),
+        ('392.0.0.9.118','443200020'),('395.0.0.6.110','445000000'),
+        ('398.0.0.3.120','447000000'),('400.0.0.9.121','450000000'),
+        ('405.0.0.8.113','453000000'),('410.0.0.18.100','455000000'),
+        ('415.0.0.11.100','458000000'),('420.0.0.13.100','460000000'),
+        ('425.0.0.15.100','462000000'),('430.0.0.21.117','465000000'),
+        ('435.0.0.17.104','467000000'),('439.0.0.0.8','470000000'),
+        ('440.0.0.11.65','471000000'),('444.0.0.12.102','472000000'),
+        ('448.0.0.8.100','474000000'),('452.0.0.0.0','476000000'),
+        ('456.0.0.0.0','478000000'),('460.0.0.0.0','480000000'),
+        ('464.0.0.0.0','482000000'),('468.0.0.0.0','484000000'),
+        ('472.0.0.0.0','486000000'),('476.0.0.0.0','488000000'),
     ]
+    _densities = ['1.5','2.0','2.5','2.75','3.0','3.5']
+    _widths    = ['360','375','390','393','412','414','428','480','540','720','1080']
+    _heights   = ['640','780','800','844','896','915','1024','1280','1440','1600','2280','2400','2600']
+    _locales   = ['en_US','en_GB','en_PH','fil_PH','en_AU','en_SG']
+    _brands    = ['Samsung','Xiaomi','Realme','OPPO','vivo','Motorola','Nokia','Tecno','Infinix','OnePlus']
+
+    model        = random.choice(_models)
+    android      = random.choice(_android)
+    cv, cf       = random.choice(_chrome_builds)
+    fv, fbv      = random.choice(_fb_versions)
+    density      = random.choice(_densities)
+    width        = random.choice(_widths)
+    height       = random.choice(_heights)
+    locale       = random.choice(_locales)
+    brand        = random.choice(_brands)
+    fp           = hashlib.md5(f"{model}{android}{cf}{random.random()}{time.time()}".encode()).hexdigest()[:16]
+    build        = random.choice([
+        'RP1A.200720.011','SP1A.210812.016','TP1A.220624.014','TKQ1.221114.001',
+        'UP1A.231005.007','PKQ1.190101.001','RKQ1.200826.002','RQ3A.210805.001',
+        'SQ1A.210205.002','QP1A.190711.020','SKQ1.211006.001','UKQ1.230917.001',
+        'AP2A.240605.024','BP1A.220429.003','CP1A.211005.001','DP2A.211117.001',
+    ])
+
+    ua = (
+        f"Mozilla/5.0 (Linux; Android {android}; {model} Build/{build}; wv) "
+        f"AppleWebKit/537.36 (KHTML, like Gecko) Version/4.0 "
+        f"Chrome/{cf} Mobile Safari/537.36 "
+        f"[FBAN/FB4A;FBAV/{fv};FBBV/{fbv};"
+        f"FBDM/{{density={density},width={width},height={height}}};"
+        f"FBLC/{locale};FBRV/0;FBCR/;"
+        f"FBMF/{brand};FBBD/{model.split('-')[0] if '-' in model else model};"
+        f"FBPN/com.facebook.lite;FBDV/{model};"
+        f"FBSV/{android};FBOP/1;FBCA/armeabi-v7a:armeabi;]"
+    )
+    sec_ua      = f'"Android WebView";v="{cv}", "Chromium";v="{cv}", "Not_A Brand";v="24"'
+    sec_ua_full = f'"Android WebView";v="{cf}", "Chromium";v="{cf}", "Not_A Brand";v="24.0.0.0"'
     return {
-        'model': random.choice(device_models),
-        'android': random.choice(android_versions),
-        'chrome': random.choice(chrome_versions),
-        'dpr': random.choice(['1.5', '2.0', '2.5', '2.75', '3.0', '3.5']),
-        'width': random.choice(['360', '375', '393', '412', '480', '540', '720']),
-        'build': random.choice(build_codes),
-        'fb_lite_version': random.choice(fb_versions),
-        'fingerprint': hashlib.md5(f"{random.random()}{time.time()}".encode()).hexdigest()[:16],
+        'ua': ua, 'android': android, 'model': model,
+        'cv': cv, 'cf': cf, 'density': density, 'width': width,
+        'sec_ua': sec_ua, 'sec_ua_full': sec_ua_full, 'fp': fp, 'locale': locale,
     }
+
+def get_device_info():
+    return _random_device()
 
 def ugen():
     return ua.random
@@ -2061,8 +2157,22 @@ def register_account(domain_choice, name_option, gender_option, max_retries=2):
     while not STOP_FLAG.is_set() and attempts < max_retries:
         attempts += 1
         try:
+            dev = _random_device()
             ses = requests.Session()
-            res = ses.get('https://m.facebook.com/reg/')
+            res = ses.get(
+                'https://m.facebook.com/reg/',
+                headers={
+                    'User-Agent': dev['ua'],
+                    'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8',
+                    'Accept-Language': 'en-US,en;q=0.9',
+                    'sec-ch-ua': dev['sec_ua'],
+                    'sec-ch-ua-mobile': '?1',
+                    'sec-ch-ua-platform': '"Android"',
+                    'upgrade-insecure-requests': '1',
+                    'x-requested-with': 'com.facebook.lite',
+                },
+                timeout=15,
+            )
             form = extract_form(res.text)
             if gender_option == "1":
                 gender = "2"
@@ -2123,20 +2233,22 @@ def register_account(domain_choice, name_option, gender_option, max_retries=2):
                 'accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.7',
                 'accept-language': 'en-US;q=0.8,en;q=0.7',
                 'cache-control': 'max-age=0',
-                'dpr': '2',
+                'dpr': dev['density'],
                 'referer': 'https://m.facebook.com/login/save-device/',
                 'sec-ch-prefers-color-scheme': 'light',
-                'sec-ch-ua': '"Android WebView";v="109", "Chromium";v="109", "Not_A Brand";v="24"',
+                'sec-ch-ua': dev['sec_ua'],
+                'sec-ch-ua-full-version-list': dev['sec_ua_full'],
                 'sec-ch-ua-mobile': '?1',
                 'sec-ch-ua-platform': '"Android"',
+                'sec-ch-ua-model': f'"{dev["model"]}"',
                 'sec-fetch-dest': 'document',
                 'sec-fetch-mode': 'navigate',
                 'sec-fetch-site': 'same-origin',
                 'sec-fetch-user': '?1',
                 'upgrade-insecure-requests': '1',
-                'user-agent': FB_LITE_UA,
+                'user-agent': dev['ua'],
                 'x-requested-with': 'com.facebook.lite',
-                'viewport-width': '980'
+                'viewport-width': dev['width'],
             }
             reg = ses.post(_reg_url, data=payload, headers=headers)
             cookies = ses.cookies.get_dict()
