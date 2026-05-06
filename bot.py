@@ -1032,7 +1032,29 @@ async def _start_creation(uid, count, data, chat_id):
                     stopped = True
                 return
 
-            if result and result != "BLOCKED":
+            if result == "BLOCKED":
+                async with lock:
+                    stopped = True
+                stop_flags[uid] = True
+                banner_id = creating_msg.pop(uid, None)
+                if banner_id:
+                    asyncio.create_task(_del(chat_id, banner_id))
+                await bot.send_message(
+                    chat_id,
+                    "🚫 *IP Blocked by Facebook*\n\n"
+                    "This server's IP is currently blocked by Facebook.\n"
+                    "Try again later or contact the owner.",
+                    parse_mode="Markdown"
+                )
+                await bot.send_message(
+                    chat_id,
+                    "🤖 *Facebook Auto Creator*\n\nSelect options step by step 👇",
+                    parse_mode="Markdown",
+                    reply_markup=make_start_kb(uid)
+                )
+                return
+
+            if result and isinstance(result, dict):
                 async with lock:
                     if stopped or success >= count:
                         return
@@ -1061,7 +1083,7 @@ async def _start_creation(uid, count, data, chat_id):
                 )
                 if current >= count:
                     return
-            # BLOCKED or None — just retry immediately, no cooldown
+            # None = registration failed, retry
 
     tasks = [asyncio.create_task(_worker()) for _ in range(N_WORKERS)]
     try:
