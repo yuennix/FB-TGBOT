@@ -1337,7 +1337,7 @@ def createfb_method_1():
             time.sleep(10)
             pass
     
-    # Add completion message and summary
+    # Completion summary
     print(' ')
     linex()
     print(f'{W}[{G}•{W}]{G} The process has completed')
@@ -1345,7 +1345,7 @@ def createfb_method_1():
     print(f'{W}[{G}•{W}]{G} Total OK {W}: {G}{len(oks)}')
     print(f'{W}[{R}•{W}]{G} Total CP {W}: {R}{len(cps)}')
     linex()
-    sys.exit(f'{W}[{G}•{W}]{G} Thanks For Use.....{R}!{W}')
+    input(f'{W}[{G}•{W}]{G} Press Enter to go back to menu... {W}')
 
 
 def register_account(domain_choice, name_option="1", gender_option="3", custom_pass=None, max_retries=5):
@@ -1354,8 +1354,7 @@ def register_account(domain_choice, name_option="1", gender_option="3", custom_p
     Returns dict {name, email, password, uid} on success,
     "BLOCKED" if IP-blocked, or None on failure after retries.
     """
-    blocked_streak = 0
-    reg_attempt    = 0
+    reg_attempt = 0
 
     while True:
         try:
@@ -1363,16 +1362,12 @@ def register_account(domain_choice, name_option="1", gender_option="3", custom_p
             response = ses.get("https://x.facebook.com/reg", timeout=15)
             form = extractor(response.text)
 
-            # Form fields missing = IP is blocked by Facebook
+            # Form fields missing = Facebook not loading properly, retry
             if not form.get("lsd") and not form.get("fb_dtsg"):
-                blocked_streak += 1
-                if blocked_streak >= 3:
-                    return "BLOCKED"
-                time.sleep(3)
+                time.sleep(5)
                 continue
 
-            blocked_streak = 0  # reset on a good page
-            reg_attempt   += 1
+            reg_attempt += 1
 
             # Name selection
             if name_option == "2":
@@ -1446,8 +1441,6 @@ def register_account(domain_choice, name_option="1", gender_option="3", custom_p
                 }
 
             # Got the form but registration didn't succeed — keep retrying
-            if reg_attempt >= 10:
-                return None
 
         except Exception:
             pass
