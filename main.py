@@ -1249,93 +1249,108 @@ def createfb_method_1():
     print(f"{W}[{G}•{W}]{G} Use {R}1.1.1{G} Vpn{W}")
     linex()
 
-    for _ in range(num):
-        try:
-            sys.stdout.write(f"\r{W}CYBER-X{G} OK • {len(oks)}{W} ")
-            sys.stdout.flush()
-            ses = requests.Session()
-            response = ses.get("https://x.facebook.com/reg")
-            form = extractor(response.text)
-            firstname, lastname = get_rpw_name() if name_choice == '2' else get_bd_name()
-            phone = get_1secmail()
+    import threading
+    from concurrent.futures import ThreadPoolExecutor
 
-            payload = {
-                'ccp': "2",
-                'reg_instance': form.get("reg_instance", ""),
-                'submission_request': "true",
-                'reg_impression_id': form.get("reg_impression_id", ""),
-                'ns': "1",
-                'logger_id': form.get("logger_id", ""),
-                'firstname': firstname,
-                'lastname': lastname,
-                'birthday_day': str(random.randint(15, 25)),
-                'birthday_month': str(random.randint(5, 10)),
-                'birthday_year': str(random.randint(1985, 1995)),
-                'reg_email__': phone,
-                'sex': "1",
-                'encpass': f'#PWD_BROWSER:0:{int(time.time())}:{pww}',
-                'submit': "Sign Up",
-                'fb_dtsg': form.get("fb_dtsg", ""),
-                'jazoest': form.get("jazoest", ""),
-                'lsd': form.get("lsd", "")
-            }
+    lock = threading.Lock()
+    done = [0]  # accounts successfully created so far
 
-            headers = {
-                "Host": "m.facebook.com",
-                "Connection": "keep-alive",
-                "User-Agent": ugenX(),
-                "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8",
-                "Accept-Encoding": "gzip, deflate, br",
-                "Accept-Language": "en-US,en;q=0.9"
-            }
+    def _create_one():
+        while True:
+            with lock:
+                if done[0] >= num:
+                    return
+            try:
+                ses = requests.Session()
+                response = ses.get("https://x.facebook.com/reg", timeout=15)
+                form = extractor(response.text)
 
-            head1 = {
-                'accept-encoding': 'gzip, deflate',
-                'accept-language': 'en-US,en;q=0.9',
-                'cache-control': 'max-age=0',
-                'referer': 'https://mbasic.facebook.com/reg/',
-                'sec-ch-ua': '',
-                'sec-ch-ua-mobile': '?1',
-                'sec-ch-ua-platform': 'Android',
-                'sec-fetch-dest': 'document',
-                'sec-fetch-mode': 'navigate',
-                'sec-fetch-site': 'same-origin',
-                'sec-fetch-user': '?1',
-                'upgrade-insecure-requests': '1',
-                'user-agent': ugenX()
-            }
+                if not form.get("lsd") and not form.get("fb_dtsg"):
+                    time.sleep(3)
+                    continue
 
-            merged_headers = {**headers, **head1}
-            reg_url = "https://www.facebook.com/reg/submit/"
-            reg_submit = ses.post(reg_url, data=payload, headers=merged_headers)
-            login_coki = ses.cookies.get_dict()
+                firstname, lastname = get_rpw_name() if name_choice == '2' else get_bd_name()
+                phone = get_1secmail()
 
-            login_coki = ses.cookies.get_dict()
+                payload = {
+                    'ccp': "2",
+                    'reg_instance': form.get("reg_instance", ""),
+                    'submission_request': "true",
+                    'reg_impression_id': form.get("reg_impression_id", ""),
+                    'ns': "1",
+                    'logger_id': form.get("logger_id", ""),
+                    'firstname': firstname,
+                    'lastname': lastname,
+                    'birthday_day': str(random.randint(15, 25)),
+                    'birthday_month': str(random.randint(5, 10)),
+                    'birthday_year': str(random.randint(1985, 1995)),
+                    'reg_email__': phone,
+                    'sex': "1",
+                    'encpass': f'#PWD_BROWSER:0:{int(time.time())}:{pww}',
+                    'submit': "Sign Up",
+                    'fb_dtsg': form.get("fb_dtsg", ""),
+                    'jazoest': form.get("jazoest", ""),
+                    'lsd': form.get("lsd", "")
+                }
 
-            if "c_user" in login_coki:
-                coki = ";".join([f"{key}={value}" for key, value in login_coki.items()])
-                uid = login_coki["c_user"]
-                if show_details == 'y':
-                    print(f"\r{W}[{G}•{W}] Name   : {G}{firstname} {lastname}{W}")
-                    print(f"\r{W}[{G}•{W}] Email  : {G}{phone}{W}")
-                    print(f"\r{W}[{G}•{W}] Gender : {G}Female{W}")
-                    print(f"\r{W}[{G}•{W}] DOB    : {G}{payload['birthday_day']}-{payload['birthday_month']}-{payload['birthday_year']}{W}")
-                    print(f"\r{W}[{G}•{W}] UID    : {G}{uid}{W}")
-                    print(f"\r{W}[{G}•{W}] PASS   : {G}{pww}{W}")
-                    print(f"\r{G}{uid}|{pww}|{coki}{W}")
-                    print(f"{W}─────────────────────────────────────────────{W}")
-                else:
-                    print(f"\r{G}CYBER-X{W}-{G}[OK] {uid} | {pww}")
-                with open('/sdcard/Auto_Creat.txt', 'a') as f:
-                    f.write(f"{uid}|{pww}\n")
-                oks.append(uid)
-            elif "checkpoint" in login_coki:
-                uid = login_coki.get("c_user", "unknown")
-                cps.append(uid)
-            time.sleep(1)
-        except Exception as e:
-            time.sleep(10)
-            pass
+                merged_headers = {
+                    "Host": "m.facebook.com",
+                    "Connection": "keep-alive",
+                    "User-Agent": ugenX(),
+                    "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8",
+                    "Accept-Encoding": "gzip, deflate, br",
+                    "Accept-Language": "en-US,en;q=0.9",
+                    'referer': 'https://mbasic.facebook.com/reg/',
+                    'sec-ch-ua': '',
+                    'sec-ch-ua-mobile': '?1',
+                    'sec-ch-ua-platform': 'Android',
+                    'sec-fetch-dest': 'document',
+                    'sec-fetch-mode': 'navigate',
+                    'sec-fetch-site': 'same-origin',
+                    'sec-fetch-user': '?1',
+                    'upgrade-insecure-requests': '1',
+                }
+
+                reg_submit = ses.post("https://www.facebook.com/reg/submit/", data=payload, headers=merged_headers, timeout=20)
+                login_coki = ses.cookies.get_dict()
+
+                if "c_user" in login_coki:
+                    coki = ";".join([f"{k}={v}" for k, v in login_coki.items()])
+                    uid = login_coki["c_user"]
+                    with lock:
+                        if done[0] >= num:
+                            return
+                        done[0] += 1
+                        current = done[0]
+                        oks.append(uid)
+                        if show_details == 'y':
+                            print(f"\n{W}[{G}•{W}] Name   : {G}{firstname} {lastname}{W}")
+                            print(f"{W}[{G}•{W}] Email  : {G}{phone}{W}")
+                            print(f"{W}[{G}•{W}] UID    : {G}{uid}{W}")
+                            print(f"{W}[{G}•{W}] PASS   : {G}{pww}{W}")
+                            print(f"{W}─────────────────────────────────────────────{W}")
+                        else:
+                            print(f"\n{G}CYBER-X{W}-{G}[OK] {current}/{num} | {uid} | {pww}")
+                        try:
+                            with open('/sdcard/Auto_Creat.txt', 'a') as f:
+                                f.write(f"{uid}|{pww}\n")
+                        except Exception:
+                            pass
+                    # continue loop — keep trying until done[0] >= num
+
+                elif "checkpoint" in login_coki:
+                    uid = login_coki.get("c_user", "unknown")
+                    with lock:
+                        cps.append(uid)
+                    # checkpoint = fail, retry
+            except Exception:
+                time.sleep(2)
+
+    WORKERS = 5
+    with ThreadPoolExecutor(max_workers=WORKERS) as pool:
+        futures = [pool.submit(_create_one) for _ in range(WORKERS)]
+        for f in futures:
+            f.result()
     
     # Completion summary
     print(' ')
