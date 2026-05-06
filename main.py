@@ -1352,21 +1352,27 @@ def register_account(domain_choice, name_option="1", gender_option="3", custom_p
     """
     Called by bot.py to create a single Facebook account.
     Returns dict {name, email, password, uid} on success,
-    "BLOCKED" if IP-blocked, or None on failure.
+    "BLOCKED" if IP-blocked, or None on failure after retries.
     """
-    attempt = 0
+    blocked_streak = 0
+    reg_attempt    = 0
+
     while True:
-        attempt += 1
         try:
             ses = requests.Session()
             response = ses.get("https://x.facebook.com/reg", timeout=15)
-
             form = extractor(response.text)
 
-            # If critical form fields are missing, retry
+            # Form fields missing = IP is blocked by Facebook
             if not form.get("lsd") and not form.get("fb_dtsg"):
-                time.sleep(2)
+                blocked_streak += 1
+                if blocked_streak >= 3:
+                    return "BLOCKED"
+                time.sleep(3)
                 continue
+
+            blocked_streak = 0  # reset on a good page
+            reg_attempt   += 1
 
             # Name selection
             if name_option == "2":
@@ -1388,10 +1394,8 @@ def register_account(domain_choice, name_option="1", gender_option="3", custom_p
             else:
                 fb_sex = random.choice(["1", "2"])
 
-            # Always use 1secmail
             email = get_1secmail()
-
-            pww = custom_pass if custom_pass else get_pass()
+            pww   = custom_pass if custom_pass else get_pass()
 
             payload = {
                 'ccp': "2",
@@ -1430,18 +1434,20 @@ def register_account(domain_choice, name_option="1", gender_option="3", custom_p
                 'upgrade-insecure-requests': '1',
             }
 
-            reg_url = "https://www.facebook.com/reg/submit/"
-            reg_submit = ses.post(reg_url, data=payload, headers=headers, timeout=20)
+            reg_submit = ses.post("https://www.facebook.com/reg/submit/", data=payload, headers=headers, timeout=20)
             login_coki = ses.cookies.get_dict()
 
             if "c_user" in login_coki:
-                uid = login_coki["c_user"]
                 return {
                     "name":     f"{firstname} {lastname}",
                     "email":    email,
                     "password": pww,
-                    "uid":      uid,
+                    "uid":      login_coki["c_user"],
                 }
+
+            # Got the form but registration didn't succeed — keep retrying
+            if reg_attempt >= 10:
+                return None
 
         except Exception:
             pass
