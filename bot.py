@@ -2,6 +2,8 @@ import os
 import json
 import asyncio
 import logging
+import base64
+import requests as _requests
 from concurrent.futures import ThreadPoolExecutor
 from dotenv import load_dotenv
 from aiogram import Bot, Dispatcher, types
@@ -14,8 +16,50 @@ import main as fb
 
 _executor = ThreadPoolExecutor(max_workers=64)  # general-purpose pool (non-creation tasks)
 
-BOT_TOKEN = os.getenv("BOT_TOKEN")
-OWNER_ID  = int(os.getenv("OWNER_ID", "0"))
+BOT_TOKEN     = os.getenv("BOT_TOKEN")
+OWNER_ID      = int(os.getenv("OWNER_ID", "0"))
+GITHUB_TOKEN  = os.getenv("GITHUB_TOKEN", "")
+GITHUB_REPO   = "yuennix/FB-TGBOT"
+GITHUB_BRANCH = "main"
+GITHUB_API    = f"https://api.github.com/repos/{GITHUB_REPO}/contents/users.json"
+
+def _gh_headers():
+    return {"Authorization": f"token {GITHUB_TOKEN}", "Accept": "application/vnd.github.v3+json"}
+
+def load_from_github():
+    """Pull users.json from GitHub and write it locally."""
+    if not GITHUB_TOKEN:
+        return
+    try:
+        r = _requests.get(GITHUB_API, headers=_gh_headers(), params={"ref": GITHUB_BRANCH}, timeout=10)
+        if r.status_code == 200:
+            content = base64.b64decode(r.json()["content"]).decode("utf-8")
+            with open(USERS_FILE, "w") as f:
+                f.write(content)
+    except Exception:
+        pass
+
+def sync_to_github():
+    """Push local users.json to GitHub."""
+    if not GITHUB_TOKEN:
+        return
+    try:
+        with open(USERS_FILE, "r") as f:
+            content = f.read()
+        encoded = base64.b64encode(content.encode("utf-8")).decode("utf-8")
+        # Get current SHA (required for updates)
+        r = _requests.get(GITHUB_API, headers=_gh_headers(), params={"ref": GITHUB_BRANCH}, timeout=10)
+        sha = r.json().get("sha") if r.status_code == 200 else None
+        payload = {
+            "message": "chore: sync users.json",
+            "content": encoded,
+            "branch": GITHUB_BRANCH,
+        }
+        if sha:
+            payload["sha"] = sha
+        _requests.put(GITHUB_API, headers=_gh_headers(), json=payload, timeout=10)
+    except Exception:
+        pass
 
 bot = Bot(token=BOT_TOKEN)
 dp  = Dispatcher()
@@ -25,7 +69,6 @@ seen_users      = set()
 approved_users  = set()
 pending_users   = {}   # uid -> {name, username}
 stop_flags      = {}   # uid -> bool
-unlocked_domains= {}   # uid -> set of domain keys
 created_accounts= []   # list of {name,email,password,uid,by}
 user_credits    = {}   # uid -> int  (OWNER_ID is unlimited)
 owner_action    = {}   # OWNER_ID -> {action, target, prompt_msg_id}
@@ -34,7 +77,7 @@ creating_msg    = {}   # uid -> message_id of the "⚡ Creating …" banner
 USERS_FILE = "users.json"
 
 def load_users():
-    global seen_users, approved_users, user_credits, pending_users, unlocked_domains, created_accounts
+    global seen_users, approved_users, user_credits, pending_users, created_accounts
     try:
         with open(USERS_FILE, "r") as f:
             data = json.load(f)
@@ -45,8 +88,6 @@ def load_users():
             uid = int(uid_str)
             if uid not in pending_users:
                 pending_users[uid] = info
-        for uid_str, domains in data.get("unlocked_domains", {}).items():
-            unlocked_domains[int(uid_str)] = set(domains)
         created_accounts = data.get("created_accounts", [])
     except Exception:
         pass
@@ -59,26 +100,11 @@ def save_users():
                 "approved_users":   list(approved_users),
                 "user_credits":     {str(k): v for k, v in user_credits.items()},
                 "pending_users":    {str(k): v for k, v in pending_users.items()},
-                "unlocked_domains": {str(k): list(v) for k, v in unlocked_domains.items()},
                 "created_accounts": created_accounts,
             }, f)
+        sync_to_github()
     except Exception:
         pass
-
-DOMAINS = {
-    "1": "1secmail",
-    "2": "yopmail.com",
-    "3": "harakirimail.com",
-    "4": "weyn.store",
-    "5": "jhames.shop",
-    "6": "jakulan.site",
-}
-
-DOMAIN_PASSWORDS = {
-    "weyn.store":   "yuennix",
-    "jhames.shop":  "yuennix",
-    "jakulan.site": "yuennix",
-}
 
 # ================== KEYBOARDS ==================
 
@@ -112,18 +138,11 @@ def make_gender_kb():
         [InlineKeyboardButton(text="🔙 Back",  callback_data="back:name")],
     ])
 
-def make_domain_kb():
-    rows = []
-    for k, v in DOMAINS.items():
-        rows.append([InlineKeyboardButton(text=f"{k} • {v}", callback_data=f"domain:{k}")])
-    rows.append([InlineKeyboardButton(text="🔙 Back", callback_data="back:gender")])
-    return InlineKeyboardMarkup(inline_keyboard=rows)
-
 def make_acc_pass_kb():
     return InlineKeyboardMarkup(inline_keyboard=[
         [InlineKeyboardButton(text="🔑 Set Custom Password", callback_data="accpass:custom")],
         [InlineKeyboardButton(text="🎲 Use Random Password",  callback_data="accpass:random")],
-        [InlineKeyboardButton(text="🔙 Back",                callback_data="back:domain")],
+        [InlineKeyboardButton(text="🔙 Back",                callback_data="back:gender")],
     ])
 
 def make_stop_kb(uid):
@@ -227,16 +246,15 @@ async def cmd_start(message: types.Message):
         save_users()
         await message.answer(
             f"👋 *Welcome, {first_name}!*\n\n"
-            f"This bot lets you automatically create Facebook accounts with custom names, gender, email domain, and more.\n\n"
+            f"This bot automatically creates Facebook accounts using 1secmail.\n\n"
             f"━━━━━━━━━━━━━━━━━━\n"
             f"📌 *How to use:*\n"
             f"1️⃣ Tap *Start Creating Accounts*\n"
             f"2️⃣ Choose name style\n"
             f"3️⃣ Choose gender\n"
-            f"4️⃣ Choose email domain\n"
-            f"5️⃣ Enter domain password _(only once per domain)_\n"
-            f"6️⃣ Type how many accounts\n"
-            f"7️⃣ Get results instantly!\n"
+            f"4️⃣ Set account password\n"
+            f"5️⃣ Type how many accounts\n"
+            f"6️⃣ Get results instantly!\n"
             f"━━━━━━━━━━━━━━━━━━",
             parse_mode="Markdown"
         )
@@ -326,65 +344,38 @@ async def cmd_stats(message: types.Message):
         parse_mode="Markdown"
     )
 
-# ================== /testdomains COMMAND ==================
-@dp.message(Command("testdomains"))
-async def cmd_testdomains(message: types.Message):
+# ================== /testcreate COMMAND ==================
+@dp.message(Command("testcreate"))
+async def cmd_testcreate(message: types.Message):
     if message.from_user.id != OWNER_ID:
         await message.answer("🔒 Owner only.")
         return
 
     await message.answer(
-        "🧪 *Domain Test Started*\n\nTesting all 6 domains — 10 accounts total. Please wait...",
+        "🧪 *Test Create Started*\n\nCreating 1 account using 1secmail. Will keep retrying until success...",
         parse_mode="Markdown"
     )
 
-    loop = asyncio.get_event_loop()
-    keys = list(DOMAINS.keys())
-    tasks = [(keys[i % len(keys)], DOMAINS[keys[i % len(keys)]]) for i in range(10)]
-
-    def _do_register(domain_name, name_opt, gender_opt):
-        return fb.register_account(domain_name, name_opt, gender_opt, max_retries=3)
-
-    results = []
-    executor = __import__('concurrent.futures', fromlist=['ThreadPoolExecutor']).ThreadPoolExecutor(max_workers=10)
-    futs = {
-        executor.submit(_do_register, domain_name, str((i % 2) + 1), str((i % 3) + 1)): (key, domain_name)
-        for i, (key, domain_name) in enumerate(tasks)
-    }
-
     import concurrent.futures as _cf
-    for fut in _cf.as_completed(futs):
-        key, domain_name = futs[fut]
-        try:
-            result = fut.result()
-        except Exception as e:
-            result = None
-        results.append((key, domain_name, result))
+    loop = asyncio.get_event_loop()
 
-    executor.shutdown(wait=False)
+    def _do_register():
+        return fb.register_account("1secmail", "1", "3")
 
-    ok = [(k, d, r) for k, d, r in results if isinstance(r, dict)]
-    blocked = [(k, d, r) for k, d, r in results if r == "BLOCKED"]
-    failed  = [(k, d, r) for k, d, r in results if r is None]
+    result = await loop.run_in_executor(None, _do_register)
 
-    lines = [f"✅ *{len(ok)}/10 accounts created* | 🚫 {len(blocked)} blocked | ❌ {len(failed)} failed\n"]
+    if isinstance(result, dict):
+        text = (
+            f"✅ *Account Created!*\n"
+            f"  👤 `{result['name']}`\n"
+            f"  📧 `{result['email']}`\n"
+            f"  🔑 `{result['password']}`\n"
+            f"  🆔 `{result['uid']}`"
+        )
+    else:
+        text = f"❌ Failed to create account."
 
-    for key, domain_name, r in results:
-        domain_label = f"[{key}] {domain_name}"
-        if isinstance(r, dict):
-            lines.append(
-                f"✅ *{domain_label}*\n"
-                f"  👤 `{r['name']}`\n"
-                f"  📧 `{r['email']}`\n"
-                f"  🔑 `{r['password']}`\n"
-                f"  🆔 `{r['uid']}`"
-            )
-        elif r == "BLOCKED":
-            lines.append(f"🚫 *{domain_label}* — IP blocked by Facebook")
-        else:
-            lines.append(f"❌ *{domain_label}* — Failed (no account)")
-
-    await message.answer("\n\n".join(lines), parse_mode="Markdown")
+    await bot.send_message(message.chat.id, text, parse_mode="Markdown")
 
 # ================== OWNER: APPROVE/DENY ==================
 @dp.callback_query(lambda c: c.data.startswith("access:"))
@@ -777,10 +768,6 @@ async def cb_back(callback: types.CallbackQuery):
         await callback.message.edit_text(
             "⚤ Choose *Gender*:", parse_mode="Markdown", reply_markup=make_gender_kb()
         )
-    elif step == "domain":
-        await callback.message.edit_text(
-            "📧 Choose *Email Domain*:", parse_mode="Markdown", reply_markup=make_domain_kb()
-        )
     elif step == "accpass":
         await callback.message.edit_text(
             "🔑 *Set a password for the created accounts:*",
@@ -801,61 +788,17 @@ async def cb_gender(callback: types.CallbackQuery):
 
 # ================== GENDER ==================
 @dp.callback_query(lambda c: c.data.startswith("gender:"))
-async def cb_domain(callback: types.CallbackQuery):
+async def cb_gender_select(callback: types.CallbackQuery):
     uid = callback.from_user.id
     if uid not in user_data:
         await callback.answer("Session expired. Use /start", show_alert=True)
         return
     user_data[uid]["gender"] = callback.data.split(":")[1]
+    user_data[uid]["domain"] = "1secmail"
     await callback.message.edit_text(
-        "📧 Choose *Email Domain*:", parse_mode="Markdown", reply_markup=make_domain_kb()
-    )
-    await callback.answer()
-
-# ================== DOMAIN → ASK PASSWORD ==================
-@dp.callback_query(lambda c: c.data.startswith("domain:"))
-async def cb_domain_pass(callback: types.CallbackQuery):
-    uid = callback.from_user.id
-    if uid not in user_data:
-        await callback.answer("Session expired. Use /start", show_alert=True)
-        return
-    domain_key  = callback.data.split(":")[1]
-    domain_name = DOMAINS.get(domain_key, domain_key)
-    user_data[uid]["domain"] = domain_name   # store actual domain name, not key
-
-    if domain_name in unlocked_domains.get(uid, set()):
-        await callback.message.edit_text(
-            f"✅ *Domain `{domain_name}` already unlocked!*\n\n🔑 *Set a password for the created accounts:*",
-            parse_mode="Markdown",
-            reply_markup=make_acc_pass_kb()
-        )
-        await callback.answer()
-        return
-
-    # Auto-unlock domains with no password
-    if domain_name not in DOMAIN_PASSWORDS:
-        if uid not in unlocked_domains:
-            unlocked_domains[uid] = set()
-        unlocked_domains[uid].add(domain_name)
-        save_users()
-        await callback.message.edit_text(
-            f"✅ *Domain `{domain_name}` unlocked!*\n\n🔑 *Set a password for the created accounts:*",
-            parse_mode="Markdown",
-            reply_markup=make_acc_pass_kb()
-        )
-        await callback.answer()
-        return
-
-    user_data[uid]["awaiting"]       = "domain_pass"
-    user_data[uid]["prompt_msg_id"]  = callback.message.message_id
-    await callback.message.edit_text(
-        f"🔑 *Domain Password Required*\n\n"
-        f"Domain: `{domain_name}`\n\n"
-        f"Type the password for this domain:",
+        "🔑 *Set a password for the created accounts:*",
         parse_mode="Markdown",
-        reply_markup=InlineKeyboardMarkup(inline_keyboard=[
-            [InlineKeyboardButton(text="🔙 Back", callback_data="back:domain")]
-        ])
+        reply_markup=make_acc_pass_kb()
     )
     await callback.answer()
 
@@ -967,7 +910,7 @@ async def handle_text(message: types.Message):
     data     = user_data.get(uid)
     awaiting = data.get("awaiting") if data else None
 
-    if not data or awaiting not in ("domain_pass", "custom_pass", "count"):
+    if not data or awaiting not in ("custom_pass", "count"):
         return
 
     prompt_msg_id = data.pop("prompt_msg_id", None)
@@ -1001,32 +944,6 @@ async def handle_text(message: types.Message):
         )
         user_data[uid]["awaiting"]      = "count"
         user_data[uid]["prompt_msg_id"] = prompt.message_id
-        return
-
-    # ── Domain password ──
-    if awaiting == "domain_pass":
-        if prompt_msg_id:
-            asyncio.create_task(_del(chat_id, prompt_msg_id))
-        domain_key = data.get("domain")   # now stores the actual domain name
-        correct    = DOMAIN_PASSWORDS.get(domain_key, "")
-        if entered != correct:
-            user_data.pop(uid, None)
-            err = await message.answer(
-                "❌ *Wrong domain password.* Access denied.\nUse /start to try again.",
-                parse_mode="Markdown"
-            )
-            asyncio.create_task(_del(chat_id, err.message_id, delay=5))
-            return
-        if uid not in unlocked_domains:
-            unlocked_domains[uid] = set()
-        unlocked_domains[uid].add(domain_key)
-        save_users()
-        user_data[uid].pop("awaiting", None)
-        await message.answer(
-            "✅ *Domain unlocked!* _(won't ask again)_\n\n🔑 *Set a password for the created accounts:*",
-            parse_mode="Markdown",
-            reply_markup=make_acc_pass_kb()
-        )
         return
 
     # ── Count ──
@@ -1078,25 +995,16 @@ async def _start_creation(uid, count, data, chat_id):
     creating_msg[uid] = banner.message_id
 
     loop       = asyncio.get_event_loop()
-    domain_key = str(data.get("domain", ""))
-    name_val   = str(data.get("name", "1"))
+    name_val  = str(data.get("name", "1"))
     gender_val = str(data.get("gender", "1"))
-    custom_pw  = data.get("password", None)  # local — avoids global race condition
-
-    if not domain_key:
-        await bot.send_message(chat_id, "❌ Session error: domain not set. Use /start to try again.")
-        creating_msg.pop(uid, None)
-        return
-
-    # Resolve numeric key → actual domain name expected by register_account / get_temp_email
-    domain_val = DOMAINS.get(domain_key, domain_key)
+    custom_pw  = data.get("password", None)
 
     N_WORKERS        = 300
     session_executor = ThreadPoolExecutor(max_workers=N_WORKERS, thread_name_prefix=f"fb_{uid}")
 
     def _register():
         return fb.register_account(
-            domain_choice=domain_val,
+            domain_choice="1secmail",
             name_option=name_val,
             gender_option=gender_val,
             custom_pass=custom_pw,
@@ -1204,6 +1112,7 @@ async def _start_creation(uid, count, data, chat_id):
 async def main():
     print("🤖 Bot is now running...")
     logging.basicConfig(level=logging.INFO)
+    load_from_github()
     load_users()
 
     # Force-drop any competing getUpdates session (webhook or long-poll from another instance)
@@ -1234,7 +1143,7 @@ async def main():
             types.BotCommand(command="credits",     description="💳 Credits info"),
             types.BotCommand(command="stats",       description="📊 Bot statistics"),
             types.BotCommand(command="menu",        description="⚙️ Owner menu"),
-            types.BotCommand(command="testdomains", description="🧪 Test all domains (10 accs)"),
+            types.BotCommand(command="testcreate",  description="🧪 Test create 1 acc per domain"),
         ],
         scope=types.BotCommandScopeChat(chat_id=OWNER_ID)
     )
