@@ -16,50 +16,7 @@ from faker import Faker
 import pyotp
 import logging
 
-osxd = os.system
-os.system('cls' if platform.system().lower() == 'windows' else 'clear')
-os.system('xdg-open https://chat.whatsapp.com/BdyKJEo6dUy2XbSPcWcEyt');time.sleep(1.5)
-
-print('\033[92;1m>>\033[1;37m Installing missing modules ...')
-osxd('pip uninstall requests chardet urllib3 idna certifi -y;pip install chardet urllib3 idna certifi requests bs4')
-osxd('p'+'i'+'p'+' install '+' py'+'cu'+'rl'+' > /dev/null')
-osxd("pip install faker")
-osxd("pip install pyotp")
-
-try:
-    import requests
-except ImportError:
-    print('\n\033[92;1m>>\033[1;37m Installing requests !...\n')
-    osxd('pip install requests')
-    
-
-try:
-    import concurrent.futures
-except ImportError:
-    print('\n\033[92;1m>>\033[1;37m Installing futures !...\n')
-    osxd('pip install futures')
-
-
-    time.sleep(1.5)
-    os.system('git pull')
-    os.system('pkg install curl')
-try:
-    import requests 
-except ImportError:
-    print('\n\033[92;1m>>\033[1;37m Installing Requests ...\n')
-    os.system('pip install requests')
-
-
-try:
-    import concurrent.futures
-except ImportError:
-    print('\n\033[92;1m>>\033[1;37m Installing futures ...\n')
-    os.system('pip install futures')
-
-try:
-    import mechanize
-except ModuleNotFoundError:
-    os.system('pip install mechanize > /dev/null')
+import concurrent.futures
 from os import path
 from urllib.request import Request, urlopen
 
@@ -83,8 +40,8 @@ ua = UserAgent()
 # File storage functions
 def save_to_file(data: str, file_path: str):
     """Save data to file in plain text."""
-    full_path = os.path.join(CONFIG["output_dir"], file_path)
-    os.makedirs(os.path.dirname(full_path), exist_ok=True)
+    full_path = file_path
+    os.makedirs(os.path.dirname(full_path) or ".", exist_ok=True)
     with open(full_path, "a", encoding="utf-8") as f:
         f.write(data + "\n")
 
@@ -144,28 +101,28 @@ def ugenX():
 
 ugen=[]
 for xd in range(10000):
-	rr = random.randint
-	build_b = random.choice(["001","002","003","011","012","014","015","020","021","022","023","024"])
-	bl_typ = random.choice(["TKQ1","SKQ1","TP1A","RKQ1","SP1A","RP1A","PPR1","QP1A"])
-	oppo = random.choice(["CPH2461","CPH2451","PCGM00","PBBM00","PFZM10","PGGM10","PECT30","PCHM10","PEAT00","PEYM00","PESM10","PFGM00"])
-	infinix = random.choice(["Infinix X669C","Infinix X6823","Infinix X676C","Infinix X683","Infinix X689C","Infinix X6811","Infinix X612B","Infinix X6810","Infinix X665E"])
-	redmi = random.choice(["2211133G","M2004J19C","22041219I","22101316UG","2209116AG","M2010J19SY","M2012K11C","Redmi Note 7","Redmi Note 8","Redmi Note 5"])
-	um2 = f"Mozilla/5.0 (Linux; Android {str(rr(6,12))}; {oppo} Build/{bl_typ}.{str(rr(120000,220000))}.{build_b}; wv) AppleWebKit/537.36 (KHTML, like Gecko) Version/4.0 Chrome/{str(rr(80,114))}.0.{str(rr(4200,5400))}.{str(rr(70,150))} Mobile Safari/537.36"
-	um1 = f"Mozilla/5.0 (Linux; Android {str(rr(6,12))}; {redmi} Build/{bl_typ}.{str(rr(120000,220000))}.{build_b}; wv) AppleWebKit/537.36 (KHTML, like Gecko) Version/4.0 Chrome/{str(rr(80,114))}.0.{str(rr(4200,5400))}.{str(rr(70,150))} Mobile Safari/537.36"
-	um3 = f"Mozilla/5.0 (Linux; Android {str(rr(6,12))}; {infinix} Build/{bl_typ}.{str(rr(120000,220000))}.{build_b}; wv) AppleWebKit/537.36 (KHTML, like Gecko) Version/4.0 Chrome/{str(rr(80,114))}.0.{str(rr(4200,5400))}.{str(rr(70,150))} Mobile Safari/537.36"
-	um4 = f"Mozilla/5.0 (Linux; Android {str(rr(6,12))}; {infinix}) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/{str(rr(100,114))}.0.{str(rr(4900,5700))}.{str(rr(70,150))} Mobile Safari/537.36"
-	ugen.append(um2)
-	ugen.append(um3)
-	ugen.append(um1)
-	ugen.append(um4)
+        rr = random.randint
+        build_b = random.choice(["001","002","003","011","012","014","015","020","021","022","023","024"])
+        bl_typ = random.choice(["TKQ1","SKQ1","TP1A","RKQ1","SP1A","RP1A","PPR1","QP1A"])
+        oppo = random.choice(["CPH2461","CPH2451","PCGM00","PBBM00","PFZM10","PGGM10","PECT30","PCHM10","PEAT00","PEYM00","PESM10","PFGM00"])
+        infinix = random.choice(["Infinix X669C","Infinix X6823","Infinix X676C","Infinix X683","Infinix X689C","Infinix X6811","Infinix X612B","Infinix X6810","Infinix X665E"])
+        redmi = random.choice(["2211133G","M2004J19C","22041219I","22101316UG","2209116AG","M2010J19SY","M2012K11C","Redmi Note 7","Redmi Note 8","Redmi Note 5"])
+        um2 = f"Mozilla/5.0 (Linux; Android {str(rr(6,12))}; {oppo} Build/{bl_typ}.{str(rr(120000,220000))}.{build_b}; wv) AppleWebKit/537.36 (KHTML, like Gecko) Version/4.0 Chrome/{str(rr(80,114))}.0.{str(rr(4200,5400))}.{str(rr(70,150))} Mobile Safari/537.36"
+        um1 = f"Mozilla/5.0 (Linux; Android {str(rr(6,12))}; {redmi} Build/{bl_typ}.{str(rr(120000,220000))}.{build_b}; wv) AppleWebKit/537.36 (KHTML, like Gecko) Version/4.0 Chrome/{str(rr(80,114))}.0.{str(rr(4200,5400))}.{str(rr(70,150))} Mobile Safari/537.36"
+        um3 = f"Mozilla/5.0 (Linux; Android {str(rr(6,12))}; {infinix} Build/{bl_typ}.{str(rr(120000,220000))}.{build_b}; wv) AppleWebKit/537.36 (KHTML, like Gecko) Version/4.0 Chrome/{str(rr(80,114))}.0.{str(rr(4200,5400))}.{str(rr(70,150))} Mobile Safari/537.36"
+        um4 = f"Mozilla/5.0 (Linux; Android {str(rr(6,12))}; {infinix}) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/{str(rr(100,114))}.0.{str(rr(4900,5700))}.{str(rr(70,150))} Mobile Safari/537.36"
+        ugen.append(um2)
+        ugen.append(um3)
+        ugen.append(um1)
+        ugen.append(um4)
 for xhd in range(1000):
-	a = random.choice(['de-at','in-id','ms-my','uk-ua','en-us','en-gb','id-id','de-de','ru-ru','en-sg','fr-fr','fa-ir','ja-jp','pt-br','cs-cz','zh-hk','zh-cn','vi-vn','en-ph','en-in','tr-tr','en-au','th-th','hi-in','zh-tw','my-zg','en-nz','en-ca','es-mx','ko-kr','el-gr','en-ez','ar-ae','fr-ch','nl-nl','gu-in'])
-	b = random.choice(['A','B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J', 'K', 'L', 'M', 'N', 'O', 'P', 'Q', 'R', 'S', 'T', 'U', 'V', 'W', 'X', 'Y', 'Z'])
-	c = random.choice(['A','B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J', 'K', 'L', 'M', 'N', 'O', 'P', 'Q', 'R', 'S', 'T', 'U', 'V', 'W', 'X', 'Y', 'Z'])
-	b2 = random.choice(['A','B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J', 'K', 'L', 'M', 'N', 'O', 'P', 'Q', 'R', 'S', 'T', 'U', 'V', 'W', 'X', 'Y', 'Z'])
-	c2 = random.choice(['A','B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J', 'K', 'L', 'M', 'N', 'O', 'P', 'Q', 'R', 'S', 'T', 'U', 'V', 'W', 'X', 'Y', 'Z'])
-	d = f"Mozilla/5.0 (Linux; U; Android {str(random.randint(6,14))}; {a}; OPPO {b}{str(random.randint(10,99))}{c} Build/{b2}{str(random.randint(1,999))}{c2}) AppleWebKit/537.36 (KHTML, like Gecko) Version/4.0 Chrome/{str(random.randint(75,117))}.0.{str(random.randint(2500,5900))}.{str(random.randint(80,200))} Mobile Safari/537.36 HeyTapBrowser/{str(random.randint(6,47))}.{str(random.randint(7,8))}.{str(random.randint(2,40))}.{str(random.randint(1,9))}"
-	ugen.append(d)
+        a = random.choice(['de-at','in-id','ms-my','uk-ua','en-us','en-gb','id-id','de-de','ru-ru','en-sg','fr-fr','fa-ir','ja-jp','pt-br','cs-cz','zh-hk','zh-cn','vi-vn','en-ph','en-in','tr-tr','en-au','th-th','hi-in','zh-tw','my-zg','en-nz','en-ca','es-mx','ko-kr','el-gr','en-ez','ar-ae','fr-ch','nl-nl','gu-in'])
+        b = random.choice(['A','B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J', 'K', 'L', 'M', 'N', 'O', 'P', 'Q', 'R', 'S', 'T', 'U', 'V', 'W', 'X', 'Y', 'Z'])
+        c = random.choice(['A','B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J', 'K', 'L', 'M', 'N', 'O', 'P', 'Q', 'R', 'S', 'T', 'U', 'V', 'W', 'X', 'Y', 'Z'])
+        b2 = random.choice(['A','B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J', 'K', 'L', 'M', 'N', 'O', 'P', 'Q', 'R', 'S', 'T', 'U', 'V', 'W', 'X', 'Y', 'Z'])
+        c2 = random.choice(['A','B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J', 'K', 'L', 'M', 'N', 'O', 'P', 'Q', 'R', 'S', 'T', 'U', 'V', 'W', 'X', 'Y', 'Z'])
+        d = f"Mozilla/5.0 (Linux; U; Android {str(random.randint(6,14))}; {a}; OPPO {b}{str(random.randint(10,99))}{c} Build/{b2}{str(random.randint(1,999))}{c2}) AppleWebKit/537.36 (KHTML, like Gecko) Version/4.0 Chrome/{str(random.randint(75,117))}.0.{str(random.randint(2500,5900))}.{str(random.randint(80,200))} Mobile Safari/537.36 HeyTapBrowser/{str(random.randint(6,47))}.{str(random.randint(7,8))}.{str(random.randint(2,40))}.{str(random.randint(1,9))}"
+        ugen.append(d)
 for xd in range(1000):
    rr = random.randint; rc = random.choice
    aZ = str(rc(['A','B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J', 'K', 'L', 'M', 'N', 'O', 'P', 'Q', 'R', 'S', 'T', 'U', 'V', 'W', 'X', 'Y', 'Z']))
@@ -194,74 +151,925 @@ for xd in range(1000):
    ugen.append(strvnokiax)
    ugen.append(strvgt) 
 for op in range(1000):
-	rr = random.randint
-	rc = random.choice
-	bahasa = random.choice(["en","fr","ru","tr","id","pt","es","en-GB"])
-	ua1 = f"Opera/9.80 (BlackBerry; Opera Mini/8.0.{str(rr(35000, 39000))}/{str(rr(190, 199))}.{str(rr(270, 290))}; U; {bahasa}) Presto/2.{str(rr(4, 20))}.{str(rr(420, 490))} Version/12.16"
-	ua2 = f"SAMSUNG-GT-S3802 Opera/9.80 (J2ME/MIDP; Opera Mini/7.1.{str(rr(35000, 39000))}/{str(rr(190, 199))}.{str(rr(270, 290))}; U; {bahasa}) Presto/2.{str(rr(4, 20))}.{str(rr(420, 490))} Version/12.16"
-	ua3 = f"Opera/9.80 (iPhone; Opera Mini/16.0.{str(rr(35000, 39000))}/{str(rr(190, 199))}.{str(rr(270, 290))}; U; {bahasa}) Presto/2.{str(rr(4, 20))}.{str(rr(420, 490))} Version/12.16"
-	ua4 = f"Opera/9.80 (Android; Opera Mini/11.0.{str(rr(35000, 39000))}/{str(rr(190, 199))}.{str(rr(270, 290))}; U; {bahasa}) Presto/2.{str(rr(4, 20))}.{str(rr(420, 490))} Version/12.16"
-	ua5 = f"Opera/9.80 (Windows Mobile; Opera Mini/5.1.{str(rr(35000, 39000))}/{str(rr(190, 199))}.{str(rr(270, 290))}; U; {bahasa}) Presto/2.{str(rr(4, 20))}.{str(rr(420, 490))} Version/12.16"
-	ugen.append(ua1)
-	ugen.append(ua2)
-	ugen.append(ua3)
-	ugen.append(ua4)
-	ugen.append(ua5)
+        rr = random.randint
+        rc = random.choice
+        bahasa = random.choice(["en","fr","ru","tr","id","pt","es","en-GB"])
+        ua1 = f"Opera/9.80 (BlackBerry; Opera Mini/8.0.{str(rr(35000, 39000))}/{str(rr(190, 199))}.{str(rr(270, 290))}; U; {bahasa}) Presto/2.{str(rr(4, 20))}.{str(rr(420, 490))} Version/12.16"
+        ua2 = f"SAMSUNG-GT-S3802 Opera/9.80 (J2ME/MIDP; Opera Mini/7.1.{str(rr(35000, 39000))}/{str(rr(190, 199))}.{str(rr(270, 290))}; U; {bahasa}) Presto/2.{str(rr(4, 20))}.{str(rr(420, 490))} Version/12.16"
+        ua3 = f"Opera/9.80 (iPhone; Opera Mini/16.0.{str(rr(35000, 39000))}/{str(rr(190, 199))}.{str(rr(270, 290))}; U; {bahasa}) Presto/2.{str(rr(4, 20))}.{str(rr(420, 490))} Version/12.16"
+        ua4 = f"Opera/9.80 (Android; Opera Mini/11.0.{str(rr(35000, 39000))}/{str(rr(190, 199))}.{str(rr(270, 290))}; U; {bahasa}) Presto/2.{str(rr(4, 20))}.{str(rr(420, 490))} Version/12.16"
+        ua5 = f"Opera/9.80 (Windows Mobile; Opera Mini/5.1.{str(rr(35000, 39000))}/{str(rr(190, 199))}.{str(rr(270, 290))}; U; {bahasa}) Presto/2.{str(rr(4, 20))}.{str(rr(420, 490))} Version/12.16"
+        ugen.append(ua1)
+        ugen.append(ua2)
+        ugen.append(ua3)
+        ugen.append(ua4)
+        ugen.append(ua5)
 for generate in range(100):
-	a=random.randrange(1, 9)
-	b=random.randrange(1, 9)
-	c=random.randrange(7, 13)
-	c=random.randrange(73,100)
-	d=random.randrange(4200,4900)
-	e=random.randrange(40,150)
-	uaku=f'Mozilla/5.0 (Linux; Android {a}.{b}; Pixel {b}) AppleWebKit/537.36 (KHTML, like Gecko) Version/4.0 Chrome/{c}.0.{d}.{e} Mobile Safari/537.36'
-	ugen.append(uaku)
+        a=random.randrange(1, 9)
+        b=random.randrange(1, 9)
+        c=random.randrange(7, 13)
+        c=random.randrange(73,100)
+        d=random.randrange(4200,4900)
+        e=random.randrange(40,150)
+        uaku=f'Mozilla/5.0 (Linux; Android {a}.{b}; Pixel {b}) AppleWebKit/537.36 (KHTML, like Gecko) Version/4.0 Chrome/{c}.0.{d}.{e} Mobile Safari/537.36'
+        ugen.append(uaku)
 
 
 # Name and password generation
-first_names = [
-    # Female names
-    "Maria", "Ana", "Joy", "Grace", "Angel", "Angela", "Christine", "Kristine", "Michelle", "Shiela",
-    "Sheila", "Maricel", "Marites", "Maribel", "Marjorie", "Jennifer", "Jenny", "Jessa", "Jessica", "Janine",
-    "Katherine", "Catherine", "Kathleen", "Karen", "Karla", "Camille", "Bianca", "Patricia", "Patty", "Tricia",
-    "Aileen", "Eileen", "Irene", "Iris", "Hazel", "Cherry", "Lovely", "Honey", "Princess", "Angelica",
-    "Bernadette", "Rowena", "Rosalie", "Roselyn", "Rosalinda", "Lourdes", "Teresa", "Therese", "Carmela", "Carmen",
-    "Liza", "Elizabeth", "Beth", "Isabel", "Isabela", "Bella", "Andrea", "Andi", "Alexandra", "Alexa",
-    "Nina", "Mina", "Rina", "Jocelyn", "Jocelle", "Jhoanna", "Joan", "Joanne", "Joanna", "Johanna",
-    "May", "Mae", "Mylene", "Myra", "Myrna", "Melanie", "Melisa", "Melissa", "Marissa", "Mariz",
-    "Pauline", "Paula", "Paulina", "Regina", "Rhea", "Rochelle", "Sharon", "Samantha",
-    "Sandra", "Sarah", "Sophia", "Sofia", "Stephanie", "Tiffany", "Vanessa", "Veronica", "Vina", "Yvonne",
-    "Leah", "Lia", "Louise", "Luisa", "Lorraine", "Lorna", "Lani", "Mika", "Mikaela",
-    "Janelle", "Janella", "Janice", "Joyce", "Judy", "Judith", "Julie", "Juliana", "Juliet", "Julienne",
-    "Faith", "Hope", "Charity", "Heaven", "Blessy", "Precious", "Lovelyn", "Shaira", "Aira", "Kyra",
-    "Rachelle", "Rachel", "Reina", "Selena", "Selina", "Trisha", "Trina", "Wendy", "Zenaida",
-
-    # Male names
-    "Juan", "Jose", "Pedro", "Paolo", "Paul", "Mark", "John", "Johnny", "Jonathan", "Nathan",
-    "Michael", "Miguel", "Daniel", "David", "Andrew", "Andre", "Anthony", "Antonio", "Albert", "Alfred",
-    "Brian", "Bryan", "Benjamin", "Carlo", "Carlos", "Christian", "Christopher", "Chris", "Cedric", "Cesar",
-    "Dennis", "Diego", "Dominic", "Edward", "Edgar", "Emmanuel", "Eric", "Erwin", "Francis", "Frank",
-    "Gabriel", "Gilbert", "Henry", "Ian", "Ivan", "James", "Jasper", "Jerome", "Joel", "Joshua",
-    "Kenneth", "Kevin", "Kyle", "Lawrence", "Leo", "Leonard", "Lester", "Louis", "Lucas", "Marco",
-    "Martin", "Matthew", "Melvin", "Nathaniel", "Noel", "Oliver", "Patrick", "Paolo", "Raymond", "Richard",
-    "Robert", "Ronald", "Ryan", "Samuel", "Sebastian", "Steven", "Stephen", "Thomas", "Timothy", "Victor",
-    "Vincent", "Wilfred", "William", "Xavier", "Zachary"
+first_names_male = [
+'Juan', 'Jose', 'Miguel', 'Gabriel', 'Rafael', 'Antonio', 'Carlos', 'Luis',
+'Marco', 'Paolo', 'Angelo', 'Joshua', 'Christian', 'Mark', 'John', 'James',
+'Daniel', 'David', 'Michael', 'Jayson', 'Kenneth', 'Ryan', 'Kevin', 'Neil',
+'Jerome', 'Renzo', 'Carlo', 'Andres', 'Felipe', 'Diego', 'Mateo', 'Lucas',
+'Adrian', 'Albert', 'Aldrin', 'Alfred', 'Allen', 'Alonzo', 'Amiel',
+'Andre', 'Andrew', 'Angelo', 'Anton', 'Arden', 'Aries', 'Arman', 'Arnel',
+'Arnold', 'Arthur', 'August', 'Avery', 'Benito', 'Benjamin', 'Bernard',
+'Blake', 'Bryan', 'Bryant', 'Caleb', 'Cameron', 'Cedric', 'Cesar',
+'Charles', 'Christianne', 'Clarence', 'Clark', 'Clint', 'Clyde', 'Colin',
+'Conrad', 'Crispin', 'Cyril', 'Damian', 'Darrel', 'Daryl', 'Darren',
+'Dean', 'Denver', 'Derrick', 'Dexter', 'Dominic', 'Dylan', 'Earl', 'Edgar',
+'Edison', 'Edward', 'Edwin', 'Eli', 'Elias', 'Elijah', 'Emil', 'Emmanuel',
+'Eric', 'Ernest', 'Eron', 'Ethan', 'Eugene', 'Ferdinand', 'Francis',
+'Frank', 'Fred', 'Frederick', 'Galen', 'Garry', 'Genesis', 'Geo', 'Gerald',
+'Gilbert', 'Giovanni', 'Greg', 'Gregory', 'Hans', 'Harold', 'Henry',
+'Hugh', 'Ian', 'Irvin', 'Isaac', 'Ivan', 'Jake', 'Jared',
+'Jarred', 'Jason', 'Jasper', 'Jay', 'Jayden', 'Jerald', 'Jericho',
+'Jethro', 'Jimmy', 'Joel', 'Jonas', 'Jonathan', 'Jordan', 'Joseph',
+'Julius', 'Justin', 'Karl', 'Kayden', 'Keith', 'Kelvin', 'Kiel', 'King',
+'Kirk', 'Kyle', 'Lance', 'Larry', 'Lawrence', 'Leandro', 'Leo', 'Leonard',
+'Levi', 'Liam', 'Lorenzo', 'Louie', 'Lucas', 'Lucio', 'Luisito', 'Macario',
+'Malcolm', 'Marcus', 'Mario', 'Martin', 'Marvin', 'Matthew', 'Max',
+'Melvin', 'Mico', 'Miguelito', 'Milan', 'Mitch', 'Nathan', 'Nathaniel',
+'Neilson', 'Nelson', 'Nicholas', 'Nico', 'Noel', 'Norman', 'Oliver',
+'Oscar', 'Owen', 'Patrick', 'Paulo', 'Peter', 'Philip', 'Pierre', 'Ralph',
+'Randall', 'Raymond', 'Reagan', 'Reggie', 'Rein', 'Reiner', 'Ricardo',
+'Rico', 'Riel', 'Robbie', 'Robert', 'Rodney', 'Roldan', 'Romeo', 'Ronald',
+'Rowell', 'Russell', 'Ryanne', 'Sam', 'Samuel', 'Santino', 'Sean', 'Seth',
+'Shawn', 'Simon', 'Stephen', 'Steven', 'Taylor', 'Terrence', 'Theo',
+'Timothy', 'Tomas', 'Tristan', 'Troy', 'Tyler', 'Vernon', 'Victor',
+'Vincent', 'Virgil', 'Warren', 'Wayne', 'Wilfred', 'William', 'Winston',
+'Wyatt', 'Xander', 'Zachary', 'Zion', 'Arvin', 'Dion', 'Harvey', 'Irvin',
+'Jeriel', 'Kennard', 'Levin', 'Randel', 'Ramil', 'Rendon', 'Rome', 'Roven',
+'Silas', 'Tobias', 'Uriel', 'Zandro', 'Axl', 'Brysen', 'Ced', 'Clarkson',
+'Deo', 'Eion', 'Errol', 'Franco', 'Gavin', 'Hansel', 'Isidro', 'Jiro',
+'Kiel', 'Loren', 'Matteo', 'Noelito', 'Omar', 'Paxton', 'Quinn', 'Ramon',
+'Renz', 'Sandy', 'Tyrone', 'Ulrich', 'Vince', 'Wesley', 'Yvan', 'Zed',
+'Alric', 'Brent', 'Caden', 'Dionel', 'Ethaniel', 'Fritz', 'Gerson',
+'Hansley', 'Ivar', 'Jeric', 'Kenzo', 'Lex', 'Morris', 'Nate', 'Orville',
+'Pio', 'Quentin', 'Rydel', 'Sergio', 'Tobit', 'Ulysses', 'Val', 'Wade',
+'Yohan', 'Zyren', 'Adley', 'Cairo', 'Drey', 'Enzo', 'Ferris', 'Gale',
+'Hector', 'Iven', 'Jaycee', 'Kaleb', 'Lyndon', 'Macky', 'Nash', 'Oren',
+'Pierce', 'Quino', 'Rustin', 'Sylvio', 'Tanner', 'Ulian', 'Vaughn',
+'Weston', 'Xeno', 'Yuri', 'Zandro', 'Andro', 'Basil', 'Crisanto', 'Derris',
+'Efrain', 'Florenz', 'Gael', 'Hanz', 'Ismael', 'Jeromey', 'Kielan',
+'Lucian', 'Marlo', 'Nerio', 'Osric', 'Patrik', 'Rion', 'Santino', 'Timo',
+'Vin', 'Wilmer', 'Zaim', 'Zen', 'Gabriel', 'Joshua', 'John', 'Mark', 'James', 'Daniel', 'Matthew', 'Miguel', 'Nathan', 'David',
+'Andrew', 'Joseph', 'Christian', 'Emmanuel', 'Adrian', 'Angelo', 'Carl', 'Marco', 'Kenneth', 'Ryan',
+'Justin', 'Patrick', 'Paul', 'Francis', 'Anthony', 'Carlos', 'Rafael', 'Samuel', 'Sebastian', 'Elijah',
+'Aiden', 'Brent', 'Cedric', 'Darren', 'Ethan', 'Felix',
+'Gavin', 'Harold', 'Ian', 'Jacob', 'Kyle', 'Lance',
+'Mason', 'Noel', 'Oscar', 'Preston', 'Quentin', 'Riley',
+'Steven', 'Tristan', 'Ulysses', 'Vernon', 'Warren', 'Xander',
+'Yves', 'Zachary', 'Aaron', 'Benjo', 'Calvin', 'Damien',
+'Edward', 'Francis', 'Gerald', 'Harvey', 'Irvin', 'Jasper',
+'Kevin', 'Lloyd', 'Marco', 'Nathaniel', 'Owen', 'Patrick',
+'Ramon', 'Simon', 'Trevor', 'Vincent', 'Wilfred', 'Zion',
+'Alfred', 'Bryan', 'Clarence', 'Daryl', 'Emil', 'Franco',
+'Gilbert', 'Henry', 'Isaac', 'Jerome', 'Kristoffer', 'Leandro',
+'Mario', 'Noah', 'Paolo', 'Rey', 'Santino', 'Troy',
+'Vince', 'Wayne', 'Xian', 'Yohan', 'Zayne', 'Adonis',
+'Brandon', 'Cyrus', 'Dominic', 'Enzo', 'Frederick', 'Gideon',
+'Hanz', 'Jett', 'Kenzo', 'Luciano', 'Matteo',
+'Nico', 'Orion', 'Pierce', 'Rafael', 'Stefan', 'Tobias',
+'Valentin', 'Weston', 'Xavi', 'Yasser', 'Zedrick', 'Alonzo',
+'Bryce', 'Coby', 'Dexter', 'Eli', 'Finn', 'Gael',
+'Hector', 'Ismael', 'Joaquin', 'Keith', 'Lawrence', 'Maverick',
+'Nash', 'Oliver', 'Pio', 'Reuben', 'Seth', 'Travis',
+'Vaughn', 'Wyatt', 'Yuri', 'Zoren', 'Andrei', 'Benedict',
+'Carlo', 'Denver', 'Earl', 'Franz', 'Giovanni', 'Hans',
+'Ian', 'Julian', 'Kirk', 'Leo', 'Myles', 'Neo',
+'Orlando', 'Philip', 'Rico', 'Sean', 'Thaddeus', 'Vito',
+'Wendell', 'Yohan', 'Zayden', 'Adrianne', 'Blaine', 'Cliff',
+'Dean', 'Elmer', 'Floyd', 'Gino', 'Hubert', 'Ivan',
+'Jonas', 'Kyleen', 'Lemuel', 'Marlon', 'Nolan', 'Omar',
+'Patrik', 'Rustin', 'Silas', 'Trent', 'Ulrich', 'Vern',
+'Wesley', 'Yancy', 'Zaldy', 'Alaric', 'Blake', 'Chester',
+'Dominique', 'Eros', 'Francois', 'Gerry', 'Holden', 'Ira',
+'Jules', 'Kean', 'Luther', 'Mackenzie', 'Othello',
+'Pax', 'Romeo', 'Samson', 'Tanner', 'Vince', 'Wylie',
+'Yago', 'Zionel', 'Alec', 'Ben', 'Dion',
+'Emerson', 'Fritz', 'Gareth', 'Hunter', 'Isidro', 'Jairo',
+'Kale', 'Levi', 'Miles', 'Oren', 'Paxton',
+'Ryder', 'Shawn', 'Theo', 'Urian', 'Victor', 'Wilmer',
+'Yosef', 'Zain', 'Alvin', 'Brando', 'Clint', 'Dale',
+'Everett', 'Fredrick', 'Garry', 'Howard', 'Isaias', 'Jansen',
+'Kaleb', 'Lorenzo', 'Markus', 'Nicko', 'Owen', 'Parker',
+'Raymond', 'Shane', 'Tyrone', 'Vince', 'Winston', 'Yusef',
+'Zyler', 'Aron', 'Benedicto', 'Chris', 'Dariel', 'Eagan',
+'Felipe', 'George', 'Hayden', 'Ivor', 'Justin', 'Kenrick',
+'Lian', 'Mack', 'Nolan', 'Osric', 'Pio', 'Ramil',
+'Sherwin', 'Tadeo', 'Vaughn', 'Wilbur', 'Yvan', 'Zarek',
+'Albie', 'Briggs', 'Casper', 'Damon', 'Eliot', 'Farley',
+'Garth', 'Hansel', 'Jayden', 'Kristian', 'Logan',
+'Matias', 'Nixon', 'Orin', 'Paulo', 'Reagan', 'Soren',
+'Trevin', 'Vernon', 'Wyatt', 'Yul', 'Zebedee', 'Alexei',
+'Brock', 'Claudio', 'Derrick', 'Elijah', 'Fidel', 'Gavin',
+'Hershel', 'Ismael', 'Jovan', 'Kieran', 'Lucian', 'Marvin',
+'Nico', 'Ollie', 'Pablo', 'Roderick', 'Simeon', 'Terrence',
+'Uriel', 'Virgil', 'Wayne', 'Yoshua', 'Zain', 'Aries',
+'Bruno', 'Caden', 'Darwin', 'Ephraim', 'Finnley', 'Gomer',
+'Harry', 'Indie', 'Jesse', 'Keaton', 'Lazaro', 'Mordecai',
+'Nero', 'Orvin', 'Presley', 'Rufus', 'Stanley', 'Tomas',
+'Uri', 'Vito', 'West', 'Yasir', 'Zev', 'Alton',
+'Bernard', 'Carter', 'Dionisio', 'Edison', 'Fernando', 'Gabe',
+'Hugh', 'Immanuel', 'Joel', 'Kristoff', 'Lucio', 'Mikel',
+'Nevin', 'Osmond', 'Paulino', 'Rico', 'Stewart', 'Trent',
+'Ulysses', 'Vince', 'Wylder', 'Yunus', 'Zarek', 'Abel',
+'Benson', 'Claudio', 'Dennis', 'Ezekiel', 'Francis', 'Gavin',
+'Harlan', 'Ivan', 'Jericho', 'Kendrick', 'Lars', 'Mathew',
+'Nestor', 'Octavio', 'Perry', 'Rogelio', 'Sandy', 'Tyrone',
+'Ulises', 'Vern', 'Wendel', 'Yves', 'Zac', 'Albert',
+'Blair', 'Cruz', 'Dionel', 'Elvin', 'Fabian', 'Giancarlo',
+'Hanzel', 'Iago', 'Jon', 'Kyle', 'Leif', 'Marcelo',
+'Nigel', 'Orwell', 'Pierce', 'Roldan', 'Sage', 'Truman',
+'Urbano', 'Vance', 'Wes', 'Yuki', 'Zandro', 'Amiel',
+'Bert', 'Colin', 'Daryl', 'Erwin', 'Francisco', 'Geoff',
+'Harris', 'Ian', 'Jayvee', 'Kristo', 'Logen', 'Manny',
+'Nuel', 'Olan', 'Pablo', 'Riel', 'Simeon', 'Thane',
+'Umar', 'Val', 'Wyler', 'Yarden', 'Zeke', 'Anton',
+'Bryce', 'Caden', 'Devon', 'Eman', 'Fritz', 'Garry',
+'Henri', 'Isagani', 'Jiro', 'Kael', 'Lauro', 'Mackie',
+'Nash', 'Ogie', 'Pax', 'Roi', 'Stefano', 'Troy',
+'Uno', 'Vaughn', 'Wayne', 'Yasir', 'Zaniel', 'Armand',
+'Blas', 'Corbin', 'Dindo', 'Edric', 'Fermin', 'Gerry',
+'Hendrick', 'Isidore', 'Jemuel', 'Kurt', 'Lemuel', 'Maurice',
+'Natan', 'Olan', 'Paulo', 'Renz', 'Sandy', 'Tobit',
+'Uriel', 'Vito', 'Weston', 'Yuri', 'Zander', 'Ariel',
+'Benny', 'Carmelo', 'Darel', 'Earl', 'Flint', 'Gian',
+'Henley', 'Jeff', 'Kiko', 'Louie', 'Marlon',
+'Nash', 'Orion', 'Pietro', 'Rico', 'Stevan', 'Tomas',
+'Ulric', 'Vernon', 'Wyatt', 'Yeshua', 'Zeb', 'Axel',
+'Berto', 'Clyde', 'Darrel', 'Ely', 'Fredo', 'Gelo',
+'Hector', 'Irving', 'Jomar', 'Ken', 'Lenny', 'Mico', 'Nashon', 'Owen', 'Pietro', 'Randel', 'Sergio', 'Tristan',
+'Uziel', 'Vaughn', 'Warren', 'Yvan', 'Zain', 'Alaric',
+'Briggs', 'Cyril', 'Drew', 'Evan', 'Floyd', 'Gareth',
+'Hiro', 'Ismael', 'Jaden', 'Kurtis', 'Leandro', 'Miguelito',
+'Nolan', 'Osmar', 'Paxton', 'Ronan', 'Soren', 'Trey',
+'Ulises', 'Vann', 'Wilbert', 'Yuri', 'Zandro', 'Aiden',
+'Brando', 'Carter', 'Dustin', 'Elian', 'Fermin', 'Gavin',
+'Hudson', 'Isagani', 'Jonel', 'Kasey', 'Lyle', 'Marlon',
+'Noel', 'Omar', 'Preston', 'Rufino', 'Santino', 'Toby',
+'Uri', 'Val', 'Wade', 'Yeshua', 'Zed', 'Alvin',
+'Bryant', 'Colby', 'Dante', 'Eliot', 'Franco', 'Gideon',
+'Hershel', 'Isaiah', 'Jasper', 'Kenric', 'Luther', 'Marcus',
+'Nathaniel', 'Orvin', 'Pio', 'Rodel', 'Simeon', 'Tanner',
+'Urbano', 'Victor', 'Wyatt', 'Yancey', 'Zavier', 'Arnold',
+'Blake', 'Chester', 'Diego', 'Evan', 'Felipe', 'Grayson',
+'Hendrick', 'Ian', 'Jiro', 'Karlo', 'Luis', 'Matthias',
+'Nestor', 'Odie', 'Paco', 'Ronaldo', 'Salvador', 'Tyrone',
+'Ulric', 'Vincent', 'Wendell', 'Yusef', 'Zeke', 'Anderson',
+'Bruce', 'Clark', 'Davin', 'Eugene', 'Felix', 'Gustavo',
+'Hiram', 'Irvin', 'Julius', 'Karl', 'Leopoldo', 'Morgan',
+'Nixon', 'Oberon', 'Percy', 'Roland', 'Sam', 'Travis',
+'Uziel', 'Vern', 'Willard', 'Yuri', 'Zacharias', 'Arturo',
+'Bryan', 'Coby', 'Dennis', 'Edison', 'Frank', 'Gilbert',
+'Harry', 'Isaias', 'Jose', 'Kendrick', 'Lance', 'Marcel',
+'Nilo', 'Owen', 'Patrick', 'Rico', 'Sean', 'Theo',
+'Uriah', 'Vince', 'Walter', 'Yohan', 'Zachary', 'Amos',
+'Bobby', 'Curtis', 'Dion', 'Elias', 'Fritz', 'Gerry',
+'Hansel', 'Ivan', 'Jorge', 'Kiel', 'Leo', 'Manny',
+'Niel', 'Oscar', 'Paul', 'Randy', 'Seth', 'Trent',
+'Ulrich', 'Victor', 'Wesley', 'Yvan', 'Zane', 'Ariel',
+'Benji', 'Chris', 'Domingo', 'Edwin', 'Freddie', 'Gino',
+'Harvey', 'Irwin', 'Joel', 'Kirk', 'Lou', 'Martin',
+'Noel', 'Ollie', 'Phillip', 'Randy', 'Samson', 'Timothy',
+'Ulysses', 'Vaughn', 'Winston', 'Yves', 'Zion', 'Adriel',
+'Benedict', 'Connor', 'Dionel', 'Emmanuel', 'Francis', 'Gerson',
+'Hugh', 'Isidro', 'Joshua', 'Kean', 'Lemuel', 'Miguel',
+'Neil', 'Omar', 'Paolo', 'Rainer', 'Simeon', 'Tadeo',
+'Urbano', 'Vincent', 'Wendell', 'Yul', 'Zandro', 'Alexis',
+'Brent', 'Clint', 'Dario', 'Edison', 'Felipe', 'Gareth',
+'Humbert', 'Isidro', 'Jericho', 'Kiefer', 'Levi', 'Maverick',
+'Nick', 'Orville', 'Pierre', 'Rufus', 'Stefano', 'Troy',
+'Uziel', 'Val', 'Warren', 'Yancy', 'Zeke', 'Albert',
+'Benny', 'Carmelo', 'Dindo', 'Elvin', 'Franco', 'Giovanni',
+'Henri', 'Ivan', 'Jairus', 'Kaleb', 'Lucio', 'Maurice',
+'Nathan', 'Orion', 'Paolo', 'Ruel', 'Santino', 'Thaddeus',
+'Uri', 'Vince', 'Wyatt', 'Yvan', 'Zionel', 'Anton',
+'Bryce', 'Cedric', 'Darrel', 'Eren', 'Fabian', 'Gelo',
+'Hans', 'Isidro', 'Jonel', 'Kiko', 'Lars', 'Mico',
+'Noel', 'Olan', 'Patrick', 'Rico', 'Stephen', 'Tristan',
+'Uly', 'Vaughn', 'Wendell', 'Yeshua', 'Zadok', 'Alaric',
+'Brad', 'Clyde', 'Dylan', 'Eugene', 'Fermin', 'Garry',
+'Hendrick', 'Isaac', 'Julian', 'Kenneth', 'Lorenzo', 'Marco',
+'Noah', 'Oren', 'Paco', 'Rian', 'Silas', 'Tommy',
+'Urbie', 'Vince', 'Walter', 'Yvan', 'Zayden', 'Amiel',
+'Blas', 'Colin', 'Darwin', 'Ernest', 'Felix', 'Gabe',
+'Harris', 'Ian', 'Jerome', 'Kevin', 'Lyle', 'Matthew',
+'Nico', 'Owen', 'Paul', 'Ramon', 'Simon', 'Trent',
+'Uriel', 'Victor', 'Will', 'Yves', 'Zander', 'Arvin',
+'Bryan', 'Cedrick', 'Dale', 'Elias', 'Fred', 'George',
+'Hugh', 'Isaac', 'Jude', 'Karlo', 'Lance', 'Miguel',
+'Nash', 'Oscar', 'Patrick', 'Ralph', 'Steven', 'Tyler',
+'Urbano', 'Vince', 'Wes', 'Yuri', 'Zack', 'Aiden',
+'Blake', 'Connor', 'Daryl', 'Eren', 'Franz', 'Gideon',
+'Hansel', 'Ivan', 'Jonas', 'Kean', 'Levi', 'Morris',
+'Niel', 'Omar', 'Paulo', 'Ricky', 'Seth', 'Tristan',
+'Ulysses', 'Vaughn', 'Wyatt', 'Yohan', 'Zain', 'Aaron',
+'Brett', 'Clark', 'Darren', 'Eugene', 'Felix', 'Gabriel',
+'Henry', 'Isaiah', 'Jacob', 'Kyle', 'Logan', 'Martin',
+'Nolan', 'Owen', 'Pierce', 'Roderick', 'Shawn', 'Troy',
+'Ulric', 'Vernon', 'Wayne', 'Yves', 'Zach', 'Ariel',
+'Bryce', 'Cliff', 'Dean', 'Eli', 'Francis', 'Gio',
+'Harry', 'Ivan', 'Jett', 'Ken', 'Liam', 'Matthew',
+'Noel', 'Omar', 'Parker', 'Rafael', 'Simon', 'Theo',
+'Ulysses', 'Victor', 'Wesley', 'Yuri', 'Zane', 'Andre',
+'Brent', 'Cyrus', 'Dion', 'Eden', 'Frank', 'Gabe',
+'Hans', 'Isaac', 'Joel', 'Kyle', 'Lance', 'Mark',
+'Nico', 'Oscar', 'Paul', 'Ryan', 'Seth', 'Trent',
+'Urbano', 'Vince', 'Walter', 'Yvan', 'Zeke', 'Aiden',
+'Blair', 'Clifford', 'Dionisio', 'Eliot', 'Franco', 'Gavin',
+'Hendrick', 'Isidro', 'Jules', 'Kenji', 'Lucio', 'Marcus',
+'Noel', 'Ollie', 'Pierce', 'Rico', 'Stefan', 'Tobias',
+'Uriah', 'Vaughn', 'Wyatt', 'Yves', 'Zion', 'Jerome', 'Jayden', 'Daniel', 'Ezekiel', 'Russell', 'Francis', 'Erwin', 'Kenneth', 'Ramon', 'Leo', 'Brylle', 'Philip', 'Leandro', 'Gerald', 'Jonathan', 'Timothy', 'Earl', 'Harold', 'Mark', 'Ryan', 'Kevin', 'Romeo', 'Dominic', 'Marvin', 'Alexander', 'Joel', 'Ralph', 'Allan', 'Kian', 'Simon', 'James', 'Alfred', 'Thomas', 'Paolo', 'John', 'Elijah', 'Rene', 'Martin', 'Justin', 'Patrick', 'Lloyd', 'Jose', 'Allen', 'Jonathan', 'Ronald', 'Jeremiah', 'Rafael', 'Christopher', 'Rowell', 'Kurt', 'Angelo', 'Leonard', 'Jason', 'Reymond', 'Kenzo', 'Elric', 'Samuel', 'Nelson', 'Aiden', 'Kian', 'Ramon', 'Kurt', 'Alexander', 'Rome', 'Martin', 'Zachary', 'Erwin', 'Gabriel', 'Christian', 'Adrian', 'Zion', 'Sean', 'Miguel', 'Jayden', 'Renz', 'Ian', 'Arnold', 'Carlo', 'Gerald', 'Jared', 'Edgar', 'Tony', 'Kevin', 'Carl', 'Paolo', 'Earl', 'Clyde', 'Brylle', 'Kian', 'Robert', 'Nelson', 'Martin', 'Sean', 'Arthur', 'Roderick', 'Marvin', 'Kenneth', 'Leandro', 'Tony', 'Jacob', 'Miguel', 'Rome', 'Carlo', 'Arvin', 'Axel', 'Noel', 'Zane', 'Ramon', 'Daryl', 'Russell', 'Darren', 'Roland', 'Rafael', 'Joshua', 'Aaron', 'Paolo', 'Eugene', 'Arvin', 'Jason', 'Jared', 'Lance', 'Aiden', 'Daryl', 'Joshua', 'Lawrence', 'Jose', 'Ramon', 'Noah', 'Victor', 'Gerald', 'Alvin', 'Jeffrey', 'Kurt', 'Roland', 'Carlo', 'Harvey', 'Reymond', 'Allen', 'Victor', 'Adrian', 'Justin', 'Allan', 'Axel', 'Albert', 'Santino', 'Ferdinand', 'Jayden', 'Dominic', 'Vincent', 'Xander', 'Dennis', 'Kenzo', 'Edgar', 'Paolo', 'Leonard', 'Edward', 'Ralph', 'Allen', 'Mathew', 'Lance', 'Christian', 'Dominic', 'Nathan', 'Jonathan', 'Zachary', 'Gilbert', 'Ferdinand', 'Alonzo', 'Joel', 'Mark', 'Timothy', 'Anthony', 'Dean', 'Allen', 'Carl',
+'Reginald', 'Valentino', 'Weston', 'Xavier', 'Zachariah', 'Adriel',
+'Benedict', 'Constantine', 'Dashiell', 'Emmanuel', 'Francisco', 'Giovanni',
+'Harrison', 'Ignatius', 'Jeremiah', 'Kingston', 'Leonardo', 'Montgomery',
+'Nathaniel', 'Orlando', 'Princeton', 'Remington',
+'Afton', 'Finley', 'Kearney', 'Keary', 'Kegan', 'Keir', 'Kendall', 'Mannix',
+'Melvin', 'Merlin', 'Murray', 'Perth', 'Ronan', 'Sean',
+'Tadc', 'Tegan', 'Tiernan', 'Torin', 'Vaughan',
+'Hodding', 'Kyler', 'Maarten', 'Rembrandt', 'Rodolf', 'Roosevelt',
+'Schuyler', 'Van', 'Vandyke', 'Wagner',
+'Aldo', 'Aleyn', 'Alford', 'Anson', 'Archibald',
+'Atley', 'Atwell', 'Audie', 'Avery', 'Ayers', 'Baker', 'Balder',
+'Barker', 'Bayard', 'Bishop', 'Blake', 'Blaine', 'Bramwell',
+'Brant', 'Bryce', 'Byron',
+'Cage', 'Cedar', 'Churchill', 'Colton', 'Crandall',
+'Dack', 'Dakin', 'Dallin', 'Dalton', 'Dartmouth', 'Dawson', 'Dax',
+'Denton', 'Denver', 'Denzel', 'Diamond',
+'Doane', 'Doc', 'Draper', 'Dugan', 'Dunley',
+'Dunn', 'Dunstan', 'Dwyer', 'Dyson', 'Edison',
+'Edred', 'Egbert', 'Eldwin', 'Elgin', 'Ellis',
+'Elwood', 'Emmett', 'Errol', 'Everest', 'Ewing', 'Falkner',
+'Farold', 'Farran', 'Fenton', 'Finch', 'Fitz', 'Fleming',
+'Flint', 'Fox', 'Freedom', 'Gaines',
+'Gale', 'Gallant', 'Garfield', 'Garrett', 'Geary',
+'Gene', 'Gifford', 'Gomer', 'Graham',
+'Green', 'Griffin', 'Grover',
+'Hart', 'Haskel', 'Heathcliff', 'Heaton', 'Helmut', 'Houston',
+'Howard', 'Howe', 'Hoyt', 'Hurst', 'Huxley', 'Indiana',
+'Jagger', 'Jarrell', 'Jax', 'Jaxon', 'Jay',
+'Jet', 'Judson', 'Julian', 'Kaid', 'Keane', 'Keaton',
+'Kell', 'Kelsey', 'Kelvin', 'Kennard', 'Kenneth', 'Kentlee',
+'Ker', 'Kester', 'Kingsley', 'Kirby', 'Klay',
+'Knightley', 'Kody', 'Kolby', 'Kolton', 'Kyler',
+'Lake', 'Langston', 'Lathrop', 'Leighton',
+'Lex', 'Lindell', 'Lindsay', 'Livingston', 'Locke', 'London',
+'Lord', 'Lowell', 'Ludlow', 'Luke', 'Lusk', 'Lyndal',
+'Lynn', 'Maddox', 'Mander',
+'Mansfield', 'Markham', 'Marley', 'Marsh',
+'Marston', 'Martin', 'Marvin', 'Massey', 'Matheson', 'Maverick',
+'Maxwell', 'Mayer', 'Meldon',
+'Merrick', 'Merton', 'Miles', 'Monte', 'Montgomery',
+'Moreland', 'Morley', 'Morrison', 'Myles', 'Ned',
+'Newt', 'Nile', 'Norman',
+'Norris', 'Norton', 'Norvin',
+'Norwin', 'Odell',
+'Orlan', 'Ormond', 'Orrick', 'Orson', 'Osborn',
+'Osgood', 'Ossie', 'Overton', 'Parsifal',
+'Peers', 'Pelton', 'Pierce', 'Piers',
+'Powell', 'Radford', 'Radley',
+'Randal', 'Reed', 'Reynold',
+'Rhett', 'Rhodes', 'Richard', 'Ridge', 'Ridgley',
+'Rivers', 'Roan', 'Robin', 'Robson', 'Rockwell',
+'Roden', 'Roe', 'Roldan', 'Ross',
+'Rowley', 'Royce', 'Rudd', 'Rune',
+'Ryder', 'Sage', 'Salisbury', 'Sanborn',
+'Saxon', 'Searles', 'Seaton',
+'Seger', 'Selby', 'Seldon', 'Selwyn', 'Seton',
+'Sewell', 'Shade', 'Shelby', 'Sheldon', 'Shepley',
+'Sidwell', 'Simeon', 'Siward', 'Skye',
+'Slate', 'Smith', 'Somerton',
+'Spalding', 'Stafford', 'Stanbury',
+'Stanwick', 'Starr', 'Steadman', 'Sterling', 'Stetson', 'Stiles',
+'Stoke', 'Storm', 'Stuart', 'Sunny', 'Sydney',
+'Sylvester', 'Taft', 'Talon', 'Templeton', 'Thompson',
+'Thorley', 'Tolbert', 'Tyson', 'Udall',
+'Ulmer', 'Upjohn', 'Upton', 'Usher', 'Uther', 'Vail',
+'Valen', 'Vine', 'Vinson', 'Vinton',
+'Wadell', 'Wadsworth', 'Wain',
+'Waite', 'Walcott', 'Wales', 'Walford', 'Walker',
+'Waller', 'Walsh', 'Walworth', 'Warburton',
+'Ward', 'Wardley', 'Ware', 'Waring',
+'Warley', 'Warrick', 'Warton', 'Warwick', 'Washburn', 'Wat',
+'Wayde', 'Waylon', 'Webb', 'Weldon',
+'Westbrook', 'Whitby', 'Whitcomb', 'Whittaker',
+'Wiley', 'Wilford', 'Wilton', 'Wirt',
+'Wisdom', 'Witton', 'Wolcott', 'Wolf', 'Wolfe',
+'Woodson', 'Wythe', 'Yardley', 'Yule', 'Zani',
 ]
+
+first_names_female = [
+'Maria', 'Ana', 'Sofia', 'Isabella', 'Gabriela', 'Valentina', 'Camila',
+'Angelica', 'Nicole', 'Michelle', 'Christine', 'Sarah', 'Jessica',
+'Andrea', 'Patricia', 'Jennifer', 'Karen', 'Ashley', 'Jasmine', 'Princess',
+'Angel', 'Joyce', 'Kristine', 'Diane', 'Joanna', 'Carmela', 'Isabel',
+'Lucia', 'Elena',
+'Abigail', 'Adeline', 'Adrienne', 'Agnes', 'Aileen', 'Aira', 'Aiza',
+'Alana', 'Alexa', 'Alexis', 'Alice', 'Allyson', 'Alyssa', 'Amara',
+'Amelia', 'Amirah', 'Anabelle', 'Anastasia', 'Andrea', 'Angela', 'Angelie',
+'Angelyn', 'Anita', 'Annabelle', 'Anne', 'Annie', 'Antoinette', 'April',
+'Ariana', 'Arlene', 'Aubrey', 'Audrey', 'Aurora', 'Ava', 'Bea', 'Bella',
+'Bernadette', 'Bianca', 'Blessy', 'Brianna', 'Bridget', 'Carla', 'Carmel',
+'Cassandra', 'Catherine', 'Cecilia', 'Celeste', 'Charisse', 'Charlene',
+'Charlotte', 'Chelsea', 'Cherry', 'Cheska', 'Clarice', 'Claudia', 'Coleen',
+'Colleen', 'Cristina', 'Cynthia', 'Dahlia', 'Danica', 'Daniela',
+'Danielle', 'Darlene', 'Diana', 'Dominique', 'Donna', 'Dorothy', 'Eden',
+'Elaine', 'Eleanor', 'Elisa', 'Eliza', 'Ella', 'Ellen', 'Eloisa', 'Elsa',
+'Emerald', 'Emily', 'Emma', 'Erica', 'Erin', 'Esme', 'Eunice', 'Faith',
+'Fatima', 'Felice', 'Flor', 'Frances', 'Francesca', 'Genevieve', 'Georgia',
+'Gillian', 'Giselle', 'Glenda', 'Grace', 'Gretchen', 'Gwen', 'Hailey',
+'Hannah', 'Hazel', 'Heather', 'Heidi', 'Helen', 'Helena', 'Hope', 'Iana',
+'Irene', 'Irish', 'Isabelle', 'Ivana', 'Ivory', 'Jacqueline', 'Jamie',
+'Jane', 'Janella', 'Janet', 'Janine', 'Janna', 'Jasmine', 'Jean',
+'Jeanine', 'Jem', 'Jenica', 'Jessa', 'Jillian', 'Joan', 'Joanna', 'Joanne',
+'Jocelyn', 'Jolina', 'Joy', 'Judith', 'Julia', 'Julianne', 'Juliet',
+'Justine', 'Kaila', 'Kaitlyn', 'Karen', 'Karina', 'Kate', 'Katrina',
+'Kayla', 'Keira', 'Kendra', 'Kim', 'Kimberly', 'Krisha', 'Krista',
+'Krystel', 'Kyla', 'Kylie', 'Lara', 'Larissa', 'Laura', 'Lauren', 'Lea',
+'Leanne', 'Lena', 'Leslie', 'Lexi', 'Lianne', 'Liza', 'Lorraine', 'Louisa',
+'Louise', 'Lovely', 'Lucille', 'Luna', 'Lyndsay', 'Lyra', 'Mae', 'Maggie',
+'Maja', 'Mandy', 'Marcia', 'Margaret', 'Marian', 'Mariel', 'Marilyn',
+'Marina', 'Marissa', 'Marites', 'Martha', 'Mary', 'Matilda', 'Maureen',
+'Maxine', 'May', 'Megan', 'Melissa', 'Mia', 'Mika', 'Mikayla', 'Mila',
+'Mira', 'Miranda', 'Mirella', 'Monica', 'Nadia', 'Naomi', 'Natalie',
+'Nathalie', 'Nerissa', 'Nika', 'Nina', 'Nora', 'Norma', 'Olivia',
+'Ophelia', 'Pamela', 'Patricia', 'Paula', 'Pauline', 'Pearl', 'Phoebe',
+'Pia', 'Precious', 'Queenie', 'Quiana', 'Rachelle', 'Rae', 'Rain', 'Raisa',
+'Ramona', 'Raven', 'Reina', 'Rhea', 'Rica', 'Richelle', 'Rina', 'Rochelle',
+'Rosa', 'Rosalie', 'Roseanne', 'Rowena', 'Ruth', 'Sabrina', 'Samantha',
+'Samira', 'Sandra', 'Sara', 'Selene', 'Serena', 'Shaira', 'Shaina',
+'Shanelle', 'Shanika', 'Sharon', 'Sheena', 'Sheila', 'Sherlyn', 'Shiela',
+'Shirley', 'Siena', 'Sierra', 'Sofia', 'Sophia', 'Steffany', 'Stephanie',
+'Summer', 'Susan', 'Suzette', 'Sylvia', 'Tanya', 'Tara', 'Tatiana',
+'Tessa', 'Thea', 'Theresa', 'Trisha', 'Trista', 'Valeria', 'Vanessa',
+'Veronica', 'Vicky', 'Victoria', 'Viel', 'Vina', 'Vivian', 'Wendy',
+'Whitney', 'Yasmin', 'Ysabel', 'Yvette', 'Yvonne', 'Zara', 'Zelda', 'Zia',
+'Zoe', 'Althea', 'Arya', 'Beatriz', 'Czarina', 'Dayanara', 'Elora',
+'Fiona', 'Gianna', 'Helena', 'Indira', 'Janine', 'Kalista', 'Larraine',
+'Maeve', 'Noelle', 'Odessa', 'Patrina', 'Rowan', 'Selina', 'Tahlia', 'Una',
+'Vienna', 'Willow', 'Xandra', 'Yanna', 'Zyra', 'Clarissa', 'Diane',
+'Fritzie', 'Harley', 'Ivette', 'Juliana', 'Karmina', 'Leira', 'Maricel',
+'Nerina', 'Odette', 'Pia', 'Riona', 'Sandy', 'Tanya', 'Vielka', 'Winona',
+'Xyla', 'Ysa', 'Zian', 'Adria', 'Aubriel', 'Celina', 'Devina', 'Emerie',
+'Florence', 'Graciela', 'Hilary', 'Isla', 'Jaira', 'Kelsey', 'Lianne',
+'Maika', 'Nashira', 'Orla', 'Perla', 'Quinley', 'Roxanne', 'Soleil',
+'Therese', 'Ulani', 'Verona', 'Xaviera', 'Althea', 'Andrea', 'Angela', 'Anna', 'Sarah', 'Nicole', 'Ella', 'Sophia', 'Isabella',
+'Jasmine', 'Kristine', 'Michelle', 'Patricia', 'Catherine', 'Victoria', 'Samantha', 'Ashley', 'Gabrielle', 'Maryanne',
+'Christine', 'Angelica', 'Stephanie', 'Jennifer', 'Amanda', 'Diana', 'Clarissa', 'Erica', 'Theresa', 'Monica',
+'Ariana', 'Bea', 'Camille', 'Danica', 'Elaine', 'Faith',
+'Giselle', 'Hannah', 'Inara', 'Janelle', 'Kaila', 'Lianne',
+'Monique', 'Nadine', 'Olivia', 'Phoebe', 'Queenie', 'Rachelle',
+'Savannah', 'Tiffany', 'Uma', 'Venice', 'Wynona', 'Ysabelle',
+'Zoey', 'Abigail', 'Bianca', 'Caitlyn', 'Dahlia', 'Eliza',
+'Farrah', 'Georgia', 'Hailey', 'Ivy', 'Jasmine', 'Katrina',
+'Lara', 'Maxine', 'Nathalie', 'Opal', 'Patricia', 'Renee',
+'Sienna', 'Trisha', 'Vania', 'Willow', 'Yasmin', 'Zaira',
+'Alaina', 'Bridget', 'Clarisse', 'Deborah', 'Erika', 'Fiona',
+'Gemma', 'Hazel', 'Isla', 'Janine', 'Kayla', 'Lianne',
+'Mikaela', 'Noreen', 'Odessa', 'Penelope', 'Quiana', 'Rafaela',
+'Sabrina', 'Therese', 'Valerie', 'Whitney', 'Yvette', 'Zelda',
+'Alessia', 'Bethany', 'Cassandra', 'Diana', 'Elyse', 'Freya',
+'Grace', 'Harriet', 'Iana', 'Jessa', 'Kimberly', 'Lynette',
+'Marielle', 'Noemi', 'Orla', 'Patrice', 'Rosalind', 'Sophia',
+'Tamara', 'Veronica', 'Willa', 'Yara', 'Zion', 'Amara',
+'Bernadette', 'Celine', 'Delaney', 'Estelle', 'Faye', 'Gianna',
+'Hilary', 'Ivana', 'Jillian', 'Keziah', 'Larissa', 'Mara',
+'Nika', 'Oriana', 'Pamela', 'Rianne', 'Selene', 'Talia',
+'Vittoria', 'Wendy', 'Ysadora', 'Zia', 'Aubrey', 'Blythe',
+'Carmela', 'Daphne', 'Eden', 'Florence', 'Gwen', 'Helena',
+'Inez', 'Joanna', 'Keira', 'Lourdes', 'Mayumi', 'Nadine',
+'Ondrea', 'Pauleen', 'Regina', 'Simone', 'Theresa', 'Vera',
+'Wynne', 'Yumi', 'Zandra', 'Aimee', 'Brooklyn', 'Carla',
+'Daria', 'Eloisa', 'Fritzie', 'Glenda', 'Haidee', 'Isabel',
+'Juliana', 'Kirsten', 'Liana', 'Matilda', 'Noreen', 'Ophelia',
+'Patty', 'Rina', 'Samantha', 'Trina', 'Vienna', 'Xyra',
+'Ynah', 'Zyra', 'Alana', 'Bettina', 'Clarissa', 'Darlene',
+'Evelyn', 'Faith', 'Giulia', 'Hana', 'Ivory', 'Jamie',
+'Krista', 'Lianne', 'Macy', 'Nerissa', 'Odette', 'Pauline',
+'Rhianna', 'Selina', 'Trixie', 'Verna', 'Willa', 'Yara',
+'Zenia', 'Angelie', 'Brianna', 'Catrina', 'Denise', 'Ellaine',
+'Fiona', 'Grace', 'Hillary', 'Imogen', 'Janice', 'Kiara',
+'Lara', 'Marin', 'Nina', 'Odessa', 'Phoebe', 'Reina',
+'Savina', 'Tanya', 'Vanna', 'Wendelyn', 'Yvette', 'Zaira',
+'Arielle', 'Blanca', 'Cheska', 'Doreen', 'Emeraude', 'Francine',
+'Gillian', 'Harley', 'Isha', 'Jasmine', 'Krizia', 'Laraine',
+'Misha', 'Nashira', 'Olesya', 'Patrizia', 'Rachelle', 'Serena',
+'Tracy', 'Vanessa', 'Wynette', 'Ysabel', 'Zoe', 'Alliah',
+'Beatriz', 'Caren', 'Danielle', 'Elora', 'Fatima', 'Gina',
+'Hazel', 'Isabelle', 'Jade', 'Katya', 'Liza', 'Margaux',
+'Nina', 'Odette', 'Pia', 'Raquel', 'Sofia', 'Therese',
+'Vivienne', 'Winter', 'Ynah', 'Zia', 'Aaliyah', 'Blaire',
+'Czarina', 'Desiree', 'Eliza', 'Faith', 'Georgina', 'Heidi',
+'Ingrid', 'Jemima', 'Kailyn', 'Layla', 'Mika', 'Nicole',
+'Olive', 'Paola', 'Ruth', 'Selena', 'Tala', 'Valeria',
+'Xandra', 'Ysabella', 'Zyrah', 'Amira', 'Bettina', 'Chantal',
+'Diane', 'Eira', 'Fiona', 'Gretchen', 'Hana', 'Ina',
+'Janelle', 'Kendra', 'Lani', 'Mara', 'Nadine', 'Orla',
+'Pauleen', 'Rafaela', 'Sandy', 'Tina', 'Verna', 'Winnie',
+'Ysa', 'Zara', 'Ariane', 'Bambi', 'Caitlin', 'Danna',
+'Ella', 'Faith', 'Gabbie', 'Hellen', 'Inna', 'Jessamine',
+'Kyla', 'Lara', 'Mikaela', 'Noreen', 'Oona', 'Penelope',
+'Raina', 'Sophia', 'Theresa', 'Vina', 'Winter', 'Yumi',
+'Zelene', 'Alyssa', 'Briar', 'Chesca', 'Danna', 'Erin',
+'Faye', 'Gwyneth', 'Hannah', 'Ira', 'Jodie', 'Keira',
+'Luna', 'Mariel', 'Nika', 'Olivia', 'Paula', 'Rachelle',
+'Sienna', 'Tessa', 'Vera', 'Wynne', 'Yelena', 'Zaira',
+'Annika', 'Bea', 'Corinne', 'Dahlia', 'Elara', 'Fritzie',
+'Giselle', 'Hailey', 'Isla', 'Jamie', 'Kassandra', 'Lyra',
+'Mira', 'Nadine', 'Ornella', 'Patrice', 'Quinn', 'Renee',
+'Sabrina', 'Trixie', 'Valentina', 'Winnie', 'Ysabel', 'Zia',
+'Abbie', 'Blanche', 'Cleo', 'Daisy', 'Eleni', 'Faith',
+'Gretel', 'Helena', 'Ivana', 'Joyce', 'Kara', 'Lianne',
+'Maeve', 'Nina', 'Oriana', 'Pia', 'Ruth', 'Sari',
+'Tanya', 'Vivian', 'Wynona', 'Yanna', 'Zenya', 'Asha',
+'Brielle', 'Carmina', 'Dina', 'Elaiza', 'Florence', 'Gia',
+'Hazel', 'Isabel', 'Jasmin', 'Kristine', 'Lia', 'Marla',
+'Nadine', 'Odette', 'Patty', 'Raquel', 'Samara', 'Tessa',
+'Vicky', 'Winona', 'Yani', 'Zyra', 'Aileen', 'Briena', 'Carla', 'Dayanara', 'Evelina', 'Fiona',
+'Gwen', 'Hazel', 'Isobel', 'Jenna', 'Kaila', 'Leona',
+'Meg', 'Nadine', 'Odessa', 'Pamela', 'Queenie', 'Renee',
+'Savina', 'Trisha', 'Valeria', 'Wynnie', 'Yuna', 'Zelia',
+'Althea', 'Blaine', 'Celina', 'Delia', 'Ember', 'Francesca',
+'Gianna', 'Helene', 'Ingrid', 'Jordyn', 'Kyla', 'Lyn',
+'Mikhaela', 'Nella', 'Orla', 'Penelope', 'Renee', 'Sophia',
+'Tamara', 'Vanna', 'Willow', 'Yvaine', 'Zinnia', 'Aimee',
+'Bella', 'Clarisse', 'Daria', 'Ellaine', 'Faith', 'Grace',
+'Hannah', 'Ivy', 'Jazmine', 'Krisha', 'Laraine', 'Marina',
+'Nia', 'Odelle', 'Priscilla', 'Rhianna', 'Sierra', 'Tanya',
+'Vanessa', 'Wren', 'Ysadora', 'Zoe', 'Ariella', 'Bianca',
+'Cailin', 'Daniella', 'Eunice', 'Felicia', 'Gabrielle', 'Hillary',
+'Isabela', 'Jemma', 'Kianna', 'Lianne', 'Mayumi', 'Noelle',
+'Olivine', 'Patricia', 'Roselyn', 'Tala', 'Veronica', 'Wendy',
+'Yen', 'Zandra', 'Alethea', 'Brynn', 'Catrina', 'Dianne',
+]
+
 surnames = [
-    "Santos", "Reyes", "Cruz", "Bautista", "Garcia", "Mendoza",
-    "Flores", "Gonzales", "Ramos", "Aquino",
-    "DelaCruz", "DelosSantos", "Villanueva", "Fernandez", "Castillo",
-    "Torres", "Dominguez", "Navarro", "Salazar", "DeGuzman",
-    "Perez", "Rivera", "Lopez", "Martinez", "Hernandez",
-    "Alvarez", "Morales", "Rojas", "Santiago", "Padilla",
-    "Rosales", "Valdez", "Estrada", "Aguilar", "Manalo",
-    "Francisco", "Romero", "Velasco", "Soriano", "Pascual",
-    "Pineda", "Ferrer", "Cuevas", "Suarez", "Montes",
-    "Calderon", "DelosReyes", "Lim", "Tan", "Chua"
+'Reyes', 'Santos', 'Cruz', 'Bautista', 'Garcia', 'Flores', 'Gonzales',
+'Martinez', 'Ramos', 'Mendoza', 'Rivera', 'Torres', 'Fernandez', 'Lopez',
+'Castillo', 'Aquino', 'Villanueva', 'Santiago', 'Dela Cruz', 'Perez',
+'Castro', 'Mercado', 'Domingo', 'Gutierrez', 'Ramirez', 'Valdez',
+'Alvarez', 'Salazar', 'Morales', 'Navarro', 'Abad', 'Abella', 'Abellanosa',
+'Acevedo', 'Aguinaldo', 'Aguilar', 'Alcantara', 'Almonte', 'Alonzo',
+'Altamirano', 'Amador', 'Amparo', 'Ancheta', 'Andrada', 'Angeles',
+'Antonio', 'Aquino', 'Araneta', 'Arceo', 'Arellano', 'Arias', 'Asuncion',
+'Avila', 'Ayala', 'Bagasbas', 'Balagtas', 'Balane', 'Balbuena',
+'Ballesteros', 'Baltazar', 'Banaga', 'Bao', 'Barcenas', 'Baron', 'Basa',
+'Basco', 'Bautista', 'Beltran', 'Benitez', 'Bernal', 'Blanco', 'Borja',
+'Briones', 'Buendia', 'Bustamante', 'Caballero', 'Cabanilla', 'Cabrera',
+'Cadiz', 'Calderon', 'Camacho', 'Canlas', 'Capili', 'Carpio', 'Castaneda',
+'Castroverde', 'Catapang', 'Celis', 'Ceniza', 'Cerda', 'Chavez',
+'Clemente', 'Coloma', 'Concepcion', 'Cordova', 'Cornejo', 'Coronel',
+'Corpuz', 'Cortez', 'Cruzado', 'Cuenca', 'Cuevas', 'Dacanay', 'Daguio',
+'Dalisay', 'Daluz', 'Damaso', 'Dancel', 'Danganan', 'De Guzman',
+'Del Mundo', 'Del Rosario', 'Delos Reyes', 'Deluna', 'Desamparado',
+'Dimaandal', 'Dimaculangan', 'Dizon', 'Dolor', 'Duque', 'Ebarle',
+'Echevarria', 'Elizalde', 'Encarnacion', 'Enriquez', 'Escalante',
+'Escobar', 'Escueta', 'Espinosa', 'Espiritu', 'Estrella', 'Evangelista',
+'Fabian', 'Fajardo', 'Falcon', 'Fernan', 'Ferrolino', 'Ferrer', 'Figueras',
+'Florencio', 'Fonseca', 'Francisco', 'Fuentes', 'Galang', 'Galvez',
+'Garay', 'Garing', 'Gaspar', 'Gavino', 'Giron', 'Godinez', 'Gomez',
+'Gonzaga', 'Granado', 'Guerrero', 'Guevarra', 'Guinto', 'Hernandez',
+'Herrera', 'Hilario', 'Ignacio', 'Ilagan', 'Inocencio', 'Intal', 'Isidro',
+'Jacinto', 'Javier', 'Jimenez', 'Labao', 'Lacson', 'Ladines', 'Lagman',
+'Lao', 'Lara', 'Lasala', 'Lazaro', 'Legaspi', 'Leones', 'Leviste',
+'Liwanag', 'Lorenzo', 'Lucero', 'Lumibao', 'Luna', 'Macaraig', 'Madarang',
+'Madrid', 'Magalong', 'Magbago', 'Magno', 'Magpantay', 'Malabanan',
+'Malig', 'Malinao', 'Manalo', 'Mangahas', 'Mangubat', 'Manlapig', 'Manuel',
+'Marasigan', 'Marquez', 'Martel', 'Matic', 'Melendres', 'Meneses',
+'Miranda', 'Mojica', 'Montero', 'Montoya', 'Morante', 'Moreno', 'Moya',
+'Naval', 'Nieva', 'Nieto', 'Nieves', 'Nolasco', 'Obando', 'Ocampo',
+'Oliva', 'Olivares', 'Ong', 'Ordonez', 'Ortega', 'Ortiz', 'Osorio',
+'Padilla', 'Paguio', 'Palacio', 'Palma', 'Pangan', 'Panganiban',
+'Panlilio', 'Pantoja', 'Paredes', 'Parilla', 'Parungao', 'Pasco', 'Pastor',
+'Patricio', 'Pineda', 'Pizarro', 'Po', 'Policarpio', 'Ponce', 'Quijano',
+'Quimpo', 'Quinto', 'Quirino', 'Rafael', 'Ramoso', 'Razon', 'Redillas',
+'Relucio', 'Remulla', 'Riego', 'Rigor', 'Rivadeneira', 'Rizal', 'Robles',
+'Rocha', 'Rodriguez', 'Rojo', 'Romualdez', 'Rosa', 'Rosales', 'Rosario',
+'Rueda', 'Ruiz', 'Sablan', 'Salas', 'Salcedo', 'Salinas', 'Samson',
+'San Juan', 'San Miguel', 'Sandoval', 'Santillan', 'Santoson', 'Sarmiento',
+'Segovia', 'Sereno', 'Sia', 'Silang', 'Silva', 'Sison', 'Soledad',
+'Soliman', 'Soriano', 'Subido', 'Suarez', 'Sumangil', 'Sy', 'Tablante',
+'Tabora', 'Tacorda', 'Tagle', 'Tamayo', 'Tan', 'Tangonan', 'Tantoco',
+'Tapales', 'Taruc', 'Tejada', 'Tiongson', 'Tolentino', 'Tongco', 'Toribio',
+'Trinidad', 'Tronqued', 'Tuazon', 'Ubaldo', 'Ugalde', 'Umali', 'Untalan',
+'Uy', 'Valencia', 'Valenton', 'Valera', 'Valle', 'Vargas', 'Velasco',
+'Velasquez', 'Vergara', 'Verzosa', 'Villafuerte', 'Villalobos', 'Villamor',
+'Villanueva', 'Villareal', 'Vizcarra', 'Yamamoto', 'Yap', 'Yatco', 'Yumul',
+'Zabala', 'Zamora', 'Zarate', 'Zavalla', 'Zialcita', 'dela Cruz',
+'Perez', 'Gomez', 'Rodriguez', 'Sanchez', 'Ramirez', 'Francisco', 'Pascual', 'Hernandez', 'Aguilar',
+'Diaz', 'Lim', 'Chua', 'Uy', 'Co', 'Lee', 'Chan', 'Yap', 'Manalo', 'Panganiban', 'Marasigan',
+'Agbayani', 'Macapagal',
+'Abad', 'Abadiano', 'Abalos', 'Abanilla', 'Abanto', 'Abarca',
+'Abaya', 'Abella', 'Abesamis', 'Abiera', 'Abinoja', 'Abisamis',
+'Ablan', 'Ablaza', 'Abordo', 'Abrigo', 'Abril', 'Abucay', 'Abunda',
+'Acabo', 'Acal', 'Acedera', 'Acevedo', 'Acosta', 'Adajar',
+'Adan', 'Adarlo', 'Adaza', 'Adlawan', 'Adolfo', 'Adriano',
+'Agbayani', 'Agcaoili', 'Agda', 'Agdeppa', 'Agero', 'Agliam',
+'Aglibot', 'Agmata', 'Agnes', 'Agoncillo', 'Agpaoa', 'Agregado',
+'Aguado', 'Aguila', 'Aguilar', 'Aguilera', 'Aguinaldo', 'Aguirre',
+'Alarcon', 'Alba', 'Albano', 'Alcaraz', 'Alcazar', 'Alcober',
+'Alcoseba', 'Alcuizar', 'Aldaba', 'Alday', 'Alegria', 'Alejandrino',
+'Alejo', 'Alfonso', 'Aliño', 'Alinsangan', 'Allarde', 'Almeda',
+'Almirante', 'Almonte', 'Almuete', 'Almario', 'Alonte', 'Alonzo',
+'Alvarado', 'Alvarez', 'Amador', 'Amante', 'Amarillo', 'Amatong',
+'Ambao', 'Ambrosio', 'Amistoso', 'Amores', 'Amparo', 'Ampil',
+'Amurao', 'Anacleto', 'Ancheta', 'Andal', 'Andrada', 'Andres',
+'Andrin', 'Ang', 'Angara', 'Angeles', 'Angping', 'Aniban',
+'Aniceto', 'Anonas', 'Antiporda', 'Antonio', 'Antoque', 'Anunciacion',
+'Apolonio', 'Apostol', 'Aquino', 'Araneta', 'Arce', 'Arcega',
+'Arceo', 'Arciaga', 'Arcilla', 'Arellano', 'Arevalo', 'Arguelles',
+'Aristores', 'Arnaiz', 'Arnaldo', 'Arriola', 'Arroyo', 'Arsenio',
+'Asis', 'Asistio', 'Asuncion', 'Atienza', 'Aurelio', 'Austria',
+'Avila', 'Ayala', 'Ayson', 'Azarcon', 'Azores',
+'Bacani', 'Baclig', 'Bacungan', 'Badajos', 'Badayos', 'Badillo',
+'Bagalay', 'Bagatsing', 'Bagay', 'Bagongon', 'Baguio', 'Bahena',
+'Bailon', 'Balanay', 'Balane', 'Balatbat', 'Baldonado', 'Baldo',
+'Baldoza', 'Baldovino', 'Balingit', 'Ballesteros', 'Balmeo', 'Balmes',
+'Balmonte', 'Baluyot', 'Banaag', 'Banal', 'Banaria', 'Bangayan',
+'Bangco', 'Bangoy', 'Banlaoi', 'Banzon', 'Baranda', 'Barba',
+'Barcena', 'Barcelona', 'Barela', 'Bargas', 'Bariso', 'Barlaan',
+'Barrientos', 'Barroga', 'Barsaga', 'Bartolome', 'Basco', 'Basilio',
+'Batungbakal', 'Bautista', 'Bayani', 'Baylon', 'Bayona', 'Bayot',
+'Beltran', 'Belmonte', 'Benitez', 'Bernabe', 'Bernardo', 'Bersamin',
+'Blanco', 'Bonifacio', 'Borja', 'Borlongan', 'Borromeo',
+'Braganza', 'Bravo', 'Brillantes', 'Briones', 'Buenaventura', 'Buendia',
+'Bueno', 'Bugay', 'Bulaon', 'Bulanadi', 'Bulatao', 'Bunag',
+'Burgos', 'Bustamante', 'Caballero', 'Cabanilla', 'Cabrera',
+'Cabatingan', 'Cadiz', 'Calderon', 'Camacho', 'Camara', 'Campos',
+'Candelaria', 'Canlas', 'Canoy', 'Carandang', 'Caraig', 'Carating',
+'Cariño', 'Carreon', 'Carrillo', 'Carungay', 'Casal', 'Casanova',
+'Casimiro', 'Castaneda', 'Castillo', 'Castro', 'Catapang',
+'Cayabyab', 'Cayetano', 'Celestino', 'Celis', 'Centeno', 'Cervantes',
+'Chavez', 'Chua', 'Cipriano', 'Clarin', 'Claudio', 'Clemente',
+'Co', 'Concepcion', 'Cordero', 'Cordova', 'Cornejo', 'Coronel',
+'Corpuz', 'Corral', 'Cortez', 'Crisologo', 'Crisostomo', 'Cruz',
+'Cuenca', 'Cunanan', 'Custodio', 'Dacanay', 'Daguio', 'Dalisay',
+'Damasco', 'Dancel', 'Dantes', 'David', 'Davila', 'Decena',
+'Delacruz', 'Delgado', 'Delima', 'Delos Reyes', 'Del Rosario',
+'Desiderio', 'DeVera', 'Diaz', 'Dichoso', 'Dimalanta', 'Dimaculangan',
+'Dimagiba', 'Dinglasan', 'Dionisio', 'Dizon', 'Docena', 'Dolor',
+'Domingo', 'Dominguez', 'Donato', 'Duenas', 'Dulay', 'Dumo',
+'Durano', 'Ebarle', 'Echevarria', 'Edralin', 'Elizalde',
+'Encarnacion', 'Enriquez', 'Enrile', 'Escalante', 'Escobar',
+'Escueta', 'Escudero', 'Espinosa', 'Espiritu', 'Estacion', 'Esteban',
+'Estrella', 'Estrada', 'Evangelista', 'Fabian', 'Fajardo', 'Falcon',
+'Fajardo', 'Feliciano', 'Felipe', 'Fernandez', 'Fernan', 'Ferraren',
+'Ferrolino', 'Ferrer', 'Figueroa', 'Florencio', 'Flores', 'Fontanilla',
+'Francisco', 'Fuentes', 'Galang', 'Galvez', 'Gamboa', 'Garay',
+'Garcia', 'Garing', 'Garrido', 'Gaspar', 'Gatchalian', 'Gatdula',
+'Gatmaitan', 'Gavino', 'Geronimo', 'Giron', 'Gomez', 'Gonzaga',
+'Gonzales', 'Gonzalez', 'Guerrero', 'Guevarra', 'Guinto', 'Gutierrez',
+'Guzman', 'Habana', 'Halili', 'Hernandez', 'Herrera', 'Hidalgo',
+'Hilario', 'Honasan', 'Hontiveros', 'Ignacio', 'Ilagan', 'Imperial',
+'Inocencio', 'Isidro', 'Jacinto', 'Javier', 'Jimenez', 'Joaquin',
+'Jocson', 'Kalaw', 'Katigbak', 'Lacson', 'Lagman', 'Lapid',
+'Laurel', 'Lazaro', 'Ledesma', 'Legarda', 'Legaspi', 'Leonico',
+'Lim', 'Liwanag', 'Locsin', 'Lopez', 'Lorenzana', 'Lorenzo',
+'Loyola', 'Lozada', 'Lucero', 'Luna', 'Mabini', 'Macapagal',
+'Macaraig', 'Magsaysay', 'Manalo', 'Manalac', 'Manglapus', 'Marasigan',
+'Marcos', 'Mariano', 'Marquez', 'Martinez', 'Mateo', 'Matias',
+'Medalla', 'Medina', 'Mercado', 'Miranda', 'Molina', 'Montano',
+'Montenegro', 'Montero', 'Morales', 'Moreno', 'Nakpil', 'Narciso',
+'Navarro', 'Nepomuceno', 'Neri', 'Nicolas', 'Nieto', 'Nolasco',
+'Ocampo', 'Ordonez', 'Ortigas', 'Osmeña', 'Padilla', 'Palma',
+'Panganiban', 'Pangilinan', 'Panlilio', 'Pantaleon', 'Paraiso', 'Pascual',
+'Pastor', 'Paterno', 'Pelayo', 'Peña', 'Peralta', 'Perez',
+'Pimentel', 'Pineda', 'Ponce', 'Puno', 'Punsalan', 'Quezon',
+'Quirino', 'Ramirez', 'Ramos', 'Razon', 'Recto', 'Regalado',
+'Revilla', 'Ricarte', 'Rivera', 'Robles', 'Rodriguez', 'Rojo',
+'Roldan', 'Romero', 'Romualdez', 'Romulo', 'Roque', 'Rosales',
+'Rosario', 'Roxas', 'Rubio', 'Ruiz', 'Salas', 'Salazar',
+'Salcedo', 'Salonga', 'Salvador', 'Samonte', 'San Agustin', 'San Jose',
+'San Juan', 'San Pedro', 'Sanchez', 'Santiago', 'Santillan', 'Sarmiento',
+'Sebastian', 'Segovia', 'Silang', 'Singson', 'Sison', 'Soliman',
+'Soriano', 'Sotto', 'Suarez', 'Sumulong', 'Sy', 'Tagle', 'Tamayo',
+'Tan', 'Tantoco', 'Tapales', 'Tayag', 'Teodoro', 'Teves',
+'Tolentino', 'Tordesillas', 'Torres', 'Trinidad', 'Tuason', 'Tugade',
+'Ty', 'Umali', 'Uy', 'Valdez', 'Valencia', 'Valenzuela', 'Valera',
+'Vargas', 'Velasco', 'Velasquez', 'Ventura', 'Vergara', 'Verzosa',
+'Villafuerte', 'Villamor', 'Villanueva', 'Villareal', 'Villegas',
+'Vinluan', 'Yap', 'Yumul', 'Zabala', 'Zaldivar', 'Zamora',
+'Zapanta', 'Zarate', 'Zerrudo', 'Zialcita', 'Zobel', 'Zulueta',
 ]
 
 def get_bd_name():
-    return random.choice(first_names), random.choice(surnames)
+    first = random.choice(first_names_male + first_names_female)
+    last = random.choice(surnames)
+    return first, last
+
+
+rpw_first_names = [
+'Luna', 'Aurora', 'Mystic', 'Crystal', 'Sapphire', 'Scarlet', 'Violet',
+'Rose', 'Athena', 'Venus', 'Nova', 'Stella', 'Serena', 'Raven', 'Jade',
+'Ruby', 'Pearl', 'Ivy', 'Willow', 'Hazel', 'Skye', 'Aria', 'Melody',
+'Harmony', 'Grace', 'Faith', 'Hope', 'Trinity', 'Destiny', 'Serenity',
+'Angel', 'Star', 'Astra', 'Lyra', 'Celeste', 'Elara', 'Elysia', 'Raine',
+'Sylvie', 'Nahara', 'Isolde', 'Ophelia', 'Althea', 'Calista', 'Delara',
+'Eira', 'Freya', 'Gaia', 'Helena', 'Ilara', 'Junia', 'Kaia', 'Liora',
+'Maeve', 'Nara', 'Odessa', 'Phoebe', 'Quinn', 'Rhea', 'Selene', 'Thalia',
+'Una', 'Vanya', 'Wynter', 'Xanthe', 'Yara', 'Zara', 'Amara', 'Aurelia',
+'Brina', 'Celine', 'Dahlia', 'Eden', 'Fiona', 'Gwen', 'Helia', 'Isla',
+'Jessa', 'Kara', 'Lilia', 'Mara', 'Nerine', 'Oona', 'Perse', 'Runa',
+'Sana', 'Tara', 'Vera', 'Willa', 'Xena', 'Yvaine', 'Zinnia', 'Aislinn',
+'Arielle', 'Belladonna', 'Briar', 'Cassia', 'Daphne', 'Eleni', 'Flora',
+'Gemma', 'Hera', 'Ione', 'Jadea', 'Kaira', 'Lilith', 'Maven', 'Nerida',
+'Orla', 'Petra', 'Quilla', 'Risa', 'Saphira', 'Tessa', 'Vixie', 'Wren',
+'Yuna', 'Zelie', 'Aiyana', 'Ameera', 'Blaire', 'Camina', 'Daria', 'Eirene',
+'Faye', 'Greta', 'Honora', 'Indira', 'Jolie', 'Kahlia', 'Lunara', 'Maris',
+'Nixie', 'Oriana', 'Phaedra', 'Reina', 'Soleil', 'Tahlia', 'Viera',
+'Whisper', 'Xylia', 'Yasmin', 'Zephyra', 'Adira', 'Ariya', 'Brienne',
+'Coraline', 'Dove', 'Emberly', 'Fable', 'Giselle', 'Harlow', 'Ivyra',
+'Jorah', 'Keira', 'Lyrra', 'Mirelle', 'Nimue', 'Ophira', 'Paloma', 'Rivka',
+'Sarai', 'Tirzah', 'Velia', 'Wynna', 'Xaria', 'Yllia', 'Zalina', 'Amoura',
+'Aven', 'Brisa', 'Cassidy', 'Diantha', 'Elva', 'Farrah', 'Giada', 'Hollis',
+'Inara', 'Jadeen', 'Kiera', 'Leira', 'Maelle', 'Naida', 'Orra', 'Pyria',
+'Riona', 'Saphine', 'Tova', 'Vanyael', 'Winry', 'Xavia', 'Ysella', 'Zyria',
+'Alera', 'Arwen', 'Brielle', 'Cyrene', 'Deira', 'Evania', 'Fianna',
+'Gwenna', 'Halyn', 'Irina', 'Jovina', 'Kaelia', 'Luneth', 'Mariel',
+'Nayla', 'Orelle', 'Phaena', 'Ruelle', 'Sylph', 'Thessaly', 'Valea',
+'Wynnair', 'Xenara', 'Ysolde', 'Zamira', 'Alira', 'Amaris', 'Brynna',
+'Ceres', 'Delyra', 'Eislyn', 'Fiora', 'Gwyne', 'Haelia', 'Ismena', 'Jalyn',
+'Katria', 'Liorael', 'Maelis', 'Nessara', 'Ovelyn', 'Prisma', 'Ravine',
+'Seraphine', 'Tahlira', 'Vierael', 'Wyndra', 'Xylara', 'Yvanna', 'Zerina',
+'Anora', 'Aveline', 'Brienne', 'Cynra', 'Danea', 'Eirlys', 'Fael', 'Giana',
+'Hessia', 'Ilona', 'Janessa', 'Kyria', 'Lirael', 'Madria', 'Norelle',
+'Ophirae', 'Paela', 'Quina', 'Rilith', 'Sienna', 'Tiriel', 'Velisse',
+'Wrena', 'Xamira', 'Ysenne', 'Zynra', 'Aelina', 'Alessa', 'Belwyn',
+'Carmine', 'Daelia', 'Elyndra', 'Fiorael', 'Gwyneth', 'Helis', 'Isola',
+'Jynra', 'Kailen', 'Lunisse', 'Mynra', 'Nyelle', 'Orissa', 'Phira',
+'Rylis', 'Saphyre', 'Thyra', 'Valyn', 'Wynelle', 'Xira', 'Ylith', 'Zayra',
+'Avenia', 'Ariael', 'Blythe', 'Corra', 'Delyth', 'Elaina', 'Fara', 'Gisra',
+'Hellen', 'Ionea', 'Jalisa', 'Kayle', 'Lysandra', 'Mirael', 'Nysa',
+'Ophirael', 'Phaelia', 'Renelle', 'Saphra', 'Tirra', 'Viona', 'Wynlie',
+'Xynna', 'Ylia', 'Zinnara', 'Azura', 'Bliss', 'Cassiel', 'Dionne',
+'Elaris', 'Fawn', 'Gloria', 'Haelyn', 'Inessa', 'Jael', 'Koryn', 'Lissara',
+'Marenne', 'Hiraya', 'Celestine', 'Aurora', 'Astrid', 'Brielle', 'Calista', 'Davina', 'Elara', 'Freya', 'Genevieve',
+'Haven', 'Iris', 'Juliet', 'Kaia', 'Lyra', 'Mira', 'Nova', 'Ophelia', 'Persephone', 'Quinn',
+'Rosalie', 'Seraphina', 'Thea', 'Valencia', 'Willow', 'Xandra', 'Yara', 'Zara', 'Athena', 'Bianca', 'Hiraya', 'Seraphina', 'Anastasia', 'Celestine', 'Evangeline', 'Isadora',
+'Genevieve', 'Arabella', 'Josephine', 'Valentina', 'Alessandra', 'Cassandra',
+'Gabriella', 'Penelope', 'Rosalind', 'Vivienne', 'Arabesque', 'Beatrice',
+'Clementine', 'Delphine', 'Esmeralda', 'Francesca', 'Gwendolyn',
+'Isolde', 'Juliette', 'Katarina', 'Lavender', 'Magdalena', 'Nicolette',
+'Ophelia', 'Persephone', 'Queenie', 'Rosabelle', 'Sapphire', 'Theodora',
+'Valencia', 'Wilhelmina', 'Xanthia', 'Zenaida', 'Aureliana',
+'Bernadette', 'Celestia', 'Desdemona', 'Fallon', 'Flannery', 'Kaie',
+'Kaitlyn', 'Kassidy', 'Kathleen', 'Keena', 'Keira',
+'Kendall', 'Kenna', 'Kera', 'Kiara',
+'Kirra', 'Kylee', 'Lachlan', 'Lorna', 'Maeve', 'Malise',
+'Morgance', 'Morgandy', 'Nonnita', 'Nuala', 'Raelin', 'Rhonda',
+'Saoirse', 'Saraid', 'Seanna', 'Shela', 'Shylah', 'Tara',
+'Teranika', 'Tieve', 'Treasa', 'Treva', 'Addison', 'Alivia',
+'Allaya', 'Amarie', 'Amaris', 'Annabeth', 'Annalynn', 'Araminta',
+'Ardys', 'Ashland', 'Avery', 'Bernadette', 'Billie',
+'Birdee', 'Bliss', 'Brice', 'Brittany', 'Bryony', 'Cameo',
+'Carol', 'Chalee', 'Christy', 'Corky', 'Courage',
+'Daelen', 'Dana', 'Darnell', 'Dawn', 'Delsie', 'Denita',
+'Devon', 'Devona', 'Diamond', 'Divinity', 'Dusty',
+'Ellen', 'Eppie', 'Evelyn', 'Everilda', 'Falynn',
+'Fanny', 'Faren', 'Freedom', 'Gala', 'Galen', 'Gardenia',
+'Germain', 'Gig', 'Gilda', 'Giselle', 'Githa', 'Haiden',
+'Halston', 'Heather', 'Henna', 'Honey', 'Idalis',
+'Ilsa', 'Jersey', 'Jette', 'Jill', 'Joanna',
+'Kachelle', 'Kade', 'Kady', 'Kaela', 'Kalyn', 'Kandice',
+'Karrie', 'Karyn', 'Katiuscia', 'Kempley', 'Kenda', 'Kennice',
+'Kenyon', 'Kiandra', 'Kimber', 'Kimn', 'Kinsey',
+'Kipp', 'Kismet', 'Kortney', 'Kourtney',
+'Kristal', 'Kylar', 'Ladawn', 'Ladye', 'Lainey',
+'Lake', 'Lalisa', 'Landen', 'Landon', 'Landry', 'Laney',
+'Langley', 'Lanna', 'Laquetta', 'Lari', 'Lark', 'Laurel',
+'Lavender', 'Leane', 'LeAnn', 'Leanna', 'Leanne', 'Leanore',
+'Lee', 'Leeann', 'Leighanna', 'Lexie', 'Lexis', 'Liberty',
+'Liliana', 'Lillian', 'Lindley', 'Linne', 'Liora', 'Lisabet',
+'Liz', 'Lizette', 'Lona', 'London', 'Loni', 'Lorena',
+'Loretta', 'Lovette', 'Lynde', 'Lyndon', 'Lyndsay', 'Lynette',
+'Lynley', 'Lynna', 'Lynton', 'Mada', 'Maddox', 'Madison',
+'Mae', 'Maggie', 'Mahogany', 'Maia', 'Maitane', 'Maitland',
+'Malachite', 'Mamie', 'Manhattan', 'Maridel', 'Marla', 'Marley',
+'Marliss', 'Maud', 'May', 'Merleen', 'Mildred',
+'Milissa', 'Millicent', 'Mily', 'Mykala', 'Nan',
+'Nautica', 'Nelda', 'Niki', 'Nikole', 'Nimue', 'Nineve',
+'Norina', 'Ofa', 'Palmer', 'Pansy', 'Paris', 'Patience',
+'Patricia', 'Peony', 'Petunia', 'Pixie', 'Pleasance', 'Polly',
+'Primrose', 'Princell', 'Providence', 'Purity', 'Quanah', 'Queena',
+'Quella', 'Quinci', 'Rae', 'Rainbow', 'Rainelle', 'Raleigh',
+'Ralphina', 'Randi', 'Raven', 'Rayelle', 'Rea', 'Remington',
+'Richelle', 'Ripley', 'Roberta', 'Robin', 'Rosemary', 'Rowan',
+'Rumer', 'Ryesen', 'Sable', 'Sadie', 'Saffron', 'Saga',
+'Saige', 'Salal', 'Salia', 'Sandora', 'Sebille', 'Sebrina',
+'Selby', 'Serenity', 'Shae', 'Shandy', 'Shanice', 'Sharman',
+'Shelbi', 'Sheldon', 'Shelley', 'Sheridan', 'Sherill', 'Sheryl',
+'Sheyla', 'Shirley', 'Shirlyn', 'Silver', 'Skyla', 'Skylar',
+'Sorilbran', 'Sparrow', 'Spring', 'Starleen', 'Stockard', 'Storm',
+'Sudie', 'Summer', 'Sunniva', 'Suzana', 'Symphony', 'Tacey',
+'Tahnee', 'Taite', 'Talon', 'Tambre', 'Tamia', 'Taniya',
+'Tanner', 'Tanzi', 'Taria', 'Tate', 'Tatum', 'Tawnie',
+'Taya', 'Tayla', 'Taylor', 'Tayna', 'Teddi', 'Tena',
+'Tera', 'Teri', 'Teryl', 'Thistle', 'Timotha', 'Tinble',
+'Tosha', 'Totie', 'Traci', 'Tru', 'Trudie', 'Trudy',
+'Tryamon', 'Tuesday', 'Twila', 'Twyla', 'Tyne', 'Udele',
+'Unity', 'Vail', 'Vala', 'Velvet', 'Venetta', 'Walker',
+'Wallis', 'Waneta', 'Waverly', 'Wendy', 'Weslee', 'Whitley',
+'Whitney', 'Whoopi', 'Wilda', 'Wilfreda', 'Willow', 'Wilona',
+'Winifred', 'Winsome', 'Winter', 'Wisdom', 'Wrenn', 'Yale',
+'Yardley', 'Yeardley', 'Yedda', 'Young', 'Ysolde', 'Zadie',
+'Zanda', 'Zavannah', 'Zavia', 'Zeolia', 'Zinnia', 'Blaine',
+'Blair', 'Eilis', 'Kalene', 'Keaira', 'Keelty', 'Keely',
+'Keen', 'Keitha', 'Kellan', 'Kennis', 'Kerry', 'Kevina',
+'Killian', 'Kyna', 'Lakyle', 'Lee', 'Mab', 'Maeryn',
+'Maille', 'Mairi', 'Maisie', 'Meara', 'Meckenzie', 'Myrna',
+'Nara', 'Neala', 'Nelia', 'Oona', 'Quinn', 'Rhoswen',
+'Riane', 'Riley', 'Rogan', 'Rona', 'Ryan', 'Sadb',
+'Shanley', 'Shelagh', 'Sine', 'Siobhan', 'Sorcha', 'Ultreia',
+'Vevila', 'Acantha', 'Adara', 'Adelpha', 'Adrienne', 'Aegle',
+'Afrodite', 'Agape', 'Agata', 'Aglaia', 'Agnes', 'Aileen',
+'Alcina', 'Aldora', 'Alethea', 'Alexandra', 'Alice', 'Alida',
+'Alisha', 'Alixia', 'Althea', 'Aludra', 'Amara', 'Ambrosia',
+'Amethyst', 'Aminta', 'Amphitrite', 'Anastasia', 'Andrea', 'Andromache',
+'Andromeda', 'Angela', 'Anstice', 'Antonia', 'Anysia', 'Aphrodite',
+'Arali', 'Aretha', 'Ariadne', 'Ariana', 'Arissa',
+'Artemia', 'Artemis', 'Astrid', 'Athena', 'Atropos', 'Aurora',
+'Avel', 'Basilissa', 'Bernice', 'Calandra',
+'Calantha', 'Calista', 'Calliope', 'Candace', 'Candra', 'Carina',
+'Carisa', 'Cassandra', 'Cassiopeia', 'Catherine', 'Celandia', 'Cerelia', 'Charisma', 'Christina', 'Clio', 'Cloris',
+'Clotho', 'Colette', 'Cora', 'Cressida', 'Cybill', 'Cyd',
+'Cynthia', 'Damaris', 'Damia', 'Daphne', 'Daria', 'Daryn',
+'Dasha', 'Dea', 'Delbin', 'Della', 'Delphine', 'Delta',
+'Demetria', 'Desdemona', 'Desma', 'Despina', 'Dionne', 'Diotama',
+'Dora', 'Dorcas', 'Doria', 'Dorian', 'Doris', 'Dorothy',
+'Dorrit', 'Drew', 'Drucilla', 'Dysis', 'Ebony', 'Effie',
+'Eileen', 'Elani', 'Eleanor', 'Electra', 'Elke', 'Elma',
+'Elodie', 'Eos', 'Eppie', 'Eris', 'Ethereal', 'Eudora',
+'Eugenia', 'Eulalia', 'Eunice', 'Euphemia', 'Euphrosyne', 'Euterpe',
+'Evadne', 'Evangeline', 'Filmena', 'Gaea', 'Galina', 'Gelasia',
+'Gemini', 'Georgia', 'Greer', 'Greta', 'Harmony', 'Hebe',
+'Hecate', 'Hecuba', 'Helen', 'Hera', 'Hermia', 'Hermione',
+'Hero', 'Hestia', 'Hilary', 'Hippolyta', 'Hyacinth', 'Hydra',
+'Ianthe', 'Ilena', 'Iolite', 'Iona', 'Irene', 'Iris',
+'Isidore', 'Jacey', 'Jacinta', 'Jolanta', 'Kacia', 'Kaethe',
+'Kaia', 'Kaija', 'Kairi', 'Kairos', 'Kali', 'Kalidas',
+'Kalika', 'Kalista', 'Kalli', 'Kalliope', 'Kallista', 'Kalonice',
+'Kalyca', 'Kanchana', 'Kandace', 'Kara', 'Karana', 'Karen',
+'Karin', 'Karis', 'Karissa', 'Karlyn', 'Kasandra', 'Kassandra',
+'Katarina', 'Kate', 'Katherine', 'Katina', 'Khina', 'Kineta',
+'Kirsten', 'Kolina', 'Kora', 'Koren', 'Kori', 'Korina',
+'Kosma', 'Kristen', 'Kristi', 'Kristina', 'Kristine', 'Kristy',
+'Kristyn', 'Krysten', 'Krystina', 'Kynthia', 'Kyra', 'Kyrene',
+'Kyria', 'Lacy', 'Lali', 'Lareina', 'Laria', 'Larina',
+'Larisa', 'Larissa', 'Lasthenia', 'Latona', 'Layna', 'Leandra',
+'Leda', 'Ledell', 'Lenore', 'Leonora', 'Leta', 'Letha',
+'Lethia', 'Lexi', 'Lexie', 'Lidia', 'Lilika', 'Lina',
+'Linore', 'Litsa', 'Livana', 'Livvy', 'Lotus', 'Lyanne',
+'Lycorida', 'Lycoris', 'Lydia', 'Lydie', 'Lykaios', 'Lyra',
+'Lyric', 'Lyris', 'Lysandra', 'Macaria', 'Madalena', 'Madelia',
+'Madeline', 'Madge', 'Maeve', 'Magan', 'Magdalen', 'Maia',
+'Mala', 'Malissa', 'Mara', 'Margaret', 'Marigold', 'Marilee',
+'Marjorie', 'Marlene', 'Marmara', 'Maya', 'Medea', 'Medora',
+'Megan', 'Megara', 'Melanctha', 'Melanie', 'Melba', 'Melenna',
+'Melia', 'Melinda', 'Melissa', 'Melitta', 'Melody', 'Melpomene',
+'Minta', 'Mnemosyne', 'Mona', 'Muse', 'Myda', 'Myrtle',
+'Naia', 'Naida', 'Naiyah', 'Narcissa', 'Narella', 'Natasha',
+'Nell', 'Nellie', 'Nellis', 'Nelly', 'Neola', 'Neoma',
+'Nerin', 'Nerina', 'Neysa', 'Nichole', 'Nicia', 'Nicki',
+'Nicole', 'Nike', 'Nikita', 'Niobe', 'Nitsa', 'Noire',
+'Nora', 'Nyla', 'Nysa', 'Nyssa', 'Nyx', 'Obelia',
+'Oceana', 'Odea', 'Odessa', 'Ofelia', 'Olympia', 'Omega',
+'Onyx', 'Ophelia', 'Ophira', 'Orea', 'Oriana', 'Padgett',
+'Pallas', 'Pamela', 'Pandora', 'Panphila', 'Parthenia', 'Pelagia',
+'Penelope', 'Phedra', 'Philadelphia', 'Philippa', 'Philomena', 'Phoebe',
+'Phyllis', 'Pirene', 'Prisma', 'Psyche', 'Ptolema', 'Pyhrrha',
+'Pyrena', 'Pythia', 'Raissa', 'Rasia', 'Rene', 'Rhea',
+'Rhoda', 'Rhodanthe', 'Rita', 'Rizpah', 'Saba', 'Sandra',
+'Sandrine', 'Sapphira', 'Sappho', 'Seema', 'Selena', 'Selina',
+'Sema', 'Sherise', 'Sibley', 'Sirena', 'Sofi', 'Sondra',
+'Sophie', 'Sophronia', 'Stacia', 'Stefania',
+'Stephaney', 'Stesha', 'Sybella', 'Sybil', 'Syna', 'Tabitha',
+'Talia', 'Talieya', 'Taliyah', 'Tallya', 'Tamesis', 'Tanith',
+'Tansy', 'Taryn', 'Tasha', 'Tasia', 'Tedra', 'Teigra',
+'Tekla', 'Telma', 'Terentia', 'Terpsichore', 'Terri', 'Tess',
+'Thaddea', 'Thaisa', 'Thalassa', 'Thalia', 'Than', 'Thea',
+'Thelma', 'Themis', 'Theodora', 'Theodosia', 'Theola', 'Theone',
+'Theophilia', 'Thera', 'Theresa', 'Thisbe', 'Thomasa', 'Thracia',
+'Thyra', 'Tiana', 'Tienette', 'Timandra', 'Timothea', 'Titania',
+'Titian', 'Tomai', 'Tona', 'Tresa', 'Tressa', 'Triana',
+'Trifine', 'Trina', 'Tryna', 'Urania', 'Uriana', 'Vanessa',
+'Vasiliki', 'Velma', 'Venus', 'Voleta', 'Xandria', 'Xandy',
+'Xantha', 'Xenia', 'Xenobia', 'Xianthippe', 'Xylia', 'Xylona',
+'Yolanda', 'Yolie', 'Zagros', 'Zale', 'Zanaide', 'Zandra',
+'Zanita', 'Zanthe', 'Zebina', 'Zelia', 'Zena', 'Zenaide',
+'Zenia', 'Zenobia', 'Zenon', 'Zera', 'Zeta', 'Zeuti',
+'Zeva', 'Zinaida', 'Zoe', 'Zosima', 'Ai', 'Aiko',
+'Akako', 'Akanah', 'Aki', 'Akina', 'Akiyama', 'Amarante',
+'Amaya', 'Aneko', 'Anzan', 'Anzu', 'Aoi', 'Asa',
+'Asami', 'Ayame', 'Bankei', 'Chika', 'Chihiro',
+'Chiyo', 'Cho', 'Chorei', 'Dai', 'Eido', 'Ema',
+'Etsu', 'Fuyo', 'Hakue', 'Hama', 'Hanako',
+'Haya', 'Hisa', 'Himari', 'Hoshi', 'Ima', 'Ishi',
+'Iva', 'Jimin', 'Jin', 'Jun', 'Junko',
+'Kaede', 'Kagami', 'Kaida', 'Kaiya', 'Kameko',
+'Kamin', 'Kanako', 'Kane', 'Kaori', 'Kaoru', 'Kata',
+'Kaya', 'Kei', 'Keiko', 'Kiaria', 'Kichi', 'Kiku',
+'Kimi', 'Kin', 'Kioko', 'Kira', 'Kita', 'Kiwa',
+'Kiyoshi', 'Kohana', 'Koto', 'Kozue',
+'Kuma', 'Kumi', 'Kumiko', 'Kuniko', 'Kura', 'Kyoko',
+'Leiko', 'Machi', 'Machiko', 'Maeko', 'Maemi', 'Mai',
+'Maiko', 'Makiko', 'Mamiko', 'Mariko', 'Masago', 'Masako',
+'Matsuko', 'Mayako', 'Mayuko', 'Michi', 'Michiko', 'Midori',
+'Mieko', 'Mihoko', 'Mika', 'Miki', 'Minako', 'Minato',
+'Mine', 'Misako', 'Misato', 'Mitsuko', 'Miwa', 'Miya',
+'Miyoko', 'Miyuki', 'Momoko', 'Mutsuko', 'Myoki', 'Nahoko',
+'Nami', 'Nanako', 'Nanami', 'Naoko', 'Naomi', 'Nariko',
+'Natsuko', 'Nayoko', 'Nishi', 'Nori', 'Noriko', 'Nozomi',
+'Nyoko', 'Oki', 'Rai', 'Raku', 'Rei', 'Reina',
+'Reiko', 'Ren', 'Renora', 'Rieko', 'Rikako', 'Riku',
+'Rinako', 'Rin', 'Rini', 'Risako', 'Ritsuko', 'Roshin',
+'Rumiko', 'Ruri', 'Ryoko', 'Sachi', 'Sachiko', 'Sada',
+'Saeko', 'Saiun', 'Saki', 'Sakiko', 'Sakuko', 'Sakura',
+'Sakurako', 'Sanako', 'Sasa', 'Sashi', 'Sato', 'Satoko',
+'Sawa', 'Sayo', 'Sayoko', 'Seki', 'Shika', 'Shikah',
+'Shina', 'Shinko', 'Shoko', 'Sorano', 'Suki', 'Sumi',
+'Tadako', 'Taido', 'Taka', 'Takako', 'Takara', 'Taki',
+'Tamaka', 'Tamiko', 'Tanaka', 'Taney', 'Tani', 'Taree',
+'Tazu', 'Tennen', 'Tetsu', 'Tokiko', 'Tomi', 'Tomiko',
+'Tora', 'Tori', 'Toyo', 'Tsubame', 'Umeko', 'Usagi',
+'Wakana', 'Washi', 'Yachi', 'Yaki', 'Yama', 'Yasu',
+'Yayoi', 'Yei', 'Yoi', 'Yoko', 'Yori', 'Yoshiko',
+'Yuka', 'Yukako', 'Yukiko', 'Yumi', 'Yumiko', 'Yuri',
+'Yuriko', 'Yutsuko',
+]
+
+rpw_surnames = [
+'Shadow', 'Dark', 'Light', 'Star', 'Moon', 'Sun', 'Sky', 'Night', 'Dawn',
+'Storm', 'Frost', 'Fire', 'Stanley', 'Nero', 'Clifford', 'Volsckev',
+'Draven', 'Smith', 'Greisler', 'Wraith', 'Hale', 'Voss', 'Lockhart',
+'Ashford', 'Wynters', 'Grayson', 'Ravenwood', 'Langford', 'Averill',
+'Cross', 'Kane', 'Holloway', 'Mercer', 'Devereux', 'Vale', 'Alden',
+'Blackwell', 'Marcellis', 'Vossler', 'Crane', 'Laurent', 'Radcliffe',
+'Hadrian', 'Vexley', 'Roth', 'Everhart', 'Winslow', 'Fayden', 'Crawford',
+'Ashborne', 'Davenport', 'Drayton', 'Sutherland', 'Vayne', 'Rosenthal',
+'Arkwright', 'Devere', 'Langley', 'Kingsley', 'Vanora', 'Astor',
+'Carrington', 'Trevane', 'Remmington', 'Wolfe', 'Drayke', 'Hawke', 'Briar',
+'Sterling', 'Crowhurst', 'Marlowe', 'Hastings', 'Westwood', 'Ravenshire',
+'Locke', 'Harrow', 'Draxler', 'Valemont', 'Caine', 'Redgrave', 'Frost',
+'Vanthorn', 'Ashcroft', 'Moreau', 'Rothwell', 'Varen', 'Lancaster',
+'Ashfield', 'Sinclair', 'Duskwood', 'Vermillion', 'Whitlock', 'Halden',
+'Faust', 'Ironwood', 'Drayven', 'Grey', 'Valeheart', 'Caldwell', 'Vosslyn',
+'Avenhart', 'Nightray', 'Morraine', 'Leclair', 'Hartgrave', 'Thorne',
+'Montclair', 'Ashen', 'Dreyer', 'Stormwell', 'Vossen', 'Gryphon',
+'Reinhart', 'Claremont', 'Hartley', 'Nightborne', 'Valentine', 'Dreyson',
+'Marchand', 'Blackburn', 'Lucan', 'Callister', 'Hartfield', 'Verden',
+'Draymor', 'Feyr', 'Ravencroft', 'Ainsley', 'Crestfall', 'Silvera',
+'Gravemont', 'Vinter', 'Beaumont', 'Lockridge', 'Thornefield', 'Ashcroft',
+'Crowley', 'Winchester', 'Keller', 'Ravenholm', 'Rosier', 'Everett',
+'Valeon', 'Marrow', 'Vossell', 'Ashenwald', 'Wyncrest', 'Durand',
+'Montague', 'Dreyke', 'Carmine', 'Verlith', 'Harrington', 'Briarson',
+'Corvin', 'Tessler', 'Delane', 'Rayven', 'Fletcher', 'Crosswell',
+'Sterren', 'Valeric', 'Blackthorn', 'Davenport', 'Vanix', 'Dravien',
+'Vexen', 'Rhyker', 'Krynn', 'Greymont', 'Elridge', 'Locksen', 'Harrowell',
+'Valeis', 'Avenor', 'Gravelle', 'Dravenhart', 'Noxford', 'Rothen',
+'Vallier', 'Devereaux', 'Stormvale', 'Kain', 'Drevis', 'Marchen',
+'Langdon', 'Frostell', 'Haldenne', 'Ravenshade', 'Vairn', 'Wyncliff',
+'Greystone', 'Vossmer', 'Ashborne', 'Drexel', 'Rykov', 'Drayven',
+'Malvern', 'Greyhart', 'Holloway', 'Wraithson', 'Crowden', 'Valleris',
+'Stark', 'Wynther', 'Creswell', 'Torrence', 'Arden', 'Fayre', 'Crawell',
+'Thayen', 'Morrick', 'Vanier', 'Drevik', 'Hawthorne', 'Evers', 'Aldric',
+'Larkson', 'Valemir', 'Dravelle', 'Rothenwald', 'Greyvale', 'Veyron',
+'Craven', 'Frostwyn', 'Vares', 'Ashveil', 'Locken', 'Vandrell', 'Silvern',
+'Dawncrest', 'Graves', 'Hartwell', 'Falconer', 'Varnell', 'Ashwynn',
+'Dravenor', 'Vollaire', 'Kingswell', 'Vashier', 'Larkwell', 'Auren',
+'Ravenson', 'Greyborne', 'Voltaire', 'Halewyn', 'Verrin', 'Blackmore',
+'Crimson', 'Wrenford', 'Ravelle', 'Valenor', 'Frostfield', 'Vosswick',
+'Hollowcrest', 'Veyson', 'Atheron', 'Veyra', 'Raines', 'Grimmond',
+'Ashlynn', 'Draywell', 'Vander', 'Vortan', 'Nightwell', 'Vallence', 'Faye',
+'Roswell', 'Stormen', 'Havelock', 'Greys', 'Whitmore', 'Thayne', 'Drevan',
+'Halric', 'Ashmere', 'Westhall', 'Wray', 'Norring', 'Dane', 'Valeir',
+'Kraiven', 'Vosslin', 'Rynhart', 'Eldren', 'Trevane', 'Greisler',
+'Hawthorne', 'Morrin', 'Draylen', 'Aurel', 'Briarson', 'Carter', 'Rexford',
+'Lynhart', 'Ashland', 'Frostwick', 'Vanloren', 'Crowe', 'Vynne',
+'Rothmere', 'Duskhelm', 'Harron', 'Valecrest', 'Merrin', 'Hawken',
+'Dreylor', 'Blackwell', 'Farron', 'Caldren', 'Vanora', 'Hollowen',
+'Varelle', 'Draymore', 'Westcliff', 'Alder', 'Gryff', 'Ashlock', 'Volsen',
+'Drehl', 'Vayden', 'Ravenholt', 'Vossane', 'Krell', 'Marwen', 'Drace',
+'Varenne', 'Lockmere', 'Greysten', 'Hawking', 'Ryswell', 'Drayden',
+'Cresden', 'Hallow', 'Ashven', 'Valter', 'Greyson', 'Morrinell', 'Wraith',
+'Veyden', 'Falken', 'Ashwell', 'Nero', 'Scavendich', 'Volschev', 'Vermont', 'Suez', 'Ashford', 'Blackwood', 'Crane', 'Draven', 'Everhart',
+'Frost', 'Grimshaw', 'Hawthorne', 'Ironwood', 'Kingsley', 'Lancaster', 'Mercer', 'Nightshade', 'Oakley', 'Pembroke',
+'Radcliffe', 'Shadowfax', 'Thornfield', 'Underwood', 'Vance', 'Whitmore', 'Sterling', 'Ravencroft', 'Ashbury', 'Blackwell',
+]
+
+def get_rpw_name():
+    return random.choice(rpw_first_names), random.choice(rpw_surnames)
 
 
 import random
@@ -284,45 +1092,76 @@ def get_pass():
     
 #######   
 
-def get_bd_phone():
-    prefixes = ['017', '019', '018', '016', '015', '013', '014']
-    prefix = random.choice(prefixes)
-    number = ''.join(random.choices(string.digits, k=8))
-    return f'+88{prefix}{number}'
-
-def generate_phone_number():
-    countries = {
-        'BD': {'code': '+88', 'prefixes': ['017', '018', '019', '016', '015', '013', '014'], 'length': 8},
-        'KH': {'code': '+855', 'prefixes': ['010', '011', '012', '013', '014', '015', '016', '017', '092', '093', '097', '098', '099'], 'length': 6},
-        'NP': {'code': '+977', 'prefixes': ['97', '98'], 'length': 8},
-        'IN': {'code': '+91', 'prefixes': ['98', '99', '97', '96', '95', '94'], 'length': 8},
-        'PK': {'code': '+92', 'prefixes': ['300', '301', '302', '303', '304', '305'], 'length': 7},
-        'UK': {'code': '+44', 'prefixes': ['7400', '7500', '7600', '7700', '7800', '7900'], 'length': 6},
-        'PH': {'code': '+63', 'prefixes': ['917', '918', '919', '920', '921', '922'], 'length': 7},
-        'ID': {'code': '+62', 'prefixes': ['813', '815', '816', '817', '818', '819'], 'length': 7},
-        'OM': {'code': '+968', 'prefixes': ['71', '72', '73', '79'], 'length': 6},
-        'US': {'code': '+1', 'prefixes': ['201', '202', '303', '312', '415', '646', '718'], 'length': 7},
-        'NG': {'code': '+234', 'prefixes': ['701', '703', '704', '705', '706', '707', '708', '802', '803'], 'length': 7},
-        'ZA': {'code': '+27', 'prefixes': ['60', '61', '62', '63', '71', '72', '73'], 'length': 7}
-    }
-
-    country = random.choice(list(countries.keys()))
-    info = countries[country]
-    prefix = random.choice(info['prefixes'])
-    number = ''.join(random.choices(string.digits, k=info['length']))
-    return f"{info['code']}{prefix}{number}"
-
-
 from faker import Faker
 import random
 
 fake = Faker()
 
-def  khryden_email():
-    name = fake.first_name() + fake.last_name()
-    username = re.sub(r'[^a-zA-Z]', '', name).lower()
-    number = random.randint(1000, 9999)
-    return f"{username}{number}@khryden.xyz"
+def get_1secmail():
+    try:
+        res = requests.get("https://www.1secmail.com/api/v1/?action=genRandomMailbox&count=1", timeout=10)
+        data = res.json()
+        if data and len(data) > 0:
+            return data[0]
+    except Exception:
+        pass
+    name = re.sub(r'[^a-zA-Z]', '', fake.first_name() + fake.last_name()).lower()
+    domain = random.choice(["1secmail.com", "1secmail.net", "1secmail.org"])
+    return f"{name}{random.randint(100,9999)}@{domain}"
+
+
+def check_1secmail_otp(email, retries=12, delay=5):
+    """Poll 1secmail inbox and extract Facebook OTP/confirmation code."""
+    try:
+        login, domain = email.split('@')
+    except ValueError:
+        return None
+    inbox_url = f"https://www.1secmail.com/api/v1/?action=getMessages&login={login}&domain={domain}"
+    for _ in range(retries):
+        try:
+            res = requests.get(inbox_url, timeout=10)
+            messages = res.json()
+            if messages:
+                for msg in messages:
+                    msg_id = msg.get('id')
+                    read_url = f"https://www.1secmail.com/api/v1/?action=readMessage&login={login}&domain={domain}&id={msg_id}"
+                    msg_res = requests.get(read_url, timeout=10)
+                    msg_data = msg_res.json()
+                    body = msg_data.get('body', '') + msg_data.get('htmlBody', '')
+                    code = re.search(r'\b(\d{5,8})\b', body)
+                    if code:
+                        return code.group(1)
+        except Exception:
+            pass
+        time.sleep(delay)
+    return None
+
+
+def confirm_facebook_email(ses, reg_response_text, otp):
+    """Submit the OTP code to Facebook's email confirmation page."""
+    try:
+        soup = BeautifulSoup(reg_response_text, 'html.parser')
+        form = soup.find('form')
+        if not form:
+            return False
+        action = form.get('action', '')
+        if not action.startswith('http'):
+            action = 'https://www.facebook.com' + action
+        fields = {}
+        for inp in form.find_all('input'):
+            name = inp.get('name')
+            value = inp.get('value', '')
+            if name:
+                fields[name] = value
+        for key in ['code', 'confirm_code', 'n']:
+            if key in fields:
+                fields[key] = otp
+                break
+        confirm_res = ses.post(action, data=fields, timeout=15)
+        cookies = ses.cookies.get_dict()
+        return 'c_user' in cookies
+    except Exception:
+        return False
     
 
 # HTML form extractor
@@ -336,7 +1175,6 @@ def extractor(data):
             data[name] = value
     return data
 
-os.system('xdg-open https://t.me/trciks');time.sleep(1.5)
 
 # Banner
 def banner():
@@ -390,318 +1228,11 @@ def check_facebook_profile_picture(uid):
     except requests.RequestException as e:
         return 
 
-### M3
-def createfb_method_3():
-    global oks, cps
-    banner()
-    print(f"{W}[{G}1{W}]{G} TEMP NUMBER ")
-    print(f"{W}[{G}2{W}]{G} TEMP MIX NUMBER ")
-    print(f"{W}[{G}3{W}]{G} TEMP MAIL")
-    linex()
-    email_choice = input(f"{W}[{G}•{W}]{G} CHOISE {W}:{G} ")
-    linex()
-    print(f"{W}[{G}1{W}]{G} RANDOM NAMES")
-    linex()
-    name_choice = input(f"{W}[{G}•{W}]{G} CHOISE {W}:{G} ")
-    linex()
-    try:
-        num = int(input(f"{W}[{G}•{W}]{G} HOW MANY ACCOUNT {W}:{G} "))
-        if num <= 0:
-            raise ValueError("Number of accounts must be positive")
-    except ValueError:
-        print(f"{W}[{R}•{W}]{R} Please enter a valid positive number{W}")
-        sys.exit()
-    linex()
-    print(f"{W}[{G}1{W}]{G} AUTO PASSWORD")
-    print(f"{W}[{G}2{W}]{G} CUSTOM PASSWORD")
-    linex()
-    password_choice = input(f"{W}[{G}•{W}]{G} CHOISE {W}:{G} ")
-    pww = get_pass() if password_choice == '1' else input(f"{W}[{G}•{W}]{G} ENTER PASSWORD {W}:{G} ")
-    if not pww:
-        print(f"{W}[{R}•{W}]{R} Password cannot be empty{W}")
-        sys.exit()
-    linex()
-    show_details = input(f"{W}[{G}•{W}]{G} Show All Details y{R}/{G}n {W}:{G} ").lower()
-    banner()
-    print(f"{W}[{G}•{W}]{G} ACCOUNT CREATING STARTED")
-    print(f'{W}[{G}•{W}]{G} TOTAL ID {W}: {R}{num}{W}')
-    print(f"{W}[{G}•{W}]{G} Use {R}1.1.1{G} Vpn{W}")
-    linex()
-
-    for i in range(num):
-        try:
-            sys.stdout.write(f"\r{W}CYBER-X{G} OK • {len(oks)}   {R}CP • {len(cps)}{W} ")
-            sys.stdout.flush()
-            ses = requests.Session()
-            response = ses.get("https://x.facebook.com/reg")
-            form = extractor(response.text)
-            firstname, lastname = get_bd_name()
-
-            if email_choice == '1':
-                phone = get_bd_phone()
-            elif email_choice == '2':
-                phone = generate_phone_number()
-            else:
-                phone =  khryden_email()
-
-            payload = {
-                'ccp': "2",
-                'reg_instance': form.get("reg_instance", ""),
-                'submission_request': "true",
-                'reg_impression_id': form.get("reg_impression_id", ""),
-                'ns': "1",
-                'logger_id': form.get("logger_id", ""),
-                'firstname': firstname,
-                'lastname': lastname,
-                'birthday_day': str(random.randint(20, 28)),
-                'birthday_month': str(random.randint(5, 25)),
-                'birthday_year': str(random.randint(1990, 2001)),
-                'reg_email__': phone,
-                'sex': "1",  # Female
-                'encpass': f'#PWD_BROWSER:0:{int(time.time())}:{pww}',
-                'submit': "Sign Up",
-                'fb_dtsg': form.get("fb_dtsg", ""),
-                'jazoest': form.get("jazoest", ""),
-                'lsd': form.get("lsd", "")
-            }
-
-            headers = {
-                "Host": "m.facebook.com",
-                "Connection": "keep-alive",
-                "User-Agent": ugenX(),
-                "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8",
-                "Accept-Encoding": "gzip, deflate, br",
-                "Accept-Language": "en-US,en;q=0.9"
-            }
-
-            head1 = {
-                'accept-encoding': 'gzip, deflate',
-                'accept-language': 'en-US,en;q=0.9',
-                'cache-control': 'max-age=0',
-                'referer': 'https://mbasic.facebook.com/reg/',
-                'sec-ch-ua': '',
-                'sec-ch-ua-mobile': '?1',
-                'sec-ch-ua-platform': 'Android',
-                'sec-fetch-dest': 'document',
-                'sec-fetch-mode': 'navigate',
-                'sec-fetch-site': 'same-origin',
-                'sec-fetch-user': '?1',
-                'upgrade-insecure-requests': '1',
-                'user-agent': ugenX()
-            }
-
-            merged_headers = {**headers, **head1}
-            reg_url = "https://www.facebook.com/reg/submit/"
-            reg_submit = ses.post(reg_url, data=payload, headers=merged_headers)
-            login_coki = ses.cookies.get_dict()
-
-            if "c_user" in login_coki:
-                uid = login_coki["c_user"]
-                status = check_facebook_profile_picture(uid)
-                if status == "live":
-                    coki = ";".join([f"{key}={value}" for key, value in login_coki.items()])
-                    if show_details == 'y':
-                        print(f"\r{W}[{G}•{W}] Name   : {G}{firstname} {lastname}{W}")
-                        print(f"\r{W}[{G}•{W}] Number : {G}{phone}{W}")
-                        print(f"\r{W}[{G}•{W}] Gender : {G}Female{W}")
-                        print(f"\r{W}[{G}•{W}] DOB    : {G}{payload['birthday_day']}-{payload['birthday_month']}-{payload['birthday_year']}{W}")
-                        print(f"\r{W}[{G}•{W}] UID    : {G}{uid}{W}")
-                        print(f"\r{W}[{G}•{W}] PASS   : {G}{pww}{W}")
-                        print(f"\r{G}{uid}|{pww}|{coki}{W}")
-                        print(f"{W}─────────────────────────────────────────────{W}")
-                    else:
-                        print(f"\r{G}CYBER-X{W}-{G}[OK] {uid} | {pww}")
-                    try:
-                        with open('/sdcard/Auto_Creat.txt', 'a') as f:
-                            f.write(f"{uid}|{pww}|{coki}\n")
-                        oks.append(uid)
-                    except IOError:
-                        
-                        continue
-                else:
-                   # print(f"\r{R}EX XD{W}-{R}[CP] {uid}|{pww}")
-                    cps.append(uid)
-            elif "checkpoint" in login_coki:
-                uid = login_coki.get("c_user", "unknown")
-              #  print(f"\r{R}EX XD{W}-{R}[CP] {uid}|{pww}")
-                cps.append(uid)
-            time.sleep(1)  # Delay to avoid rate limiting
-        except Exception as e:
-            time.sleep(10)  # Longer delay for general errors
-            continue
-
-    print(' ')
-    linex()
-    print(f'{W}[{G}•{W}]{G} The process has completed')
-    linex()
-    print(f'{W}[{G}•{W}]{G} Total OK {W}: {G}{len(oks)}')
-    print(f'{W}[{R}•{W}]{G} Total CP {W}: {R}{len(cps)}')
-    linex()
-    sys.exit(f'{W}[{G}•{W}]{G} Thanks For Use.....{R}!{W}')
-
-
-###M2
-def createfb_method_2():
-    global oks, cps
-    banner()
-    print(f"{W}[{G}1{W}]{G} TEMP NUMBER ")
-    print(f"{W}[{G}2{W}]{G} TEMP MIX NUMBER ")
-    print(f"{W}[{G}3{W}]{G} TEMP MAIL")
-    linex()
-    email_choice = input(f"{W}[{G}•{W}]{G} CHOISE {W}:{G} ")
-    linex()
-    print(f"{W}[{G}1{W}]{G} RANDOM NAMES")
-    linex()
-    name_choice = input(f"{W}[{G}•{W}]{G} CHOISE {W}:{G} ")
-    linex()
-    try:
-        num = int(input(f"{W}[{G}•{W}]{G} HOW MANY ACCOUNT {W}:{G} "))
-        if num <= 0:
-            raise ValueError("Number of accounts must be positive")
-    except ValueError:
-        print(f"{W}[{R}•{W}]{R} Please enter a valid positive number{W}")
-        sys.exit()
-    linex()
-    print(f"{W}[{G}1{W}]{G} AUTO PASSWORD")
-    print(f"{W}[{G}2{W}]{G} CUSTOM PASSWORD")
-    linex()
-    password_choice = input(f"{W}[{G}•{W}]{G} CHOISE {W}:{G} ")
-    pww = get_pass() if password_choice == '1' else input(f"{W}[{G}•{W}]{G} ENTER PASSWORD {W}:{G} ")
-    if not pww:
-        print(f"{W}[{R}•{W}]{R} Password cannot be empty{W}")
-        sys.exit()
-    linex()
-    show_details = input(f"{W}[{G}•{W}]{G} Show All Details y{R}/{G}n {W}:{G} ").lower()
-    banner()
-    print(f"{W}[{G}•{W}]{G} ACCOUNT CREATING STARTED")
-    print(f'{W}[{G}•{W}]{G} TOTAL ID {W}: {R}{num}{W}')
-    print(f"{W}[{G}•{W}]{G} Use {R}1.1.1{G} Vpn{W}")
-    linex()
-
-    for i in range(num):
-        try:
-            sys.stdout.write(f"\r{W}EX XD{G} OK • {len(oks)}   {R}CP • {len(cps)}{W} ")
-            sys.stdout.flush()
-            ses = requests.Session()
-            response = ses.get("https://x.facebook.com/reg")
-            form = extractor(response.text)
-            firstname, lastname = get_bd_name()
-
-            if email_choice == '1':
-                phone = get_bd_phone()
-            elif email_choice == '2':
-                phone = generate_phone_number()
-            else:
-                phone =  khryden_email()
-
-            payload = {
-                'ccp': "2",
-                'reg_instance': form.get("reg_instance", ""),
-                'submission_request': "true",
-                'reg_impression_id': form.get("reg_impression_id", ""),
-                'ns': "1",
-                'logger_id': form.get("logger_id", ""),
-                'firstname': firstname,
-                'lastname': lastname,
-                'birthday_day': str(random.randint(20, 28)),
-                'birthday_month': str(random.randint(5, 25)),
-                'birthday_year': str(random.randint(1990, 2001)),
-                'reg_email__': phone,
-                'sex': "1",  # Female
-                'encpass': f'#PWD_BROWSER:0:{int(time.time())}:{pww}',
-                'submit': "Sign Up",
-                'fb_dtsg': form.get("fb_dtsg", ""),
-                'jazoest': form.get("jazoest", ""),
-                'lsd': form.get("lsd", "")
-            }
-
-            headers = {
-                "Host": "m.facebook.com",
-                "Connection": "keep-alive",
-                "User-Agent": ugenX(),
-                "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8",
-                "Accept-Encoding": "gzip, deflate, br",
-                "Accept-Language": "en-US,en;q=0.9"
-            }
-
-            head1 = {
-                'accept-encoding': 'gzip, deflate',
-                'accept-language': 'en-US,en;q=0.9',
-                'cache-control': 'max-age=0',
-                'referer': 'https://mbasic.facebook.com/reg/',
-                'sec-ch-ua': '',
-                'sec-ch-ua-mobile': '?1',
-                'sec-ch-ua-platform': 'Android',
-                'sec-fetch-dest': 'document',
-                'sec-fetch-mode': 'navigate',
-                'sec-fetch-site': 'same-origin',
-                'sec-fetch-user': '?1',
-                'upgrade-insecure-requests': '1',
-                'user-agent': ugenX()
-            }
-
-            merged_headers = {**headers, **head1}
-            reg_url = "https://www.facebook.com/reg/submit/"
-            reg_submit = ses.post(reg_url, data=payload, headers=merged_headers)
-            login_coki = ses.cookies.get_dict()
-
-            if "c_user" in login_coki:
-                uid = login_coki["c_user"]
-                status = check_facebook_profile_picture(uid)
-                if status == "live":
-                    coki = ";".join([f"{key}={value}" for key, value in login_coki.items()])
-                    if show_details == 'y':
-                        print(f"\r{W}[{G}•{W}] Name   : {G}{firstname} {lastname}{W}")
-                        print(f"\r{W}[{G}•{W}] Number : {G}{phone}{W}")
-                        print(f"\r{W}[{G}•{W}] Gender : {G}Female{W}")
-                        print(f"\r{W}[{G}•{W}] DOB    : {G}{payload['birthday_day']}-{payload['birthday_month']}-{payload['birthday_year']}{W}")
-                        print(f"\r{W}[{G}•{W}] UID    : {G}{uid}{W}")
-                        print(f"\r{W}[{G}•{W}] PASS   : {G}{pww}{W}")
-                        print(f"\r{G}{uid}|{pww}|{coki}{W}")
-                        print(f"{W}─────────────────────────────────────────────{W}")
-                    else:
-                        print(f"\r{G}EX XD{W}-{G}[OK] {uid} | {pww}")
-                    try:
-                        with open('/sdcard/Auto_Creat.txt', 'a') as f:
-                            f.write(f"{uid}|{pww}\n")
-                        oks.append(uid)
-                    except IOError:
-                        
-                        continue
-                else:
-                   # print(f"\r{R}EX XD{W}-{R}[CP] {uid}|{pww}")
-                    cps.append(uid)
-            elif "checkpoint" in login_coki:
-                uid = login_coki.get("c_user", "unknown")
-              #  print(f"\r{R}EX XD{W}-{R}[CP] {uid}|{pww}")
-                cps.append(uid)
-            time.sleep(1)  # Delay to avoid rate limiting
-        except Exception as e:
-            time.sleep(10)  # Longer delay for general errors
-            continue
-
-    print(' ')
-    linex()
-    print(f'{W}[{G}•{W}]{G} The process has completed')
-    linex()
-    print(f'{W}[{G}•{W}]{G} Total OK {W}: {G}{len(oks)}')
-    print(f'{W}[{R}•{W}]{G} Total CP {W}: {R}{len(cps)}')
-    linex()
-    sys.exit(f'{W}[{G}•{W}]{G} Thanks For Use.....{R}!{W}')
-
-
-
-#mm1
 def createfb_method_1():
     global oks, cps
     banner()
-    print(f"{W}[{G}1{W}]{G} TEMP NUMBER ")
-    print(f"{W}[{G}2{W}]{G} TEMP MIX NUMBER ")
-    print(f"{W}[{G}3{W}]{G} TEMP MAIL")
-    linex()
-    email_choice = input(f"{W}[{G}•{W}]{G} CHOISE {W}:{G} ")
-    linex()
-    print(f"{W}[{G}1{W}]{G} RANDOM NAMES")
+    print(f"{W}[{G}1{W}]{G} FILIPINO NAMES")
+    print(f"{W}[{G}2{W}]{G} RPW NAMES")
     linex()
     name_choice = input(f"{W}[{G}•{W}]{G} CHOISE {W}:{G} ")
     linex()
@@ -728,14 +1259,8 @@ def createfb_method_1():
             ses = requests.Session()
             response = ses.get("https://x.facebook.com/reg")
             form = extractor(response.text)
-            firstname, lastname = get_bd_name()
-           
-            if email_choice == '1':
-                phone = get_bd_phone()
-            elif email_choice == '2':
-                phone = generate_phone_number()
-            else:
-                phone =  khryden_email()
+            firstname, lastname = get_rpw_name() if name_choice == '2' else get_bd_name()
+            phone = get_1secmail()
 
             payload = {
                 'ccp': "2",
@@ -788,13 +1313,14 @@ def createfb_method_1():
             reg_submit = ses.post(reg_url, data=payload, headers=merged_headers)
             login_coki = ses.cookies.get_dict()
 
+            login_coki = ses.cookies.get_dict()
+
             if "c_user" in login_coki:
                 coki = ";".join([f"{key}={value}" for key, value in login_coki.items()])
                 uid = login_coki["c_user"]
                 if show_details == 'y':
-                    # Print detailed account information
                     print(f"\r{W}[{G}•{W}] Name   : {G}{firstname} {lastname}{W}")
-                    print(f"\r{W}[{G}•{W}] Number : {G}{phone}{W}")
+                    print(f"\r{W}[{G}•{W}] Email  : {G}{phone}{W}")
                     print(f"\r{W}[{G}•{W}] Gender : {G}Female{W}")
                     print(f"\r{W}[{G}•{W}] DOB    : {G}{payload['birthday_day']}-{payload['birthday_month']}-{payload['birthday_year']}{W}")
                     print(f"\r{W}[{G}•{W}] UID    : {G}{uid}{W}")
@@ -802,14 +1328,12 @@ def createfb_method_1():
                     print(f"\r{G}{uid}|{pww}|{coki}{W}")
                     print(f"{W}─────────────────────────────────────────────{W}")
                 else:
-                    # Print minimal output
                     print(f"\r{G}CYBER-X{W}-{G}[OK] {uid} | {pww}")
                 with open('/sdcard/Auto_Creat.txt', 'a') as f:
                     f.write(f"{uid}|{pww}\n")
                 oks.append(uid)
             elif "checkpoint" in login_coki:
                 uid = login_coki.get("c_user", "unknown")
-                #print(f"\r{R}CYBER-X{W}-{R}[CP] {uid}|{pww}")
                 cps.append(uid)
             time.sleep(1)
         except Exception as e:
@@ -827,272 +1351,113 @@ def createfb_method_1():
     sys.exit(f'{W}[{G}•{W}]{G} Thanks For Use.....{R}!{W}')
 
 
-# 2FA Handling
-def get_default_password():
-    default_password_file = os.path.expanduser("/sdcard/XIYAD/2FA/default_password.txt")
-    if os.path.exists(default_password_file):
-        with open(default_password_file, "r") as f:
-            return f.read().strip()
-    return None
-
-def set_default_password():
-    try:
-        banner()
-        # Check if default password already exists
-        if get_default_password():
-            print(f"{W}[{G}•{W}]{G} Default password already set!")
-            change = input(f"{W}[{G}•{W}]{G} Do you want to change it? (y/n) {W}:{R} ").strip().lower()
-            if change != 'y':
-                input(f"{W}[{G}•{W}]{G} Press Enter to continue ")
-                return
-        
-        password = input(f"{W}[{G}•{W}]{G} Enter default password {W}:{R} ").strip()
-        if not password:
-            print(f"{W}[{R}•{W}]{R} Password cannot be empty!")
-            input(f"{W}[{G}•{W}]{G} Press Enter to continue ")
-            return
-        
-        file_path = os.path.expanduser("/sdcard/CYBERX/2FA/default_password.txt")
-        os.makedirs(os.path.dirname(file_path), exist_ok=True)
-        with open(file_path, "w") as f:
-            f.write(password)
-        
-        print(f"{W}[{G}•{W}]{G} Default password saved successfully!")
-        input(f"{W}[{G}•{W}]{G} Press Enter to continue ")
-        main_menu()
-    
-    except Exception as e:
-        print(f"\n{W}[{R}•{W}]{R} Error: {e}")
-        input(f"{W}[{G}•{W}]{G} Press Enter to continue ")
-        main_menu()
-        
-
-def just_2fa():
-    """Generate 2FA codes from a secret key."""
-    try:
-        banner()
-        secret_key = input(f"{W}[{G}•{W}]{G} 2FA key {W}:{R} ").strip().replace(" ", "")
-        totp = pyotp.TOTP(secret_key)
-        print(f"{W}[{G}•{W}]{G} 2FA Code Generator  {R}>>{G} Press {R}Ctrl{W}+{R}C{G} to Stop ")
-        linex()
-        while True:
-            current_code = totp.now()
-            remaining = 30 - (int(time.time()) % 30)
-            print(f"\r{W}[{G}•{W}]{G} 2FA Code {W}:{R} {current_code} {V}>>{G} Refreshing in {W}:{R} {remaining:2d}s", end='', flush=True)
-            time.sleep(1)
-    except KeyboardInterrupt:
-        print(f"\n{W}─────────────────────────────────────────────{W}\n{W}[{R}•{W}]{R} Stopping.....!!")
-        input(f"{W}[{G}•{W}]{G} Press Enter to Back ")
-        just_2fa()
-    except Exception as e:
-        print(f"\n{W}[{R}•{W}]{R} Error")
-        input(f"{W}[{G}•{W}]{G} Press Enter to Back ")
-        main_menu()
-
-def save_2fa():
-    try:
-        banner()
-        # Check for default password
-        password = get_default_password()
-        if not password:
-            print(f"{W}[{R}•{W}]{R} No default password set! Please set one first.")
-            input(f"{W}[{G}•{W}]{G} Press Enter to Back ")
-            main_menu()
-            return
-        
-        uid = input(f"{W}[{G}•{W}]{G} Enter UID {W}:{R} ").strip()
-        secret_key = input(f"{W}[{G}•{W}]{G} 2FA key {W}:{R} ").strip().replace(" ", "")
-        
-        # Validate the secret key
-        totp = pyotp.TOTP(secret_key)
-
-        # Save UID, password, and 2FA key to sdcard
-        file_path = os.path.expanduser("/sdcard/Id_Auto_Creat.txt")
-        os.makedirs(os.path.dirname(file_path), exist_ok=True)
-        with open(file_path, 'a') as f:
-            f.write(f"{uid}|{password}|{secret_key}\n")
-        
-        # Save only 2FA key to separate file
-        key_path = os.path.expanduser("/sdcard/XIYAD/2FA/2fa_key.txt")
-        os.makedirs(os.path.dirname(key_path), exist_ok=True)
-        with open(key_path, "w") as f:
-            f.write(secret_key)
-        
-        print(f"{W}[{G}•{W}]{G} Data saved successfully!")
-        print(f"{W}[{G}•{W}]{G} 2FA Code Generator  {R}>>{G} Press {R}Ctrl{W}+{R}C{G} to Stop ")
-        linex()
-
-        while True:
-            current_code = totp.now()
-            remaining = 30 - (int(time.time()) % 30)
-            print(f"\r{W}[{G}•{W}]{G} 2FA Code {W}:{R} {current_code} {V}>>{G} Refreshing in {W}:{R} {remaining:2d}s", end='', flush=True)
-            time.sleep(1)
-    
-    except KeyboardInterrupt:
-        print(f"\n{W}─────────────────────────────────────────────{W}\n{W}[{R}•{W}]{R} Stopping.....!!")
-        input(f"{W}[{G}•{W}]{G} Press Enter to Back ")
-        save_2fa()
-    except Exception as e:
-        print(f"\n{W}[{R}•{W}]{R} Error: {e}")
-        input(f"{W}[{G}•{W}]{G} Press Enter to Back ")
-        main_menu()
-
-def main_menu():
-    """Display 2FA menu."""
-    while True:
-        banner()
-        print(f"{W}[{G}1{W}]{G} Just 2FA")
-        print(f"{W}[{G}2{W}]{G} 2FA & Save Uid|pas|2fa-key ")
-        print(f"{W}[{G}3{W}]{G} Set Default Password")
-        print(f"{W}[{R}0{W}]{R} Back")
-        linex()
-        choice = input(f"{W}[{G}•{W}]{G} Select option {W}:{R} ").strip()
-        if choice == '1':
-            just_2fa()
-        elif choice == '2':
-            save_2fa()
-        elif choice == '3':
-            set_default_password()
-        elif choice == '0':
-            break
-        else:
-            print(f"{W}[{R}•{W}]{R} Invalid option!")
-            input(f"{W}[{G}•{W}]{G} Press Enter to continue ")
-
-
-# Mail OTP Retrieval
-
-def missing():
-	banner()
-	print(f'{R} MISSING')
-
-######Coki ext
-
-ok_count = 0
-cp_count = 0
-loop = 0
-tl = 0
-
-
-def check_write_permissions(path):
-    try:
-        with open(path, 'a'):
-            return True
-    except IOError:
-        return False
-
-# Login and extract cookies
-def login_ids(file_path):
-    global ok_count, cp_count, loop, tl
-    save_file = '/sdcard/uid_pass_cookies.txt'
-    cp_file = '/sdcard/Cps_ex.txt'
-
-    if not check_write_permissions(save_file) or not check_write_permissions(cp_file):
-        print(f"{R}Error: No write permissions for /sdcard/. Check storage access.{W}")
-        return
-
-    if not os.path.exists(file_path):
-        print(f"{R}File not found: {file_path}{W}")
-        return
-    with open(file_path, 'r') as f:
-        lines = [line.strip() for line in f if line.strip()]
-    tl = len(lines)
-    if tl == 0:
-        print(f"{R}File is empty: {file_path}{W}")
-        return
-
-    banner()
-    print(f'{W}[{G}•{W}]{G} TOTAL IDs {W}: {R}{tl}{W}')
-    print(f'{W}[{G}•{W}]{G} FILE NAME {W}: {R}{os.path.basename(file_path)}{W}')
-    
-    linex()
-
-    ses = requests.Session()
-    ses.headers.update({
-        'User-Agent': 'FBAN/Orca-Android;FBAV/327.0.1.48;FBPN/com.facebook.orca;FBLC/en_US;FBCR/Kaberi;FBBV/67467545;FBMF/philips;FBBD/philips;FBDV/SM-A8100;FBSV/11.0.0;FBCA/armeabi-v7a:armeabi;FBDM/{density=2.0,width=720,height=1520};FB_FW/1;'
-    })
-
-    for line in lines:
-        loop += 1
+def register_account(domain_choice, name_option="1", gender_option="3", custom_pass=None, max_retries=5):
+    """
+    Called by bot.py to create a single Facebook account.
+    Returns dict {name, email, password, uid} on success,
+    "BLOCKED" if IP-blocked, or None on failure.
+    """
+    for attempt in range(max_retries):
         try:
-            if '|' not in line:
-                continue
-            uid, pw = line.split('|', 1)
+            ses = requests.Session()
+            response = ses.get("https://x.facebook.com/reg", timeout=15)
+            form = extractor(response.text)
 
-            url = f"https://b-api.facebook.com/method/auth.login?access_token=237759909591655%257C0f140aabedfb65ac27a739ed1a2263b1&format=json&sdk_version=1&email={uid}&locale=en_US&password={pw}&sdk=ios&generate_session_cookies=1&sig=3f555f98fb61fcd7aa0c44f58f522efm"
-            res = ses.get(url, timeout=10)
-            data = res.json()
-
-            if 'session_cookies' in data:
-                cookies_raw = data['session_cookies']
-                coki = ";".join(f"{i['name']}={i['value']}" for i in cookies_raw)
-                
-                print(f"\r{G}EX XD{W}-{G}[OK]  {uid}|{pw}|{coki}")
-                with open(save_file, 'a') as s:
-                    s.write(f"{uid}|{pw}|{coki}\n")
-                ok_count += 1
-                
-            elif 'www.facebook.com' in data.get('error_msg', ''):
-                with open(cp_file, 'a') as c:
-                    c.write(f"{uid}|{pw}\n")
-                cp_count += 1
+            # Name selection
+            if name_option == "2":
+                firstname, lastname = get_rpw_name()
             else:
-                sys.stdout.write(f"\r{G}EX XD {W}{loop}/{tl} {G}OK {W}• {G}{ok_count} {R}CP {W}• {R}{cp_count} ")
-                sys.stdout.flush()
-                time.sleep(1)
-        except requests.RequestException:
-            time.sleep(5)
-            continue
+                if gender_option == "1":
+                    firstname = random.choice(first_names_male)
+                elif gender_option == "2":
+                    firstname = random.choice(first_names_female)
+                else:
+                    firstname = random.choice(first_names_male + first_names_female)
+                lastname = random.choice(surnames)
+
+            # Gender for Facebook form: 1=Female, 2=Male
+            if gender_option == "1":
+                fb_sex = "2"
+            elif gender_option == "2":
+                fb_sex = "1"
+            else:
+                fb_sex = random.choice(["1", "2"])
+
+            # Email generation
+            if domain_choice == "1secmail" or domain_choice not in ["yopmail.com", "harakirimail.com", "weyn.store", "jhames.shop", "jakulan.site"]:
+                email = get_1secmail()
+            else:
+                local = re.sub(r'[^a-z0-9]', '', (firstname + lastname).lower()) + str(random.randint(10, 999))
+                email = f"{local}@{domain_choice}"
+
+            pww = custom_pass if custom_pass else get_pass()
+
+            payload = {
+                'ccp': "2",
+                'reg_instance': form.get("reg_instance", ""),
+                'submission_request': "true",
+                'reg_impression_id': form.get("reg_impression_id", ""),
+                'ns': "1",
+                'logger_id': form.get("logger_id", ""),
+                'firstname': firstname,
+                'lastname': lastname,
+                'birthday_day': str(random.randint(15, 25)),
+                'birthday_month': str(random.randint(5, 10)),
+                'birthday_year': str(random.randint(1985, 1995)),
+                'reg_email__': email,
+                'sex': fb_sex,
+                'encpass': f'#PWD_BROWSER:0:{int(time.time())}:{pww}',
+                'submit': "Sign Up",
+                'fb_dtsg': form.get("fb_dtsg", ""),
+                'jazoest': form.get("jazoest", ""),
+                'lsd': form.get("lsd", ""),
+            }
+
+            headers = {
+                "Host": "m.facebook.com",
+                "Connection": "keep-alive",
+                "User-Agent": ugenX(),
+                "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8",
+                "Accept-Encoding": "gzip, deflate, br",
+                "Accept-Language": "en-US,en;q=0.9",
+                'referer': 'https://mbasic.facebook.com/reg/',
+                'sec-ch-ua-mobile': '?1',
+                'sec-ch-ua-platform': 'Android',
+                'sec-fetch-dest': 'document',
+                'sec-fetch-mode': 'navigate',
+                'sec-fetch-site': 'same-origin',
+                'upgrade-insecure-requests': '1',
+            }
+
+            reg_url = "https://www.facebook.com/reg/submit/"
+            reg_submit = ses.post(reg_url, data=payload, headers=headers, timeout=20)
+            login_coki = ses.cookies.get_dict()
+
+            # Check for IP block
+            if "checkpoint" in reg_submit.url or "checkpoint" in reg_submit.text.lower()[:500]:
+                if "c_user" not in login_coki and attempt == max_retries - 1:
+                    return "BLOCKED"
+
+            # Try OTP if needed (only works with 1secmail)
+            login_coki = ses.cookies.get_dict()
+
+            if "c_user" in login_coki:
+                uid = login_coki["c_user"]
+                return {
+                    "name":     f"{firstname} {lastname}",
+                    "email":    email,
+                    "password": pww,
+                    "uid":      uid,
+                }
+
+            # Detect hard block
+            if "you've been temporarily blocked" in reg_submit.text.lower():
+                return "BLOCKED"
+
         except Exception:
-            time.sleep(5)
-            continue
+            pass
 
-    print('')
-    print(f'\n{W}[{G}•{W}]{G} Process completed')
-    linex()
-    print(f'{W}[{G}•{W}]{G} Total OK {W}: {G}{ok_count} ')
-    print(f'{W}[{R}•{W}]{G} Total CP {W}: {R}{cp_count} ')
-    linex()
-    sys.exit(f'{W}[{G}•{W}]{G} Thanks For Use.....{R}!{W}')
-
-# Main
-def coki_ext():
-    try:
-        banner()
-        file_path = input(f'{W}[{G}•{W}]{G} Enter file path {W}:{G} ').strip()
-        login_ids(file_path)
-        input(f'{W}[{G}•{W}]{G} Press Enter to exit... ')
-    except KeyboardInterrupt:
-        print(f"\n{R}Process interrupted by user{W}")
-        input(f"{W}[{G}•{W}]{G} Press Enter to continue ")
-        method()
-    except Exception as e:
-        print(f"{R}Unexpected error: {e}{W}")
-        input(f"{W}[{G}•{W}]{G} Press Enter to continue ")
-        method()
-
-#auto
-
-def auto():
-    while True:
-        banner()
-        print(f"{W}[{G}1{W}]{G} METHOD ")
-        print(f"{W}[{G}2{W}]{G} METHOD ")
-        print(f"{W}[{G}3{W}]{G} METHOD ")
-        print(f"{W}[{R}0{W}]{R} Back")
-        linex()
-        choice = input(f"{W}[{G}•{W}]{G} CHOISE {W}:{G} ").strip().upper()
-        if choice == '1':
-            createfb_method_1()
-        elif choice == '2':
-            createfb_method_2()
-        elif choice == '3':
-            createfb_method_3()
-        elif choice == '0':
-            method()
-        else:
-            print(f"{R}Invalid choice! Please select 1, 2, or 3.{W}")
-            input(f"{W}[{G}•{W}]{G} Press Enter to continue ")
+    return None
 
 
 # Main menu
@@ -1100,23 +1465,13 @@ def method():
     """Main menu for selecting script functionality."""
     while True:
         banner()
-        print(f"{W}[{G}A{W}]{G} Auto Create Fb ")
-        print(f"{W}[{G}B{W}]{G} 2Fa ")
-        print(f"{W}[{G}C{W}]{G} Missing ")
-        print(f"{W}[{G}D{W}]{G} Cookies Extract  ")
+        print(f"{W}[{G}1{W}]{G} Auto Create Fb ")
         linex()
-        choice = input(f"{W}[{G}•{W}]{G} CHOISE {W}:{G} ").strip().upper()
-        os.system('xdg-open https://t.me/trciks');time.sleep(1.5)
+        choice = input(f"{W}[{G}•{W}]{G} CHOISE {W}:{G} ").strip()
         if choice == '1':
-            auto()
-        elif choice == '2':
-            main_menu()
-        elif choice == '3':
-            missing()
-        elif choice == '4':
-            coki_ext()
+            createfb_method_1()
         else:
-            print(f"{R}Invalid choice! Please select A, B, or C.{W}")
+            print(f"{R}Invalid choice!{W}")
             input(f"{W}[{G}•{W}]{G} Press Enter to continue ")
 
 if __name__ == "__main__":
