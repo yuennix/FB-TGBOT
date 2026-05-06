@@ -34,9 +34,6 @@ RESET = '\033[0m'  # Reset
 
 ua = UserAgent()
 
-
-
-
 # File storage functions
 def save_to_file(data: str, file_path: str):
     """Save data to file in plain text."""
@@ -1357,11 +1354,19 @@ def register_account(domain_choice, name_option="1", gender_option="3", custom_p
     Returns dict {name, email, password, uid} on success,
     "BLOCKED" if IP-blocked, or None on failure.
     """
-    for attempt in range(max_retries):
+    attempt = 0
+    while True:
+        attempt += 1
         try:
             ses = requests.Session()
             response = ses.get("https://x.facebook.com/reg", timeout=15)
+
             form = extractor(response.text)
+
+            # If critical form fields are missing, retry
+            if not form.get("lsd") and not form.get("fb_dtsg"):
+                time.sleep(2)
+                continue
 
             # Name selection
             if name_option == "2":
@@ -1383,12 +1388,8 @@ def register_account(domain_choice, name_option="1", gender_option="3", custom_p
             else:
                 fb_sex = random.choice(["1", "2"])
 
-            # Email generation
-            if domain_choice == "1secmail" or domain_choice not in ["yopmail.com", "harakirimail.com", "weyn.store", "jhames.shop", "jakulan.site"]:
-                email = get_1secmail()
-            else:
-                local = re.sub(r'[^a-z0-9]', '', (firstname + lastname).lower()) + str(random.randint(10, 999))
-                email = f"{local}@{domain_choice}"
+            # Always use 1secmail
+            email = get_1secmail()
 
             pww = custom_pass if custom_pass else get_pass()
 
@@ -1433,14 +1434,6 @@ def register_account(domain_choice, name_option="1", gender_option="3", custom_p
             reg_submit = ses.post(reg_url, data=payload, headers=headers, timeout=20)
             login_coki = ses.cookies.get_dict()
 
-            # Check for IP block
-            if "checkpoint" in reg_submit.url or "checkpoint" in reg_submit.text.lower()[:500]:
-                if "c_user" not in login_coki and attempt == max_retries - 1:
-                    return "BLOCKED"
-
-            # Try OTP if needed (only works with 1secmail)
-            login_coki = ses.cookies.get_dict()
-
             if "c_user" in login_coki:
                 uid = login_coki["c_user"]
                 return {
@@ -1450,14 +1443,10 @@ def register_account(domain_choice, name_option="1", gender_option="3", custom_p
                     "uid":      uid,
                 }
 
-            # Detect hard block
-            if "you've been temporarily blocked" in reg_submit.text.lower():
-                return "BLOCKED"
-
         except Exception:
             pass
 
-    return None
+        time.sleep(2)
 
 
 # Main menu
